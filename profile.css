@@ -1,0 +1,271 @@
+/* ==========================================================================
+   PROFILE MODULE
+   Premium White 3D Theme (VIP Card Boards, Stats, Grid)
+   ========================================================================== */
+
+/* ==========================================
+   1. MAIN PROFILE VIEW
+   ========================================== */
+#profile-view {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    padding-bottom: 20px;
+}
+
+.profile-header { 
+    text-align: center; 
+    padding: 40px 20px 10px; 
+    position: relative; 
+}
+
+.profile-back-btn { 
+    position: absolute; 
+    top: 20px; 
+    left: 20px; 
+    font-size: 1.5rem; 
+    color: #1a1a1a !important; 
+    cursor: pointer; 
+    transition: 0.2s;
+}
+.profile-back-btn:active { transform: scale(0.9); }
+
+/* ==========================================
+   2. PROFILE IMAGE (DP) & FOLLOWS YOU BADGE
+   ========================================== */
+#profile-img { 
+    width: 110px; 
+    height: 110px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    cursor: pointer; 
+    border: 4px solid #ffffff !important;
+    box-shadow: 0 0 0 3px #ff006e, 0 10px 25px rgba(255, 0, 110, 0.2) !important;
+    background: #ffffff !important;
+    transition: transform 0.2s ease;
+}
+#profile-img:active { transform: scale(0.95); }
+
+/* 'Follows You' Badge */
+#profile-follows-you-card {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border: 1.5px solid #a7f3d0 !important;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 800 !important;
+    display: inline-flex; 
+    align-items: center;
+    gap: 8px;
+    margin: 15px auto -5px auto; 
+    box-shadow: 0 5px 15px rgba(0, 184, 148, 0.1);
+    position: relative;
+    letter-spacing: 0.5px;
+}
+#profile-follows-you-card i { font-size: 1rem; }
+
+/* ==========================================
+   3. VIP INFO CARD BOARD (Name, Username, Bio)
+   ========================================== */
+.profile-info-card {
+    background: #f1f5f9 !important; /* Premium Platinum Blue */
+    margin: 20px auto !important;
+    border-radius: 26px !important;
+    padding: 20px !important;
+    width: 90%;
+    max-width: 380px;
+    position: relative !important;
+    border: 3.5px solid transparent !important;
+    
+    /* 🌈 4 Corners Gradient Border */
+    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
+                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    
+    /* 💎 3D Depth Shadow */
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    text-align: center !important;
+}
+
+#profile-name { 
+    color: #000000 !important; 
+    font-weight: 900 !important; 
+    font-size: 1.4rem; 
+    margin-bottom: 3px; 
+    letter-spacing: 0.5px; 
+}
+
+#profile-username { 
+    color: #ff006e !important; 
+    font-weight: 800 !important; 
+    font-size: 0.95rem; 
+    margin-bottom: 15px; 
+    letter-spacing: 1px; 
+}
+
+.bio-divider {
+    width: 150px; height: 3px;
+    background: linear-gradient(135deg, #ff006e, #8338ec);
+    margin: 0 auto 12px; border-radius: 5px;
+}
+
+#profile-bio { 
+    color: #334155 !important; 
+    font-weight: 600 !important; 
+    font-size: 0.9rem; 
+    line-height: 1.5; 
+    font-style: italic; 
+}
+
+/* ==========================================
+   4. PROFILE STATS (Posts, Followers, Following)
+   ========================================== */
+.profile-stats {
+    background: #f1f5f9 !important;
+    margin: 15px auto !important;
+    padding: 12px !important;
+    border-radius: 20px !important;
+    display: flex !important;
+    justify-content: space-around !important;
+    border: 2px solid #e2e8f0 !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
+    width: 90%;
+    max-width: 380px;
+}
+
+.stat-item { text-align: center; cursor: pointer; transition: 0.2s; }
+.stat-item:active { transform: scale(0.95); opacity: 0.7; }
+.stat-val { display: block; color: #000000 !important; font-weight: 900 !important; font-size: 1.2rem; }
+.stat-label { font-size: 0.8rem; color: #64748b !important; font-weight: 700 !important; }
+
+/* ==========================================
+   5. REFERRAL CARD (My Profile Only)
+   ========================================== */
+#my-referral-card {
+    margin: 15px auto; width: 90%; max-width: 380px; 
+    background: #f1f5f9 !important;
+    border: 3px solid transparent !important;
+    border-radius: 20px; padding: 15px; text-align: center;
+    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
+                      linear-gradient(135deg, #8338ec, #3a86ff) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    box-shadow: 0 10px 25px rgba(131, 56, 236, 0.1) !important;
+}
+
+#profile-refer-code {
+    background: #ffffff !important;
+    color: #8338ec !important;
+    border-radius: 12px !important;
+    padding: 10px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    font-family: 'Courier New', Courier, monospace; 
+    font-weight: 800; font-size: 1.2rem; letter-spacing: 2px;
+}
+
+/* ==========================================
+   6. PROFILE ACTION BUTTONS
+   ========================================== */
+#profile-actions {
+    width: 100%; max-width: 400px; margin: 15px auto 0; padding: 0 15px;
+}
+
+.btn-edit, .btn-msg, .btn-follow, .btn-insta-support, .btn-share-app {
+    border-radius: 10px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    transition: var(--transition-smooth, 0.2s) !important;
+    border: none !important;
+    cursor: pointer;
+}
+.btn-edit:active, .btn-msg:active, .btn-follow:active { transform: scale(0.95); }
+
+/* Edit & Settings (Platinum 3D) */
+.btn-edit {
+    background: #f1f5f9 !important;
+    color: #1a1a1a !important;
+    border: 2.5px solid #cbd5e1 !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+}
+
+/* Follow & Message Buttons */
+.btn-follow { background: linear-gradient(135deg, #ff006e, #8338ec) !important; color: white !important; box-shadow: 0 5px 15px rgba(255, 0, 110, 0.3) !important; }
+.btn-following { background: #f1f5f9 !important; color: #64748b !important; border: 1.5px solid #cbd5e1 !important; box-shadow: none !important; }
+.btn-msg { background: #1a1a1a !important; color: white !important; box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important; }
+
+/* Insta & Share Buttons */
+.btn-insta-support {
+    background: linear-gradient(45deg, #f09433, #dc2743, #bc1888) !important;
+    color: white !important;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 5px 15px rgba(220, 39, 67, 0.3) !important;
+}
+.btn-share-app {
+    background: linear-gradient(135deg, #8338ec 0%, #3a86ff 100%) !important;
+    color: white !important;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 5px 15px rgba(131, 56, 236, 0.3) !important;
+}
+
+/* ==========================================
+   7. POSTS / REELS TABS
+   ========================================== */
+.profile-tabs {
+    display: flex; justify-content: center;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    margin-top: 25px;
+}
+
+.profile-tab {
+    flex: 1; text-align: center; padding: 12px 0;
+    color: #94a3b8 !important; font-size: 1.5rem;
+    cursor: pointer; transition: 0.3s;
+    border-bottom: 3px solid transparent;
+}
+.profile-tab.active {
+    color: #ff006e !important; 
+    border-bottom: 3px solid #ff006e !important;
+}
+.profile-tab:active { background: #f1f5f9; }
+
+/* ==========================================
+   8. MEDIA GRID (Posts & Reels Layout)
+   ========================================== */
+.profile-grid { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 3px; margin-top: 3px; padding: 0 3px; 
+}
+
+.grid-item { 
+    aspect-ratio: 1/1; position: relative; cursor: pointer; 
+    background: #f1f5f9; overflow: hidden; border-radius: 6px; 
+}
+
+.grid-media { 
+    width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; 
+}
+
+.grid-overlay { 
+    position: absolute; top:0; left:0; width:100%; height:100%; 
+    background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; 
+    opacity: 0; transition: 0.2s; color: white; font-weight: 800; font-size: 1.1rem; gap: 5px; 
+}
+
+.grid-item:hover .grid-media { transform: scale(1.05); }
+.grid-item:hover .grid-overlay { opacity: 1; }
+
+/* Delete Button on Hover/Self */
+.delete-grid-btn {
+    position: absolute; top: 8px; right: 8px; 
+    background: rgba(255, 71, 87, 0.9); color: white; 
+    width: 28px; height: 28px; border-radius: 8px; 
+    display: flex; align-items: center; justify-content: center; 
+    z-index: 15; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}

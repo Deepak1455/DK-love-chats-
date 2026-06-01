@@ -1,0 +1,12 @@
+{
+  "name": "lovechats-notification-server",
+  "version": "1.0.0",
+  "description": "FCM Notification Sender for DK Love Chats",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}

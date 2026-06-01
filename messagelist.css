@@ -1,0 +1,212 @@
+/* ==========================================================================
+   MESSAGE LIST & INBOX MODULE
+   Premium White 3D Theme (Search, Active Now, Chat Cards)
+   ========================================================================== */
+
+/* ==========================================
+   1. MAIN INBOX VIEW
+   ========================================== */
+#chat-view {
+    background-color: #ffffff !important;
+    background-image: none !important;
+}
+
+/* ==========================================
+   2. SEARCH BAR
+   ========================================== */
+.chat-search-container {
+    background: #ffffff !important;
+    padding: 15px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.chat-search-input {
+    width: 100%;
+    padding: 12px 15px 12px 40px;
+    background: #f1f5f9 !important;
+    border: 1.5px solid #e2e8f0 !important;
+    color: #1a1a1a !important;
+    border-radius: 15px !important;
+    font-size: 0.95rem;
+    font-weight: 600 !important;
+    outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23aaa' class='bi bi-search' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+    transition: 0.3s;
+}
+
+.chat-search-input:focus {
+    background-color: #ffffff !important;
+    border-color: var(--primary) !important;
+}
+
+/* ==========================================
+   3. ACTIVE NOW BAR (Online Users)
+   ========================================== */
+.active-now-bar {
+    background: #f1f5f9 !important;
+    margin: 10px 15px 20px 15px !important;
+    padding: 15px 10px !important;
+    border-radius: 24px !important;
+    display: flex !important;
+    gap: 15px !important;
+    overflow-x: auto !important;
+    position: relative !important;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
+                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), inset 0 2px 5px rgba(255, 255, 255, 0.9) !important;
+    border-bottom: none !important;
+    scrollbar-width: none;
+}
+.active-now-bar::-webkit-scrollbar { display: none !important; }
+
+.active-item {
+    display: flex !important; flex-direction: column !important; align-items: center !important;
+    min-width: 65px !important; position: relative !important;
+}
+
+.active-img-container {
+    position: relative !important;
+    width: 56px !important; height: 56px !important;
+    margin-bottom: 5px !important;
+    cursor: pointer !important;
+    transition: transform 0.2s !important;
+}
+.active-img-container:active { transform: scale(0.9) !important; }
+
+.active-img {
+    width: 100% !important; height: 100% !important;
+    border-radius: 50% !important; object-fit: cover !important;
+    border: 2.5px solid #ffffff !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+    background: #ffffff !important;
+}
+
+.active-dot-badge {
+    position: absolute !important; bottom: 2px !important; right: 2px !important;
+    width: 15px !important; height: 15px !important;
+    background: #00b894 !important;
+    border: 2.5px solid #f1f5f9 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 8px rgba(0, 184, 148, 0.5) !important;
+    z-index: 10 !important;
+}
+
+.active-name {
+    font-size: 0.75rem !important; color: #1a1a1a !important; font-weight: 800 !important;
+    text-align: center !important; width: 100% !important;
+    overflow: hidden !important; text-overflow: ellipsis !important;
+    cursor: pointer !important;
+}
+
+/* ==========================================
+   4. CHAT LIST ITEM (3D Card)
+   ========================================== */
+#chat-list-container .chat-item {
+    background: #f1f5f9 !important; 
+    margin: 12px 15px !important;
+    padding: 15px !important;
+    border-radius: 22px !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
+                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+#chat-list-container .chat-item:active, .inbox-pressing {
+    transform: scale(0.97) translateY(2px) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04) !important;
+}
+
+#chat-list-container .chat-item img.user-avatar {
+    border: 2.5px solid #ffffff !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Header ('Messages') */
+#chat-view div[style*="font-size:1.8rem"] {
+    color: #000000 !important;
+    font-weight: 900 !important;
+    letter-spacing: -1px !important;
+    margin-bottom: 5px !important;
+    padding-left: 20px !important;
+}
+
+/* ==========================================
+   5. TEXTS & STATUSES
+   ========================================== */
+/* User Name */
+#chat-list-container .chat-item div[style*="font-size:1.05rem"] {
+    color: #000000 !important;
+    font-weight: 800 !important;
+}
+
+/* Status Indicators */
+.active-status { font-weight: 700 !important; font-size: 0.8rem !important; }
+.status-online { color: #00b894 !important; }
+.status-offline { color: #64748b !important; }
+.draft-text { color: #ff4757 !important; font-weight: 700 !important; }
+.typing-text { color: #00b894 !important; font-weight: 900 !important; animation: pulse 1.5s infinite !important; }
+
+/* ==========================================
+   6. BADGES (Unread & Locked)
+   ========================================== */
+/* Unread Message Badge */
+.unread-badge {
+    background: linear-gradient(135deg, #ff006e, #8338ec) !important;
+    color: white !important;
+    font-size: 0.75rem !important;
+    font-weight: 900 !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    border-radius: 11px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 6px !important;
+    margin-left: 10px !important;
+    box-shadow: 0 4px 10px rgba(255, 0, 110, 0.3) !important;
+    border: 2px solid #ffffff !important;
+    animation: popInBadge 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+@keyframes popInBadge { 
+    from { transform: scale(0); } 
+    to { transform: scale(1); } 
+}
+
+/* Locked Chat Badge */
+.locked-chat-badge {
+    position: absolute !important; bottom: -2px !important; left: -2px !important;
+    background: #ffffff !important; color: #ff4757 !important;
+    font-size: 0.65rem !important; width: 22px !important; height: 22px !important;
+    border-radius: 50% !important; display: flex !important; align-items: center !important;
+    justify-content: center !important; border: 2px solid #ff4757 !important;
+    z-index: 5 !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+}
+
+/* ==========================================
+   7. JUMP TO TOP ANIMATION (New Message)
+   ========================================== */
+.chat-item.move-top {
+    animation: popToTop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+    background: #fdf2f8 !important; /* Light Pink Highlight */
+    border-left: 4px solid var(--primary) !important;
+}
+
+@keyframes popToTop {
+    0% { transform: translateY(-30px) scale(0.95); opacity: 0; }
+    50% { background: rgba(255, 0, 110, 0.1); }
+    100% { transform: translateY(0) scale(1); opacity: 1; background: #f1f5f9; }
+}

@@ -1,0 +1,202 @@
+/* --- CALLING OVERLAY BASE --- */
+.call-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, #1e1e2f, #0f0f1a);
+    /* चैट रूम (999999) से ऊपर दिखाने के लिए z-index को बढ़ाकर 10000000 किया गया है */
+    z-index: 10000000 !important; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 50px 20px;
+    color: #ffffff;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.call-overlay.active {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: all !important;
+}
+
+/* --- USER DETAIL AREA --- */
+.call-user-details {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.call-avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ff006e;
+    box-shadow: 0 0 25px rgba(255, 0, 110, 0.4);
+    margin-bottom: 20px;
+    animation: callPulse 1.8s infinite alternate;
+}
+
+@keyframes callPulse {
+    0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 0, 110, 0.3); }
+    100% { transform: scale(1.06); box-shadow: 0 0 30px rgba(255, 0, 110, 0.6); }
+}
+
+.call-name {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.call-status {
+    font-size: 0.9rem;
+    color: #e0aaff;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* --- VIDEO CONTROLLERS --- */
+.video-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: #000;
+    display: none;
+}
+
+.video-grid.active {
+    display: block;
+}
+
+.remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.local-video {
+    position: absolute;
+    top: 30px;
+    right: 20px;
+    width: 100px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+
+/* --- ACTION BUTTONS --- */
+.call-actions-container {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+    margin-bottom: 30px;
+    z-index: 100;
+}
+
+.call-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s, background-color 0.2s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.call-btn:active {
+    transform: scale(0.9);
+}
+
+.btn-decline {
+    background: #ff4757;
+    color: white;
+}
+
+.btn-accept {
+    background: #00b894;
+    color: white;
+    animation: acceptShake 1.2s infinite;
+}
+
+@keyframes acceptShake {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.btn-mute, .btn-video-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-mute.muted, .btn-video-toggle.disabled {
+    background: rgba(255, 71, 87, 0.4);
+    border-color: #ff4757;
+}
+/* call.css में इन क्लासेस को अपडेट या जोड़ें */
+
+/* कॉलिंग स्क्रीन शुरू में छुपी रहेगी */
+.call-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #1b1b2f 0%, #0c0c14 100%);
+    z-index: 10000000 !important; /* सभी स्क्रीन्स से ऊपर */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 60px 20px;
+    transform: translateY(100%); /* नीचे छुपी रहेगी */
+    transition: transform 0.4s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* कॉल आने पर एक्टिवेट होने वाली क्लास */
+.call-overlay.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* कॉल उठाने वाले हरे बटन का शानदार एनीमेशन */
+.btn-accept {
+    background: #00b894;
+    color: white;
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 0 20px rgba(0, 184, 148, 0.6);
+    animation: callingPulseGreen 1.5s infinite;
+}
+
+@keyframes callingPulseGreen {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(0, 184, 148, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 184, 148, 0); }
+}

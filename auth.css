@@ -1,0 +1,169 @@
+/* ==========================================================================
+   AUTHENTICATION MODULE (LOGIN & SIGNUP)
+   Premium White Theme
+   ========================================================================== */
+
+/* --- Main Container --- */
+#auth-section { 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    background: #ffffff; /* Pure White Background */
+    z-index: 1000; 
+    position: absolute; 
+    width: 100%; 
+    top: 0; 
+}
+
+/* --- Auth Card (3D Board Style) --- */
+.auth-card { 
+    background: #ffffff; 
+    padding: 2.5rem; 
+    border-radius: 35px; 
+    width: 90%; 
+    max-width: 380px; 
+    border: 1px solid #e2e8f0; 
+    text-align: center; 
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05); 
+}
+
+/* --- Typography --- */
+.logo-text { 
+    font-size: 2.2rem; 
+    font-weight: 800; 
+    background: linear-gradient(135deg, #10002b, #ff006e); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    margin-bottom: 2rem; 
+    letter-spacing: -1px; 
+}
+
+.auth-switch { 
+    margin-top: 1.5rem; 
+    color: #64748b; 
+    font-size: 0.9rem; 
+    cursor: pointer; 
+    font-weight: 600; 
+    transition: color 0.2s ease;
+}
+
+.auth-switch:active {
+    color: var(--primary);
+}
+
+/* --- Input Fields --- */
+.input-group { 
+    position: relative; 
+    margin-bottom: 1rem; 
+}
+
+.input-group input { 
+    width: 100%; 
+    padding: 16px; 
+    background: #f1f5f9; 
+    border: 2px solid #e2e8f0; 
+    border-radius: 16px; 
+    color: #1a1a1a; 
+    outline: none; 
+    transition: 0.3s; 
+    font-size: 1rem; 
+}
+
+.input-group input:focus { 
+    border-color: #ff006e; 
+    background: #ffffff; 
+    box-shadow: 0 0 0 4px rgba(255, 0, 110, 0.1); 
+}
+
+/* --- Status Icons (Checkmark/Cross in Inputs) --- */
+.username-status { 
+    position: absolute; 
+    right: 15px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    font-size: 1.1rem; 
+}
+
+.status-valid { color: var(--success); }
+.status-invalid { color: var(--danger); }
+#login-user-icon { color: #94a3b8 !important; }
+
+/* --- Auth Action Button --- */
+#auth-section .btn-primary { 
+    width: 100%; 
+    padding: 16px; 
+    background: linear-gradient(135deg, #ff006e, #8338ec); 
+    border: none; 
+    border-radius: 16px; 
+    color: white; 
+    font-weight: 700; 
+    font-size: 1rem; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    box-shadow: 0 8px 20px rgba(255, 0, 110, 0.3); 
+}
+
+#auth-section .btn-primary:active {
+    transform: scale(0.96);
+}
+
+#auth-section .btn-primary:disabled { 
+    background: #cbd5e1; 
+    cursor: not-allowed; 
+    box-shadow: none; 
+}
+
+/* --- Instagram Support Link in Auth --- */
+.auth-help-section {
+    margin-top: 20px; 
+    cursor: pointer; 
+    animation: fadeIn 0.8s;
+}
+
+.auth-help-section p {
+    color: #64748b; /* Updated for white theme */
+    font-size: 0.85rem; 
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.insta-auth-link { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 8px; 
+    background: #fdf2f8; 
+    padding: 8px 18px; 
+    border-radius: 20px; 
+    color: #ff006e; 
+    font-weight: 700; 
+    font-size: 0.9rem; 
+    border: 1px solid rgba(255, 0, 110, 0.3); 
+    transition: 0.3s; 
+    box-shadow: 0 4px 10px rgba(255, 0, 110, 0.1); 
+}
+
+.insta-auth-link i { 
+    font-size: 1.2rem; 
+    background: linear-gradient(45deg, #f09433, #dc2743, #bc1888); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+}
+
+.insta-auth-link:active { 
+    transform: scale(0.95); 
+    background: rgba(255, 0, 110, 0.1); 
+}
+
+/* --- JS Error Shake Animation --- */
+@keyframes inputShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.input-error-shake {
+    animation: inputShake 0.3s ease-in-out;
+    border-color: var(--danger) !important;
+}

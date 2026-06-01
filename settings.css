@@ -1,0 +1,234 @@
+/* ==========================================================================
+   SETTINGS & EDIT PROFILE MODULE
+   Premium White Full-Screen UI (3D Sunken Inputs & Cards)
+   ========================================================================== */
+
+/* ==========================================
+   1. MAIN FULL-SCREEN MODALS
+   ========================================== */
+#settings-modal, 
+#edit-profile-modal {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: #ffffff !important; /* Pure White Background */
+    z-index: 5000; 
+    display: flex; 
+    justify-content: center; 
+    align-items: flex-start; /* Start from top */
+    overflow-y: auto;
+}
+
+/* Inner Container */
+#settings-modal > div, 
+#edit-profile-modal > div {
+    width: 100%; 
+    max-width: 600px; 
+    margin: 0 auto; 
+    padding: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    min-height: 100vh;
+}
+
+/* ==========================================
+   2. HEADERS (Title & Back Button)
+   ========================================== */
+#settings-modal h3, 
+#edit-profile-modal h3 {
+    margin: 0; 
+    font-weight: 900 !important; 
+    font-size: 1.5rem !important; 
+    color: #000000 !important;
+}
+
+#settings-modal i.fa-arrow-left, 
+#edit-profile-modal i.fa-arrow-left {
+    font-size: 1.5rem; 
+    cursor: pointer; 
+    color: #1a1a1a !important;
+    transition: transform 0.2s ease;
+}
+
+#settings-modal i.fa-arrow-left:active, 
+#edit-profile-modal i.fa-arrow-left:active {
+    transform: scale(0.85);
+}
+
+/* ==========================================
+   3. SETTINGS CARDS (Platinum Blue Background)
+   ========================================== */
+#settings-modal .modal-content, 
+#edit-profile-modal .modal-content {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    text-align: left !important;
+    max-height: none !important;
+}
+
+/* Card Container */
+.settings-card-box {
+    background: #f8fafc !important; /* Light Platinum Blue */
+    padding: 20px; 
+    border-radius: 24px; 
+    border: 1px solid #e2e8f0; 
+    margin-bottom: 20px;
+    flex: 1; /* Pushes bottom elements down */
+}
+
+/* Labels */
+.settings-label {
+    font-size: 0.8rem; 
+    color: #64748b; 
+    font-weight: 700; 
+    margin-bottom: 8px;
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================
+   4. INPUT FIELDS (3D Sunken Look)
+   ========================================== */
+#settings-modal input, 
+#edit-profile-modal input,
+#edit-profile-modal textarea {
+    width: 100%; 
+    padding: 15px !important; 
+    background: #ffffff !important; 
+    border: 1.5px solid #cbd5e1 !important; 
+    color: #000000 !important; 
+    border-radius: 16px !important; 
+    outline: none; 
+    font-size: 1rem; 
+    font-weight: 600 !important;
+    margin-bottom: 20px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+    transition: all 0.3s ease;
+}
+
+#settings-modal input:focus, 
+#edit-profile-modal input:focus,
+#edit-profile-modal textarea:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(255, 0, 110, 0.1) !important;
+}
+
+/* Edit Profile Specifics */
+#edit-bio {
+    height: 100px; 
+    resize: none; 
+}
+
+/* ==========================================
+   5. PROFILE PICTURE UPLOAD (Edit Profile)
+   ========================================== */
+.dp-upload-wrapper {
+    text-align: center; 
+    margin-bottom: 30px;
+}
+
+label[for="profile-file-input"] {
+    display: inline-block; 
+    width: 120px; 
+    height: 120px; 
+    border-radius: 50%; 
+    overflow: hidden; 
+    position: relative; 
+    border: 4px solid var(--primary); 
+    cursor: pointer; 
+    box-shadow: 0 10px 25px rgba(255, 0, 110, 0.2);
+    transition: transform 0.2s;
+}
+
+label[for="profile-file-input"]:active {
+    transform: scale(0.95);
+}
+
+.dp-upload-overlay {
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    width: 100%; 
+    background: rgba(0,0,0,0.6); 
+    font-size: 0.7rem; 
+    color: white; 
+    padding: 6px 0; 
+    font-weight: 800; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ==========================================
+   6. ACTION BUTTONS (Save, Logout, Share)
+   ========================================== */
+/* Save Changes / Primary Button */
+#settings-modal .btn-primary, 
+#edit-profile-modal .btn-primary {
+    background: linear-gradient(135deg, #ff006e, #8338ec) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 18px !important;
+    font-weight: 800 !important;
+    font-size: 1.1rem !important;
+    padding: 16px !important;
+    width: 100%;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(255, 0, 110, 0.3) !important;
+    transition: 0.2s;
+}
+
+#settings-modal .btn-primary:active, 
+#edit-profile-modal .btn-primary:active {
+    transform: scale(0.97);
+}
+
+/* Logout Button (Danger Red) */
+button[onclick="triggerLogoutFromSettings()"] {
+    width: 100%; 
+    padding: 16px; 
+    background: #fee2e2 !important; 
+    color: #ef4444 !important; 
+    border-radius: 20px; 
+    font-weight: 800; 
+    font-size: 1rem; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px; 
+    border: none !important;
+    transition: 0.2s;
+}
+button[onclick="triggerLogoutFromSettings()"]:active {
+    transform: scale(0.97);
+    background: #fecaca !important;
+}
+
+/* Share App Button inside Settings */
+#settings-modal button[onclick="shareApp()"] {
+    width: 100%; 
+    padding: 16px; 
+    background: #f1f5f9 !important; 
+    border: 1.5px solid #e2e8f0 !important; 
+    color: #8338ec !important; 
+    border-radius: 20px; 
+    font-weight: 800; 
+    font-size: 1rem; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px;
+    transition: 0.2s;
+}
+#settings-modal button[onclick="shareApp()"]:active {
+    transform: scale(0.97);
+    background: #e2e8f0 !important;
+}

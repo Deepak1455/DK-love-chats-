@@ -1,0 +1,434 @@
+/* ==========================================================================
+   FEED, STORIES & REELS MODULE
+   Premium White 3D Theme (Home) & Dark Theme (Reels)
+   ========================================================================== */
+
+/* ==========================================
+   1. HOME VIEW & BACKGROUND
+   ========================================== */
+#home-view, 
+#single-post-view-modal,
+#single-post-content {
+    background-color: #ffffff !important;
+    background-image: radial-gradient(#d1d5db 1px, transparent 1px) !important;
+    background-size: 20px 20px !important;
+    scroll-behavior: smooth;
+}
+
+/* ==========================================
+   2. STORIES BAR
+   ========================================== */
+.stories-bar {
+    background: #f1f5f9 !important;
+    margin: 15px 12px 5px 12px !important;
+    padding: 15px 10px !important;
+    border-radius: 24px !important;
+    display: flex !important;
+    gap: 15px !important;
+    overflow-x: auto !important;
+    position: relative !important;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
+                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.05) !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+.stories-bar::-webkit-scrollbar { height: 3px !important; }
+.stories-bar::-webkit-scrollbar-thumb { background: rgba(255, 0, 110, 0.2) !important; border-radius: 10px !important; }
+
+.story-item { 
+    display: flex; flex-direction: column; align-items: center; 
+    gap: 8px; min-width: 70px; cursor: pointer; transition: 0.2s; position: relative; 
+}
+.story-item:active { transform: scale(0.95); }
+
+.story-ring { 
+    width: 72px; height: 72px; border-radius: 50%; padding: 3px; position: relative;
+    transition: transform 0.2s; box-shadow: 0 3px 8px rgba(0,0,0,0.1) !important;
+}
+
+.ring-unseen { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important; }
+.ring-seen { background: #d1d5db !important; }
+.ring-none { background: transparent; padding: 0; }
+.ring-none img { border: 3px solid #cbd5e1; }
+
+.story-img { 
+    width: 100%; height: 100%; border-radius: 50%; object-fit: cover; 
+    border: 2px solid #f1f5f9 !important; background: #ffffff; display: block;
+}
+
+.story-name { 
+    color: #1a1a1a !important; font-weight: 800 !important; 
+    font-size: 0.7rem !important; margin-top: 6px !important; 
+    letter-spacing: 0.3px !important; max-width: 70px; 
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; 
+}
+
+.add-story-badge { 
+    position: absolute; bottom: 0; right: 0; 
+    background: #0095f6 !important; width: 22px; height: 22px; border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 0.8rem; border: 2px solid #f1f5f9 !important; z-index: 5; 
+    cursor: pointer; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+}
+
+/* ==========================================
+   3. POST CARDS (3D Board Style)
+   ========================================== */
+.post-card { 
+    background: #f1f5f9 !important; 
+    margin: 25px 15px 40px 15px !important; 
+    border-radius: 28px !important; 
+    padding: 12px !important;
+    position: relative !important;
+    border: 3.5px solid transparent !important;
+    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
+                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12), 0 5px 10px rgba(0, 0, 0, 0.05) !important;
+    transform: translateZ(0);
+    will-change: transform, opacity;
+}
+
+.post-card:active { transform: scale(0.99); }
+
+.post-header { 
+    background: #ffffff !important; 
+    margin-bottom: 12px !important;
+    border-radius: 20px !important;
+    padding: 10px 15px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.user-info { display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; }
+
+.post-header span, .post-header b { 
+    color: #000000 !important; font-weight: 900 !important; font-size: 0.95rem;
+}
+
+.post-time { font-size: 0.75rem !important; color: #64748b !important; display: block; margin-top: 3px; font-weight: 600 !important; }
+
+/* Post DP Rings */
+.user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; transition: 0.2s; }
+.story-border-unseen { padding: 3px; background: linear-gradient(45deg, #ff006e, #ffbe0b); border-radius: 50%; }
+.story-border-seen { padding: 3px; background: #cbd5e1; border-radius: 50%; }
+.story-border-unseen img, .story-border-seen img { border: 2px solid #ffffff; border-radius: 50%; display: block; }
+
+/* Follow Button */
+.feed-follow-btn {
+    background: linear-gradient(135deg, #ffffff, #f1f5f9) !important;
+    color: #007bff !important;     
+    border: 1.5px solid #d1d5db !important;
+    border-radius: 12px !important;
+    padding: 6px 15px !important;
+    font-weight: 900 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.feed-follow-btn.following {
+    background: #f1f5f9 !important; 
+    color: #64748b !important;      
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05) !important; 
+}
+
+/* ==========================================
+   4. POST MEDIA & HEART ANIMATIONS
+   ========================================== */
+.post-media-container {
+    position: relative; width: 100%;
+    background: #e2e8f0 !important;
+    border-radius: 22px !important;
+    padding: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    overflow: hidden;
+}
+
+.smooth-img {
+    width: 100%; max-height: 500px; object-fit: contain; 
+    border-radius: 16px !important; 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important; 
+    opacity: 0; transition: opacity 0.5s ease-out, transform 0.3s;
+    cursor: zoom-in; display: block; background: #f8fafc;
+}
+.smooth-img.loaded { opacity: 1; }
+
+.img-placeholder {
+    background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+    background-size: 200% 100%;
+    animation: premiumShimmer 1.5s infinite linear;
+}
+
+/* Heart Pop Animation */
+.heart-pop { 
+    position: absolute; top: 50%; left: 50%; 
+    transform: translate(-50%, -50%) scale(0); 
+    font-size: 5rem; color: rgba(255, 255, 255, 0.95); 
+    filter: drop-shadow(0 0 20px #ff006e); 
+    pointer-events: none; animation: popHeart 0.8s ease-out; z-index: 10; 
+}
+@keyframes popHeart { 
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 
+    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; } 
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } 
+}
+
+/* ==========================================
+   5. POST ACTIONS & CAPTIONS
+   ========================================== */
+.post-actions { 
+    background: #ffffff !important; 
+    margin: 15px 0 5px 0 !important;
+    padding: 12px !important;
+    border-radius: 22px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center;
+}
+
+.action-btn { font-size: 1.5rem !important; color: #475569 !important; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+.action-btn:active { transform: scale(0.7) rotate(-10deg); }
+.action-btn.liked { color: #ff4757 !important; animation: pop 0.4s; filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.4)); }
+
+[id^="like-count-"], [id^="post-comment-count-"], [id^="post-share-count-"] {
+    color: #1e293b !important; font-weight: 900 !important; font-size: 0.75rem; margin-top: 4px; display: block;
+}
+
+.post-caption { 
+    margin-top: 10px !important;
+    padding: 15px !important;
+    background: #ffffff !important;
+    border-radius: 18px !important;
+    color: #1a1a1a !important;
+    border: 1px solid #e2e8f0 !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem; line-height: 1.5;
+}
+.post-caption b { font-weight: 900; margin-right: 6px; color: #ff006e; }
+
+/* ==========================================
+   6. SKELETON LOADERS
+   ========================================== */
+/* --- SMART SHIMMER LOADER --- */
+.smart-shimmer {
+    background: #2a2a3b;
+    background-image: linear-gradient(
+        90deg, 
+        rgba(255, 255, 255, 0) 0, 
+        rgba(255, 255, 255, 0.05) 20%, 
+        rgba(255, 255, 255, 0.1) 60%, 
+        rgba(255, 255, 255, 0)
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+/* ==========================================
+   7. REELS SECTION (Dark Theme)
+   ========================================== */
+.reels-container {
+    height: 100dvh; width: 100%;
+    overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth;
+    background: #000;
+}
+.reels-container::-webkit-scrollbar { display: none; }
+
+.reel-item {
+    height: 100dvh; width: 100%;
+    scroll-snap-align: start; scroll-snap-stop: always;
+    position: relative; background: #000;
+    display: flex; justify-content: center; align-items: center;
+    will-change: transform; backface-visibility: hidden;
+}
+
+.reel-video { width: 100%; height: 100%; object-fit: cover; background: #111; }
+
+.reel-overlay-ui {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100 !important; pointer-events: none; user-select: none;
+}
+
+.reel-status-icon {
+    font-size: 7rem; 
+    background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 30px rgba(255, 0, 110, 0.8));
+    opacity: 0; transform: scale(0.5); will-change: transform, opacity; position: absolute;
+}
+.status-pop { animation: premiumPopHide 0.6s cubic-bezier(0.2, 1.2, 0.2, 1.2) forwards; }
+@keyframes premiumPopHide { 0% { transform: scale(0.5); opacity: 0; } 40% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+
+.reel-loading-spinner { font-size: 4rem; color: #ff006e; filter: drop-shadow(0 0 15px rgba(255, 0, 110, 0.8)); display: none; position: absolute; }
+.is-loading .reel-loading-spinner { display: block; animation: fadeInSpinner 0.3s ease; }
+
+.reel-actions {
+    position: absolute; bottom: 120px; right: 15px;
+    display: flex; flex-direction: column; gap: 25px; align-items: center; z-index: 10;
+}
+.reel-action-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    color: white; font-size: 2rem; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8));
+    cursor: pointer; transition: 0.2s;
+}
+.reel-action-btn:active { transform: scale(0.8); }
+.reel-action-btn.liked i { color: #ff006e; animation: heartBeat 0.4s; }
+.reel-action-text { font-size: 0.8rem; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+
+.reel-info-gradient {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 300px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); pointer-events: none; z-index: 5;
+}
+
+.reel-info {
+    position: absolute; bottom: 90px; left: 15px; right: 70px;
+    color: white; z-index: 10; text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+}
+.reel-user { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; }
+.reel-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+.reel-user-detail { display: flex; align-items: center; gap: 12px; }
+.reel-user-name { font-weight: 800; font-size: 1.05rem; }
+.reel-follow-btn { font-size: 0.75rem; font-weight: 800; color: #fff; border: 1px solid rgba(255, 255, 255, 0.8); padding: 5px 14px; border-radius: 12px; cursor: pointer; backdrop-filter: blur(5px); }
+.reel-follow-btn.following { background: rgba(255, 255, 255, 0.2); border-color: transparent; }
+.reel-caption { font-size: 0.95rem; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Reel Heart Explosion */
+.big-heart-burst { position: absolute; font-size: 9rem; color: #ff006e; filter: drop-shadow(0 0 40px rgba(255, 0, 110, 0.9)); z-index: 200; pointer-events: none; }
+.flying-mini-heart { position: absolute; pointer-events: none; z-index: 150; will-change: transform, opacity; }
+
+/* ==========================================
+   8. SINGLE POST VIEW MODAL (Overrides)
+   ========================================== */
+#single-post-view-modal { z-index: 5500 !important; }
+#single-post-view-modal .modal-header {
+    background: #ffffff !important; border-bottom: 2px solid #f1f5f9 !important; padding: 15px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important;
+}
+#single-post-view-modal h3, #single-post-view-modal i.fa-arrow-left { color: #000000 !important; font-weight: 900 !important; }
+
+#single-post-content .post-card {
+    margin: 20px 15px 40px 15px !important; 
+    border-radius: 24px !important; 
+    border-bottom: none !important;
+    animation: slideUpUp 0.4s ease-out !important;
+}
+@keyframes slideUpUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Shared Reel Flash Effect */
+.shared-reel-glow { animation: flashReel 2s ease-out; }
+@keyframes flashReel { 0%, 100% { box-shadow: none; } 50% { box-shadow: inset 0 0 100px rgba(0, 255, 204, 0.4); } }
+/* ==========================================================================
+   HOMEPAGE UPDATES: COLLAPSE, ONLINE INDICATOR, QUICK REACTION, CONFETTI
+   ========================================================================== */
+
+/* 1. स्मार्ट कैप्शन कोलाप्स शैली */
+.post-caption {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #1a1a1a !important;
+}
+
+.read-more-btn {
+    color: #0095f6;
+    cursor: pointer;
+    font-weight: 800;
+    margin-left: 5px;
+    display: inline-block;
+    transition: color 0.15s ease;
+}
+
+.read-more-btn:hover {
+    color: #002d52;
+}
+
+/* 2. लाइव ऑनलाइन पल्स इंडिकेटर */
+.online-indicator-pulse {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background-color: #00b894;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    z-index: 10;
+    box-shadow: 0 0 5px rgba(0, 184, 148, 0.4);
+    animation: pulseRingIndicator 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseRingIndicator {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(0, 184, 148, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 184, 148, 0);
+    }
+}
+
+/* 3. क्विक इन-लाइन इमोजी रिएक्शंस बार */
+.quick-reactions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.9);
+    margin: 10px 15px 0 15px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+.reaction-emoji-btn {
+    font-size: 1.35rem;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.reaction-emoji-btn:active {
+    transform: scale(1.4);
+}
+
+/* 4. शेप-शिफ्टिंग हार्ट एनीमेशन (माइक्रो-कॉन्फेटी) */
+.micro-confetti-particle {
+    position: absolute;
+    pointer-events: none;
+    z-index: 99;
+    font-size: 0.95rem;
+    animation: microConfettiFly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes microConfettiFly {
+    0% {
+        transform: translate(-50%, -50%) scale(0.3);
+        opacity: 1;
+    }
+    80% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.2) rotate(45deg);
+        opacity: 0;
+    }
+}
