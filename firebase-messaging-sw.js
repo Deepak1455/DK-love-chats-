@@ -54,3 +54,9 @@ self.addEventListener('notificationclick', (event) => {
         })
     );
 });
+// firebase-messaging-sw.js के सबसे नीचे जोड़ें
+
+// PWA इंस्टॉलेशन की आवश्यकताओं को पूरा करने के लिए फ़ेच इवेंट को सुनना आवश्यक है
+self.addEventListener('fetch', (event) => {
+    // खाली हैंडलर भी ब्राउज़र को संतुष्ट करने के लिए पर्याप्त है
+});
