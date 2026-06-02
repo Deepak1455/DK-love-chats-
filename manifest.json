@@ -1,0 +1,21 @@
+{
+  "short_name": "DK Love Chats",
+  "name": "DK Love Chats - Secure Messaging",
+  "icons": [
+    {
+      "src": "https://i.pravatar.cc/192?u=dklovechats",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://i.pravatar.cc/512?u=dklovechats",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#10002b",
+  "theme_color": "#ff006e",
+  "display": "standalone",
+  "orientation": "portrait"
+}
