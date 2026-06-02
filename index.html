@@ -5,13 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DK Love Chats ❤️ Ultimate</title>
     
+    <!-- 📱 iOS (Apple) और सामान्य PWA सेटिंग्स (Head में स्थानांतरित) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#ff006e">
+
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- External CSS Linked Here -->
+    <!-- 🎨 सभी CSS स्टाइलशीट्स (सुरक्षित रूप से Head में लाई गईं) -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="call.css">
+    <link rel="stylesheet" href="global-nav.css">
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="feed-reels.css">
+    <link rel="stylesheet" href="messagelist.css">
+    <link rel="stylesheet" href="chat.css">
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="story.css">
+    <link rel="stylesheet" href="settings.css">
+    <link rel="stylesheet" href="modals.css">
 </head>
 <body>
 
@@ -1864,83 +1880,19 @@
         <span id="notif-body" style="display: block; font-size: 0.8rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Message description...</span>
     </div>
 </div>
-<!-- ... आपका ऊपर का HTML कोड ... -->
-    <!-- ========================================== -->
-    <!-- 🔥 ALL JAVASCRIPT FILES (IN CORRECT ORDER) -->
-    <!-- ========================================== -->
-
-<!-- ========================================== -->
-    <!--         JS SCRIPTS (MODULE ORDER)          -->
-    <!-- ========================================== -->
-
-<!-- ========================================== -->
-    <!-- 🚀 ALL JAVASCRIPT MODULES LINKING -->
-    <!-- ========================================== -->
-
-<!-- ========================================== -->
-    <!--          JAVASCRIPT MODULES SETUP          -->
-    <!-- ========================================== -->
-
-    <!-- 1. सबसे पहले Main File (Firebase Setup, Global Variables, Auth, Story) -->
-    <!-- (ध्यान दें: अगर आपकी मेन फाइल का नाम main.js है तो यहाँ script.js की जगह main.js लिखें) -->
-    <script type="module" src="script.js"></script>
-
-    <!-- 2. Notifications System (Push & In-App Alerts) - जो हमने अभी अलग की है -->
-    <script type="module" src="Notifications.js"></script>
-
-    <!-- 3. New Post Upload File (Photo/Video Upload Logic) -->
-    <script type="module" src="newpostupload.js"></script>
-
-    <!-- 4. Home Feed File (Posts, Likes, Scroll) -->
-    <script type="module" src="homefeed.js"></script>
-
-    <!-- 5. Reels File (Short Videos Logic) -->
-    <script type="module" src="reels.js"></script>
-
-    <!-- 6. Chats File (Inbox, Private Messaging) -->
-    <script type="module" src="chats.js"></script>
-
-    <!-- 7. Profile File (Edit Profile, User Data) -->
-    <script type="module" src="profile.js"></script>
-
-    <!-- 8. Search System (Global Search & History) -->
-    <script type="module" src="search.js"></script>
-
-       <script type="module" src="share.js"></script>
+<!-- JAVASCRIPT MODULES SETUP -->
+<script type="module" src="script.js"></script>
+<script type="module" src="Notifications.js"></script>
+<script type="module" src="newpostupload.js"></script>
+<script type="module" src="homefeed.js"></script>
+<script type="module" src="reels.js"></script>
+<script type="module" src="chats.js"></script>
+<script type="module" src="profile.js"></script>
+<script type="module" src="search.js"></script>
+<script type="module" src="share.js"></script>
 <script type="module" src="voicenote.js"></script>
-<!-- 9. WebRTC Voice & Video Calling System (नया जोड़ा गया) -->
-    <script type="module" src="call.js"></script>
+<script type="module" src="call.js"></script>
 
-
-
-    
-
-
-
-<!-- 1. Master Settings (Variables & Fonts) -->
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="call.css">
-<!-- 2. Global Layout & Components -->
-<link rel="stylesheet" href="global-nav.css">
-<link rel="stylesheet" href="auth.css">
-
-<!-- 3. Main Views -->
-<link rel="stylesheet" href="feed-reels.css">
-<link rel="stylesheet" href="messagelist.css">
-<link rel="stylesheet" href="chat.css">
-<link rel="stylesheet" href="profile.css">
-<link rel="stylesheet" href="story.css">
-<!-- index.html के <head> के अंदर जोड़ें -->
-<link rel="manifest" href="manifest.json">
-
-<!-- iOS (Apple) डिवाइसेस के लिए अनुकूलता -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#ff006e">
-
-<!-- 4. Modals (Overlays & Popups) -->
-<link rel="stylesheet" href="settings.css">
-<link rel="stylesheet" href="modals.css">
 <!-- CALL SCREEN OVERLAY -->
 <div id="call-screen-overlay" class="call-overlay">
     <!-- Video Grid for Video Calls -->
