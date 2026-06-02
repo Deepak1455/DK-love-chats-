@@ -1,7 +1,11 @@
 // server.js
 const admin = require('firebase-admin');
+const express = require('express'); // 🌟 नया: सर्वर लाइव रखने के लिए एक्सप्रेस
 
-// 1. डाउनलोड की गई serviceAccountKey.json फ़ाइल को इम्पोर्ट करें
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// डाउनलोड की गई serviceAccountKey.json फ़ाइल को इम्पोर्ट करें
 const serviceAccount = require('./serviceAccountKey.json');
 
 admin.initializeApp({
@@ -11,30 +15,34 @@ admin.initializeApp({
 const db = admin.firestore();
 const messaging = admin.messaging();
 
-console.log("DK Love Chats - Notification Server Started...");
+// 🌟 नया: रेंडर या क्लाउड पर पोर्ट बाइंडिंग क्रैश से बचाने के लिए छोटा सर्वर
+app.get('/', (req, res) => {
+  res.send('DK Love Chats - Notification Server is Running Active!');
+});
 
-// 2. सभी चैट रूम्स के मैसेजेस पर रीयल-टाइम नज़र रखें
-// (यह Firestore Collection Group query का उपयोग करता है ताकि सभी 'messages' सब-कलेक्शन्स को एक साथ सुना जा सके)
+app.listen(PORT, () => {
+  console.log(`Notification Server listening on port ${PORT}`);
+});
+
+console.log("DK Love Chats - Firestore Listener Active...");
+
+// सभी चैट रूम्स के मैसेजेस पर रीयल-टाइम नज़र रखें
 db.collectionGroup('messages').onSnapshot(async (snapshot) => {
   snapshot.docChanges().forEach(async (change) => {
-    // केवल नए जोड़े गए (added) मैसेजेस पर एक्शन लें
     if (change.type === 'added') {
       const messageData = change.data();
       
-      // यदि मैसेज अभी-अभी भेजा गया है और उसे प्रोसेस नहीं किया गया है
       if (messageData && !messageData.notificationSent) {
         const messageId = change.doc.id;
-        const parentDocPath = change.doc.ref.path; // e.g., chats/room_id/messages/msg_id
+        const parentDocPath = change.doc.ref.path;
 
         const senderId = messageData.senderId;
         const receiverId = messageData.receiverId;
         const messageText = messageData.text || "Sent an attachment";
 
-        // खुद को भेजे गए मैसेजेस पर नोटिफिकेशन न भेजें
         if (senderId === receiverId) return;
 
         try {
-          // सेंडर और रिसीवर दोनों की जानकारी निकालें
           const [senderSnap, receiverSnap] = await Promise.all([
             db.collection('users').doc(senderId).get(),
             db.collection('users').doc(receiverId).get()
@@ -44,7 +52,6 @@ db.collectionGroup('messages').onSnapshot(async (snapshot) => {
           const receiverData = receiverSnap.data();
           const fcmToken = receiverData.fcmToken;
 
-          // यदि रिसीवर के पास एक्टिव टोकन (fcmToken) है, तभी नोटिफिकेशन भेजें
           if (fcmToken) {
             let senderName = "Someone";
             let senderPhoto = "https://i.pravatar.cc/150";
@@ -55,7 +62,6 @@ db.collectionGroup('messages').onSnapshot(async (snapshot) => {
               senderPhoto = senderData.avatarBase64 || senderData.photoURL || senderPhoto;
             }
 
-            // पेलोड तैयार करें
             const payload = {
               notification: {
                 title: senderName,
@@ -64,17 +70,16 @@ db.collectionGroup('messages').onSnapshot(async (snapshot) => {
               data: {
                 senderId: senderId,
                 senderPhoto: senderPhoto,
-                click_action: `https://my-chat-e4ea8.firebaseapp.com/?openChat=${senderId}` // ऐप खोलने का यूआरएल
+                // 🌟 आपका असली लाइव यूआरएल यहाँ सेट कर दिया गया है
+                click_action: `https://deepak1455.github.io/DK-love-chats-/?openChat=${senderId}`
               },
               token: fcmToken
             };
 
-            // FCM के ज़रिए नोटिफिकेशन भेजें
             const response = await messaging.send(payload);
             console.log(`Notification sent to ${receiverData.name}:`, response);
           }
 
-          // दोबारा नोटिफिकेशन भेजने से बचने के लिए इस मैसेज को 'processed' मार्क कर दें
           await db.doc(parentDocPath).update({ notificationSent: true });
 
         } catch (error) {
