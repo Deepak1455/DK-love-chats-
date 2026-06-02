@@ -319,6 +319,65 @@ window.addEventListener('popstate', (event) => {
 
     if (typeof window.toggleSharedReturnButton === 'function') window.toggleSharedReturnButton(false);
     
+// ==========================================
+// --- 📱 PWA SMART INSTALLATION SYSTEM (UPDATED) ---
+// ==========================================
+let deferredPrompt;
+
+// 1. जब ब्राउज़र इंस्टॉलेशन के लिए तैयार हो
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    console.log("PWA install prompt is ready to be shown.");
+    
+    // होम फीड पर बने 3D इंस्टॉल कार्ड बोर्ड को स्क्रीन पर दिखाएं
+    const installCard = document.getElementById('pwa-install-card');
+    if (installCard) {
+        installCard.classList.remove('hidden'); // कार्ड को 'unhide' करें
+    }
+});
+
+// 2. जब यूजर 'Install' बटन पर क्लिक करे
+window.triggerAppInstallation = async () => {
+    if (!deferredPrompt) {
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert("Info", "This app is already installed or your browser doesn't support installation.", "success");
+        }
+        return;
+    }
+    
+    // इंस्टॉलेशन पॉप-अप दिखाएं
+    deferredPrompt.prompt();
+    
+    // यूजर का फैसला जानें
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User choice: ${outcome}`);
+    
+    // सहेजे गए प्रॉम्प्ट को रीसेट करें
+    deferredPrompt = null;
+    
+    // इंस्टॉल करने के बाद कार्ड बोर्ड को स्क्रीन से छुपा दें
+    const installCard = document.getElementById('pwa-install-card');
+    if (installCard) {
+        installCard.classList.add('hidden');
+    }
+};
+
+// 3. ऐप सफलतापूर्वक इंस्टॉल होने के बाद का इवेंट
+window.addEventListener('appinstalled', (evt) => {
+    console.log('App was successfully installed.');
+    
+    // सुनिश्चित करें कि कार्ड बोर्ड अब पूरी तरह से गायब हो चुका है
+    const installCard = document.getElementById('pwa-install-card');
+    if (installCard) {
+        installCard.classList.add('hidden');
+    }
+    
+    if (typeof showCustomAlert === 'function') {
+        showCustomAlert("Success", "DK Love Chats installed on your Home Screen!", "success");
+    }
+});
 const activeModals = [
         { id: 'media-viewer-modal', class: 'active', close: () => window.closeFullScreenMedia() },
         { id: 'notif-full-modal', class: 'hidden', isHidden: true, close: () => window.toggleNotifFullModal(false) }, 
