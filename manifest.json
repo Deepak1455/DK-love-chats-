@@ -1,14 +1,15 @@
 {
-  "short_name": "DK Love Chats",
-  "name": "DK Love Chats - Secure Messaging",
+  "short_name": "DK Chats",
+  "name": "DK Love Chats - Secure Messaging App",
+  "description": "A secure, fast, and real-time private messaging and video calling application.",
   "icons": [
     {
-      "src": "https://i.pravatar.cc/192?u=dklovechats",
+      "src": "logo.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "https://i.pravatar.cc/512?u=dklovechats",
+      "src": "logo.png",
       "type": "image/png",
       "sizes": "512x512"
     }
@@ -17,5 +18,6 @@
   "background_color": "#10002b",
   "theme_color": "#ff006e",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "categories": ["social", "messenger"]
 }
