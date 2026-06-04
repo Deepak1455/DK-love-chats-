@@ -1973,5 +1973,66 @@
         </button>
     </div>
 </div>
+
+<!-- index.html के सबसे नीचे </body> टैग के ठीक ऊपर जोड़ें -->
+
+<script>
+    // 🌟 ULTIMATE NON-CRASHING PWA GLOBAL BINDING
+    var deferredPrompt;
+
+    // 1. जब ब्राउज़र इंस्टॉलेशन के लिए तैयार हो
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        console.log("PWA install prompt is ready (Inline Listener).");
+        
+        var installCard = document.getElementById('pwa-install-card');
+        if (installCard) {
+            installCard.classList.remove('hidden');
+        }
+    });
+
+    // 2. 100% गारंटीड ग्लोबल फंक्शन (बिना किसी मॉड्यूल निर्भरता के)
+    window.triggerAppInstallation = async function() {
+        console.log("Global triggerAppInstallation invoked.");
+        
+        if (!deferredPrompt) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert("Info", "This app is already installed or your browser doesn't support installation.", "success");
+            } else {
+                alert("App is already installed or not supported for installation on this browser.");
+            }
+            return;
+        }
+        
+        try {
+            deferredPrompt.prompt();
+            var choice = await deferredPrompt.userChoice;
+            console.log("User choice outcome: " + choice.outcome);
+            
+            deferredPrompt = null;
+            
+            var installCard = document.getElementById('pwa-install-card');
+            if (installCard) {
+                installCard.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error("Installation prompt execution failed:", error);
+        }
+    };
+
+    // 3. इंस्टॉल होने के बाद
+    window.addEventListener('appinstalled', function(evt) {
+        console.log('App was successfully installed.');
+        var installCard = document.getElementById('pwa-install-card');
+        if (installCard) {
+            installCard.classList.add('hidden');
+        }
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert("Success", "DK Love Chats installed on your Home Screen!", "success");
+        }
+    });
+</script>
+
 </body>
 </html>
