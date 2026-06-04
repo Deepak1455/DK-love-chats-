@@ -320,7 +320,7 @@ window.addEventListener('popstate', (event) => {
     if (typeof window.toggleSharedReturnButton === 'function') window.toggleSharedReturnButton(false);
     
 // ==========================================
-// --- 📱 PWA SMART INSTALLATION SYSTEM (UPDATED) ---
+// --- 📱 PWA SMART INSTALLATION SYSTEM (FULLY OPTIMIZED) ---
 // ==========================================
 let deferredPrompt;
 
@@ -338,35 +338,43 @@ window.addEventListener('beforeinstallprompt', (e) => {
     }
 });
 
-// 2. जब यूजर 'Install' बटन पर क्लिक करे
-window.triggerAppInstallation = async () => {
+// 2. जब यूजर 'Install' बटन पर क्लिक करे (Bug Fixed: Direct Global Binding)
+window.triggerAppInstallation = async function() {
+    console.log("window.triggerAppInstallation function executed.");
+    
     if (!deferredPrompt) {
         if (typeof showCustomAlert === 'function') {
             showCustomAlert("Info", "This app is already installed or your browser doesn't support installation.", "success");
+        } else {
+            alert("App is already installed or installation is not supported on this browser.");
         }
         return;
     }
     
-    // इंस्टॉलेशन पॉप-अप दिखाएं
-    deferredPrompt.prompt();
-    
-    // यूजर का फैसला जानें
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User choice: ${outcome}`);
-    
-    // सहेजे गए प्रॉम्प्ट को रीसेट करें
-    deferredPrompt = null;
-    
-    // इंस्टॉल करने के बाद कार्ड बोर्ड को स्क्रीन से छुपा दें
-    const installCard = document.getElementById('pwa-install-card');
-    if (installCard) {
-        installCard.classList.add('hidden');
+    try {
+        // इंस्टॉलेशन पॉप-अप दिखाएं
+        deferredPrompt.prompt();
+        
+        // यूजर का फैसला जानें
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to install: ${outcome}`);
+        
+        // सहेजे गए प्रॉम्प्ट को रीसेट करें
+        deferredPrompt = null;
+        
+        // इंस्टॉल करने के बाद कार्ड बोर्ड को स्क्रीन से छुपा दें
+        const installCard = document.getElementById('pwa-install-card');
+        if (installCard) {
+            installCard.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error("Installation prompt execution failed:", error);
     }
 };
 
 // 3. ऐप सफलतापूर्वक इंस्टॉल होने के बाद का इवेंट
 window.addEventListener('appinstalled', (evt) => {
-    console.log('App was successfully installed.');
+    console.log('App was successfully installed on device.');
     
     // सुनिश्चित करें कि कार्ड बोर्ड अब पूरी तरह से गायब हो चुका है
     const installCard = document.getElementById('pwa-install-card');
