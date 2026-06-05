@@ -1,6 +1,4 @@
-// firebase-messaging-sw.js
-
-// Compat वर्शन का उपयोग ब्राउज़र बैकग्राउंड स्क्रिप्ट्स में सबसे स्थिर रहता है
+// firebase-messaging-sw.js (SMART STACKING RE-COMPILE)
 importScripts('https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.13.1/firebase-messaging-compat.js');
 
@@ -18,15 +16,19 @@ firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
-// जब ऐप बंद हो या बैकग्राउंड में हो, तब नोटिफिकेशन को यहाँ से हैंडल किया जाएगा
 messaging.onBackgroundMessage((payload) => {
     console.log('Background message received: ', payload);
 
     const notificationTitle = payload.notification ? payload.notification.title : 'New Message';
     const notificationOptions = {
-        body: payload.notification ? payload.notification.body : 'You have a new message.',
-        icon: payload.data && payload.data.senderPhoto ? payload.data.senderPhoto : 'https://i.pravatar.cc/150',
-        badge: 'https://i.pravatar.cc/150',
+        body: payload.notification ? payload.notification.body : 'You have received a new message.',
+        icon: payload.data && payload.data.senderPhoto ? payload.data.senderPhoto : 'https://deepak1455.github.io/DK-love-chats-/logo.png',
+        badge: 'https://deepak1455.github.io/DK-love-chats-/logo.png',
+        
+        // 🌟 स्मार्ट स्टैकिंग सुधार: यदि पेलोड में संदेश आईडी है, तो उसे 'tag' के रूप में सेट करें
+        // इससे हर नया मैसेज पुराने मैसेज को मिटाए बिना अलग कार्ड के रूप में स्क्रीन पर सजेगा।
+        tag: payload.data && payload.data.messageId ? payload.data.messageId : Date.now().toString(),
+        
         data: {
             click_action: payload.data && payload.data.click_action ? payload.data.click_action : '/'
         }
@@ -35,7 +37,6 @@ messaging.onBackgroundMessage((payload) => {
     return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// नोटिफिकेशन पर क्लिक होने पर ऐप को ओपन करने की प्रक्रिया
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const targetUrl = event.notification.data.click_action;
@@ -54,9 +55,7 @@ self.addEventListener('notificationclick', (event) => {
         })
     );
 });
-// firebase-messaging-sw.js के सबसे नीचे जोड़ें
 
-// PWA इंस्टॉलेशन की आवश्यकताओं को पूरा करने के लिए फ़ेच इवेंट को सुनना आवश्यक है
 self.addEventListener('fetch', (event) => {
-    // खाली हैंडलर भी ब्राउज़र को संतुष्ट करने के लिए पर्याप्त है
+    // खाली फेच इवेंट PWA आवश्यकताओं को पूरा करने के लिए
 });
