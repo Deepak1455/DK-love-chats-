@@ -234,6 +234,57 @@ window.checkAndRedirectPendingDeepLinks = async () => {
         }
     }
 };
+// ... (script.js का पहले से मौजूद कोड) ...
+
+// ==========================================
+// --- 🌟 PWA DEEP LINK ROUTING SYSTEM ---
+// ==========================================
+function handleDeepLinking() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const openChatUserId = urlParams.get('openChat');
+    const viewPostId = urlParams.get('post');
+    const viewReelId = urlParams.get('reel');
+
+    // 1. यदि चैट नोटिफिकेशन पर क्लिक किया गया हो
+    if (openChatUserId) {
+        console.log("Routing to Chat with User:", openChatUserId);
+        
+        if (typeof window.switchTab === 'function') {
+            window.switchTab('chat');
+        }
+        
+        if (typeof window.openChat === 'function') {
+            window.openChat(openChatUserId);
+        } else if (typeof window.startChatWith === 'function') {
+            window.startChatWith(openChatUserId);
+        }
+    } 
+    // 2. यदि किसी पोस्ट के नोटिफिकेशन पर क्लिक किया गया हो
+    else if (viewPostId) {
+        console.log("Routing to Single Post View:", viewPostId);
+        
+        if (typeof window.openSinglePostView === 'function') {
+            window.openSinglePostView(viewPostId);
+        }
+    } 
+    // 3. यदि किसी रील या स्टोरी के नोटिफिकेशन पर क्लिक किया गया हो
+    else if (viewReelId) {
+        console.log("Routing to Reels View for Reel:", viewReelId);
+        
+        if (typeof window.switchTab === 'function') {
+            window.switchTab('reels');
+            // यहाँ रील लोड करने या स्क्रॉल करने का कोड आ सकता है
+        }
+    }
+}
+
+// ऐप लोड होने पर और ब्राउज़र का इतिहास बदलने (URL Parameter बदलाव) पर इसे ट्रिगर करें
+window.addEventListener('DOMContentLoaded', () => {
+    // 1.2 सेकंड का डिले दिया गया है ताकि फायरबेस से डेटा और फ्रेंड्स लिस्ट बैकग्राउंड में लोड हो सके
+    setTimeout(handleDeepLinking, 1200); 
+});
+
+window.addEventListener('popstate', handleDeepLinking);
 
 function updateWindowUsersCache(usersArray) {
     allCachedUsers = usersArray;
