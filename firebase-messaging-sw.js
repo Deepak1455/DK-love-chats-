@@ -1,4 +1,4 @@
-// firebase-messaging-sw.js (SMART STACKING RE-COMPILE)
+// firebase-messaging-sw.js (SMART STACKING & NO-OVERWRITE UPDATE)
 importScripts('https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.13.1/firebase-messaging-compat.js');
 
@@ -25,8 +25,7 @@ messaging.onBackgroundMessage((payload) => {
         icon: payload.data && payload.data.senderPhoto ? payload.data.senderPhoto : 'https://deepak1455.github.io/DK-love-chats-/logo.png',
         badge: 'https://deepak1455.github.io/DK-love-chats-/logo.png',
         
-        // 🌟 स्मार्ट स्टैकिंग सुधार: यदि पेलोड में संदेश आईडी है, तो उसे 'tag' के रूप में सेट करें
-        // इससे हर नया मैसेज पुराने मैसेज को मिटाए बिना अलग कार्ड के रूप में स्क्रीन पर सजेगा।
+        // 🌟 स्मार्ट नो-ओवरराइट फिक्स: हर मैसेज को अलग नोटिफिकेशन कार्ड के रूप में दिखाने के लिए यूनिक टैग सेट करें
         tag: payload.data && payload.data.messageId ? payload.data.messageId : Date.now().toString(),
         
         data: {
