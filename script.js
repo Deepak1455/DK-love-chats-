@@ -1882,25 +1882,65 @@ window.deleteCurrentStory = () => {
     }
 };
 
+// स्टोरी लाइक के लिए त्वरित स्पैम-क्लिक प्रोटेक्शन लॉक
+window.storyLikeLock = window.storyLikeLock || new Set();
+
 window.toggleStoryLike = async () => {
-    const story = activeStoryQueue[currentStoryIdx]; if(!story) return;
+    const story = activeStoryQueue[currentStoryIdx]; 
+    if(!story) return;
+
+    // 🛡️ 1. स्पैम लॉक: यदि लाइक प्रक्रिया चल रही है, तो अन्य क्लिक रोकें
+    if (window.storyLikeLock.has(story.id)) return;
+    window.storyLikeLock.add(story.id);
+
     const likeBtn = document.getElementById('story-like-btn');
     const isLiked = likeBtn.classList.contains('liked');
-    
-    if(isLiked) {
-        likeBtn.classList.remove('liked', 'fa-solid'); likeBtn.classList.add('fa-regular');
-        await updateDoc(doc(db, "stories", story.id), { likes: arrayRemove(currentUser.uid) });
+
+    // 📱 2. सूक्ष्म वाइब्रेशन फ़ीडबैक (Premium Feel)
+    if (navigator.vibrate) navigator.vibrate(25);
+
+    // ⚡ 3. Optimistic UI Update (बिना इंतज़ार किए तुरंत बदलाव दिखाना)
+    if (isLiked) {
+        likeBtn.classList.remove('liked', 'fa-solid'); 
+        likeBtn.classList.add('fa-regular');
     } else {
-        likeBtn.classList.add('liked', 'fa-solid'); likeBtn.classList.remove('fa-regular');
-        playSendSound(); if(typeof showFloatingHearts === 'function') showFloatingHearts();
-        await updateDoc(doc(db, "stories", story.id), { likes: arrayUnion(currentUser.uid) });
+        likeBtn.classList.add('liked', 'fa-solid'); 
+        likeBtn.classList.remove('fa-regular');
         
-        // ⚡ यहाँ स्टोरी लाइक नोटिफिकेशन का ट्रिगर जोड़ा गया है
-        if(typeof window.sendNotification === 'function') {
-            await window.sendNotification(story.userId, 'like_story', 'liked your story', story.id);
-        }
+        // ऑडियो साउंड और उड़ने वाले दिलों का इफ़ेक्ट
+        if (typeof playSendSound === 'function') playSendSound(); 
+        if (typeof showFloatingHearts === 'function') showFloatingHearts();
     }
-}
+
+    const storyRef = window.doc(window.db, "stories", story.id);
+
+    try {
+        if (isLiked) {
+            await window.updateDoc(storyRef, { likes: window.arrayRemove(window.currentUser.uid) });
+        } else {
+            await window.updateDoc(storyRef, { likes: window.arrayUnion(window.currentUser.uid) });
+            
+            // 🌟 4. खुद की स्टोरी होने पर नोटिफिकेशन ट्रिगर न करें, दूसरों की होने पर ही भेजें
+            if (story.userId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
+                await window.sendNotification(story.userId, 'like_story', 'liked your story', story.id);
+            }
+        }
+    } catch(e) {
+        console.error("Story Like Update Error, rolling back UI:", e);
+        
+        // 🔄 5. नेटवर्क कनेक्टिविटी टूटने पर UI रीस्टोर (Rollback Mechanism)
+        if (isLiked) {
+            likeBtn.classList.add('liked', 'fa-solid'); 
+            likeBtn.classList.remove('fa-regular');
+        } else {
+            likeBtn.classList.remove('liked', 'fa-solid'); 
+            likeBtn.classList.add('fa-regular');
+        }
+    } finally {
+        // प्रक्रिया समाप्त होने के बाद ताला खोलें
+        window.storyLikeLock.delete(story.id);
+    }
+};
 // ==========================================
 // --- STORY ANIMATION (FLOATING HEARTS) ---
 // ==========================================
@@ -2485,56 +2525,83 @@ window.openComments = (pid) => {
     ); 
 };
 
-window.handleLikeComment = async (commentId, isLiked, commentOwnerId, commentText) => {
-    if (navigator.vibrate) navigator.vibrate(20); // हल्का हैप्टिक वाइब्रेशन
+// कमेंट्स लाइक के लिए त्वरित स्पैम-क्लिक प्रोटेक्शन लॉक
+window.commentLikeLock = window.commentLikeLock || new Set();
 
-    const commentRef = doc(db, "posts", activeCommentPostId, "comments", commentId);
+window.handleLikeComment = async (commentId, isLiked, commentOwnerId, commentText) => {
+    // 🛡️ 1. सुरक्षा लॉक: यदि लाइक प्रक्रिया चल रही है, तो अन्य क्लिक रोकें
+    if (window.commentLikeLock.has(commentId)) return;
+    window.commentLikeLock.add(commentId);
+
+    // 📱 2. हल्का हैप्टिक वाइब्रेशन फ़ीडबैक
+    if (navigator.vibrate) navigator.vibrate(25);
+
+    const commentRef = window.doc(window.db, "posts", activeCommentPostId, "comments", commentId);
+    
     try {
         if (isLiked) {
-            await updateDoc(commentRef, { likes: arrayRemove(currentUser.uid) });
+            await window.updateDoc(commentRef, { likes: window.arrayRemove(window.currentUser.uid) });
         } else {
-            await updateDoc(commentRef, { likes: arrayUnion(currentUser.uid) });
-            // पेलोड के रूप में रील आईडी (activeCommentPostId) भेजी जाती है [2]
-            if (typeof window.sendNotification === 'function') {
-                await window.sendNotification(commentOwnerId, 'like_comment', commentText, activeCommentPostId);
+            await window.updateDoc(commentRef, { likes: window.arrayUnion(window.currentUser.uid) });
+            
+            // 🌟 3. खुद के कमेंट पर पुश न भेजना + बैकएंड के लिए स्पष्ट टेक्स्ट मैपिंग
+            if (commentOwnerId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
+                // 'liked your comment' टेक्स्ट को यहाँ जोड़ दिया गया है ताकि बैकएंड इसे सही ढंग से पार्स कर सके
+                await window.sendNotification(
+                    commentOwnerId, 
+                    'like_comment', 
+                    `liked your comment: "${commentText}"`, 
+                    activeCommentPostId
+                );
             }
         }
     } catch (e) {
-        console.error("Comment like error:", e);
+        console.error("Comment like database error:", e);
+    } finally {
+        // प्रक्रिया समाप्त होने के बाद ताला खोलें
+        window.commentLikeLock.delete(commentId);
     }
 };
+
+// त्वरित लगातार सबमिशन को रोकने के लिए सेंडिंग स्टेट
+window.isCommentSending = window.isCommentSending || false;
 
 window.handleSendComment = async () => { 
     const inputEl = document.getElementById('comment-input');
     if (!inputEl) return;
     
     const t = inputEl.value.trim(); 
-    if (!t || !activeCommentPostId) return;
+    // 🛡️ 1. सुरक्षा लॉक: यदि पहले से कोई कमेंट सेंड हो रहा है या खाली है, तो रोकें
+    if (!t || !activeCommentPostId || window.isCommentSending) return;
 
-    inputEl.value = ""; // तुरंत इनपुट खाली करें (Fast Optimistic UI)
+    window.isCommentSending = true;
+    inputEl.value = ""; // तुरंत इनपुट खाली करें (Optimistic UI)
     
     try {
-        let myPhoto = currentUserData?.avatarBase64 || currentUser?.photoURL;
+        let myPhoto = window.currentUserData?.avatarBase64 || window.currentUser?.photoURL;
         
-        await addDoc(collection(db, "posts", activeCommentPostId, "comments"), {
+        await window.addDoc(window.collection(window.db, "posts", activeCommentPostId, "comments"), {
             text: t, 
-            userName: currentUser.displayName, 
-            userPhoto: myPhoto, 
-            userId: currentUser.uid, 
-            timestamp: serverTimestamp(), 
+            userName: window.currentUser.displayName || "User", 
+            userPhoto: myPhoto || "https://i.pravatar.cc/150", 
+            userId: window.currentUser.uid, 
+            timestamp: window.serverTimestamp(), 
             likes: []
         }); 
 
-        const pRef = doc(db, "posts", activeCommentPostId);
-        const pSnap = await getDoc(pRef);
+        const pRef = window.doc(window.db, "posts", activeCommentPostId);
+        const pSnap = await window.getDoc(pRef);
         
         if (pSnap.exists()) {
             const pData = pSnap.data();
             const newCount = (pData.commentCount || 0) + 1;
             
-            await updateDoc(pRef, { commentCount: newCount });
+            await window.updateDoc(pRef, { commentCount: newCount });
             
-            // थंबनेल यूआरएल काउंटर को सभी संबंधित एलिमेंट्स पर तुरंत अपडेट करना
+            // 📱 2. सफल सबमिशन पर हल्का हैप्टिक वाइब्रेशन
+            if (navigator.vibrate) navigator.vibrate(25);
+
+            // थंबनेल काउंटर को तुरंत अपडेट करना
             const reelCommentSpan = document.getElementById(`reel-comment-count-${activeCommentPostId}`);
             if (reelCommentSpan) reelCommentSpan.innerText = newCount;
             
@@ -2542,13 +2609,28 @@ window.handleSendComment = async () => {
                 span.innerText = newCount; 
             });
 
-            // नोटिफिकेशन ट्रिगर करना
-            if (pData.userId !== currentUser.uid && typeof window.sendNotification === 'function') {
-                await window.sendNotification(pData.userId, 'comment', t, activeCommentPostId); 
+            // 🌟 3. पुश नोटिफिकेशन ट्रिगर (संरचित टेक्स्ट के साथ ताकि बैकएंड इसे सही से पार्स कर सके)
+            if (pData.userId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
+                await window.sendNotification(
+                    pData.userId, 
+                    'comment', 
+                    `commented on your post: "${t}"`, 
+                    activeCommentPostId
+                ); 
             }
         }
     } catch (e) { 
         console.error("Error sending comment:", e); 
+        
+        // 🔄 4. टेक्स्ट लॉस प्रोटेक्शन (Text Loss Protection on Fail):
+        // यदि इंटरनेट जाने के कारण कमेंट सेंड नहीं होता, तो टाइप किया हुआ टेक्स्ट इनपुट बॉक्स में वापस आ जाएगा, ताकि यूज़र की मेहनत बेकार न हो।
+        inputEl.value = t; 
+        
+        if (typeof window.showToast === 'function') {
+            window.showToast("Failed to send", "Your comment was draft-restored. Try again.", "", "error");
+        }
+    } finally {
+        window.isCommentSending = false;
     }
 };
 // ==========================================
