@@ -471,73 +471,30 @@ window.showHeartAnimation = (container, pid, ownerId, postMediaUrl = "") => {
     window.handleLike(pid, ownerId, btn, postMediaUrl);
 };
 
-// होम पोस्ट लाइक के लिए ग्लोबल लॉक सेट (त्वरित लगातार क्लिक रोकने हेतु)
-window.postLikeLock = window.postLikeLock || new Set();
-
 window.handleLike = async (pid, ownerId, btnElement, postMediaUrl = "") => { 
-    // 🛡️ 1. स्पैम प्रोटेक्शन: एक बार में केवल एक ही लाइक रिक्वेस्ट प्रोसेस होगी
-    if (window.postLikeLock.has(pid)) return;
-    window.postLikeLock.add(pid);
-
     const isCurrentlyLiked = btnElement.classList.contains('liked');
     const likeCountSpan = document.getElementById(`like-count-${pid}`);
     
-    // मूल गणना सहेजें (त्रुटि होने पर वापस अपनी स्थिति में आने के लिए)
-    const originalCount = likeCountSpan ? (parseInt(likeCountSpan.innerText) || 0) : 0;
-
-    // 📱 2. हैप्टिक वाइब्रेशन फ़ीडबैक
-    if (navigator.vibrate) navigator.vibrate(25);
-
-    // ⚡ 3. Optimistic UI Update (तत्काल फ़ीडबैक)
-    if (isCurrentlyLiked) {
-        btnElement.classList.remove('liked'); 
-        btnElement.classList.replace('fa-solid', 'fa-regular');
-        if (likeCountSpan) likeCountSpan.innerText = Math.max(0, originalCount - 1);
+    if(isCurrentlyLiked) {
+        btnElement.classList.remove('liked'); btnElement.classList.replace('fa-solid', 'fa-regular');
+        if(likeCountSpan) likeCountSpan.innerText = Math.max(0, parseInt(likeCountSpan.innerText) - 1);
     } else {
-        btnElement.classList.add('liked'); 
-        btnElement.classList.replace('fa-regular', 'fa-solid');
-        if (likeCountSpan) likeCountSpan.innerText = originalCount + 1;
+        btnElement.classList.add('liked'); btnElement.classList.replace('fa-regular', 'fa-solid');
+        if(likeCountSpan) likeCountSpan.innerText = parseInt(likeCountSpan.innerText) + 1;
         
-        // विज़ुअल कॉन्फेटी प्रभाव
-        if (typeof window.triggerMicroConfetti === 'function') {
-            window.triggerMicroConfetti(btnElement);
-        }
+        window.triggerMicroConfetti(btnElement);
     }
 
     const postRef = window.doc(window.db, "posts", pid);
-    
     try {
-        if (isCurrentlyLiked) {
-            await window.updateDoc(postRef, { likes: window.arrayRemove(window.currentUser.uid) });
-        } else {
+        if(isCurrentlyLiked) await window.updateDoc(postRef, { likes: window.arrayRemove(window.currentUser.uid) });
+        else {
             await window.updateDoc(postRef, { likes: window.arrayUnion(window.currentUser.uid) });
-            
-            // 🌟 4. सुरक्षित पुश नोटिफिकेशन डेटाबेस ट्रिगर (receiverId सहित)
-            if (ownerId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
+            if(ownerId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
                 await window.sendNotification(ownerId, 'like', 'liked your post', pid, postMediaUrl);
             }
         }
-    } catch(e) {
-        console.error("Post Like Error, rolling back UI changes:", e);
-        
-        // 🔄 5. रोलबैक मैकेनिज्म (नेटवर्क फेलियर पर UI रिस्टोर करें)
-        if (isCurrentlyLiked) {
-            btnElement.classList.add('liked');
-            btnElement.classList.replace('fa-regular', 'fa-solid');
-            if (likeCountSpan) likeCountSpan.innerText = originalCount;
-        } else {
-            btnElement.classList.remove('liked');
-            btnElement.classList.replace('fa-solid', 'fa-regular');
-            if (likeCountSpan) likeCountSpan.innerText = originalCount;
-        }
-        
-        if (typeof window.showToast === 'function') {
-            window.showToast("Connection Error", "Could not save like. Please try again.", "", "error");
-        }
-    } finally {
-        // प्रोसेस खत्म होने पर लॉक को साफ़ करें
-        window.postLikeLock.delete(pid);
-    }
+    } catch(e) {}
 };
 window.deletePost = (postId) => {
     if(typeof window.showDynamicConfirm === 'function') {
