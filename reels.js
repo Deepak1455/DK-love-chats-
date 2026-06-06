@@ -332,43 +332,85 @@ function preloadNeighborReels(currentReel) {
 /**
  * रील को लाइक / अनलाइक करने का लॉजिक (Database Update)
  */
+// त्वरित लगातार क्लिक को रोकने के लिए ग्लोबल लॉक सेट
+window.reelLikeLock = window.reelLikeLock || new Set();
+
 window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
+    // 🛡️ 1. सुरक्षा लॉक: यदि इस रील पर पहले से ही लाइक की रिक्वेस्ट प्रोसेस हो रही है, तो क्लिक रोकें
+    if (window.reelLikeLock.has(pid)) return;
+    window.reelLikeLock.add(pid);
+
     const isCurrentlyLiked = btnElement.classList.contains('liked');
     const textSpan = btnElement.querySelector('.reel-action-text');
     const icon = btnElement.querySelector('i');
     
+    // वर्तमान स्थिति को सहेजें (नेटवर्क फेल होने पर रोलबैक करने के लिए)
+    const originalCount = parseInt(textSpan.innerText) || 0;
+
+    // 📱 2. हैप्टिक वाइब्रेशन फ़ीडबैक (Premium Native Feel)
+    if (navigator.vibrate) navigator.vibrate(25);
+
+    // ⚡ 3. Optimistic UI Update (बिना सर्वर रिस्पॉन्स का इंतजार किए तुरंत रिस्पॉन्स)
     if (isCurrentlyLiked) {
         btnElement.classList.remove('liked'); 
-        icon.classList.replace('fa-solid', 'fa-regular'); 
-        textSpan.innerText = Math.max(0, parseInt(textSpan.innerText) - 1);
+        icon.className = 'fa-regular fa-heart'; 
+        textSpan.innerText = Math.max(0, originalCount - 1);
     } else {
         btnElement.classList.add('liked'); 
-        icon.classList.replace('fa-regular', 'fa-solid'); 
-        textSpan.innerText = parseInt(textSpan.innerText) + 1;
-        if(typeof window.playSendSound === 'function') window.playSendSound(); 
+        icon.className = 'fa-solid fa-heart'; 
+        textSpan.innerText = originalCount + 1;
         
-        const heart = document.createElement('i'); 
-        heart.classList.add('fa-solid', 'fa-heart', 'heart-pop'); 
-        btnElement.closest('.reel-item').appendChild(heart); 
-        setTimeout(() => heart.remove(), 1000);
+        if (typeof window.playSendSound === 'function') window.playSendSound(); 
+        
+        // 🌟 4. प्रीमियम विज़ुअल इफ़ेक्ट (माइक्रो-कॉन्फेटी या फॉल-बैक हार्ट पॉप)
+        if (typeof window.triggerMicroConfetti === 'function') {
+            window.triggerMicroConfetti(btnElement);
+        } else {
+            const heart = document.createElement('i'); 
+            heart.classList.add('fa-solid', 'fa-heart', 'heart-pop'); 
+            const reelItem = btnElement.closest('.reel-item');
+            if (reelItem) {
+                reelItem.appendChild(heart); 
+                setTimeout(() => heart.remove(), 1000);
+            }
+        }
     }
 
     const postRef = window.doc(window.db, "posts", pid);
+    
     try {
         if (isCurrentlyLiked) {
             await window.updateDoc(postRef, { likes: window.arrayRemove(window.currentUser.uid) });
         } else { 
             await window.updateDoc(postRef, { likes: window.arrayUnion(window.currentUser.uid) }); 
             
+            // 🌟 5. नए सुरक्षित सिस्टम के तहत बैकएंड के लिए नोटिफिकेशन ट्रिगर करना
             if (ownerId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
                 await window.sendNotification(ownerId, 'like', 'liked your reel', pid, "", coverUrl); 
             }
         }
     } catch(e) {
-        console.error("Reel Like Error:", e);
+        console.error("Reel Like Error, rolling back UI changes:", e);
+        
+        // 🔄 6. रोलबैक तंत्र (Rollback Mechanism): नेटवर्क एरर या विफलता पर UI को पुराना जैसा करना
+        if (isCurrentlyLiked) {
+            btnElement.classList.add('liked');
+            icon.className = 'fa-solid fa-heart';
+            textSpan.innerText = originalCount;
+        } else {
+            btnElement.classList.remove('liked');
+            icon.className = 'fa-regular fa-heart';
+            textSpan.innerText = originalCount;
+        }
+        
+        if (typeof window.showToast === 'function') {
+            window.showToast("Connection Error", "Failed to register like. Try again.", "", "error");
+        }
+    } finally {
+        // प्रक्रिया पूरी होने के बाद लॉक हटा दें
+        window.reelLikeLock.delete(pid);
     }
 };
-
 /**
  * रील को स्टोरी के रूप में जोड़ने का फंक्शन
  */
