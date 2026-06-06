@@ -481,19 +481,30 @@ window.loadNotificationMediaPreview = async (notifId, postId, type = 'post') => 
 };
 
 // ===================================================
-// 🌟 SMART PRE-FETCH SENDER INTERCEPTOR
+// 🌟 SMART PRE-FETCH SENDER INTERCEPTOR (SAFE & HIGH-SPEED)
 // ===================================================
 async function sendNotification(targetUid, type, message, payload, mediaUrl = "", coverUrl = "") {
-    if(!window.currentUser || targetUid === window.currentUser.uid) return;
+    // स्वयं को नोटिफिकेशन भेजने से रोकें
+    if (!window.currentUser || targetUid === window.currentUser.uid) return;
+    
     try {
-        let fromPhoto = window.currentUser.photoURL;
-        if(window.currentUserData && window.currentUserData.avatarBase64) {
+        let fromPhoto = window.currentUser.photoURL || "";
+        if (window.currentUserData && window.currentUserData.avatarBase64) {
             fromPhoto = window.currentUserData.avatarBase64;
+        }
+
+        // 🧠 1. FCM पेलोड सुरक्षा फिक्स (FCM Payload Size Protection):
+        // बड़ी Base64 इमेज (जो 2KB से अधिक लंबी हो) फ़ायरबेस पुश सीमा (4KB) को पार करके पुश नोटिफिकेशन क्रैश कर सकती है।
+        // इसलिए, यदि इमेज बेस64 है, तो हम सुरक्षित रूप से लाइटवेट अवतार यूआरएल का उपयोग करेंगे।
+        let safePhoto = fromPhoto;
+        if (safePhoto && safePhoto.startsWith('data:') && safePhoto.length > 2048) {
+            safePhoto = window.currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(window.currentUser.displayName)}`;
         }
 
         let finalMediaUrl = mediaUrl;
         let finalCoverUrl = coverUrl;
 
+        // यदि मीडिया यूआरएल खाली है तो बैकग्राउंड में डेटाबेस से प्री-फैच करें
         if (!finalMediaUrl && !finalCoverUrl && payload) {
             try {
                 const collectionName = type === 'like_story' ? "stories" : "posts";
@@ -513,20 +524,26 @@ async function sendNotification(targetUid, type, message, payload, mediaUrl = ""
             }
         }
 
+        // 🌟 2. बैकएंड इंटीग्रेशन के साथ नया दस्तावेज़ जोड़ना
         await addDoc(collection(window.db, "users", targetUid, "notifications"), {
             type: type, 
-            fromName: window.currentUser.displayName, 
-            fromPhoto: fromPhoto, 
+            fromName: window.currentUser.displayName || "Someone", 
+            fromPhoto: safePhoto, // केवल सुरक्षित साइज़ वाली इमेज ही सर्वर पर जाएगी
             senderUid: window.currentUser.uid, 
             text: message, 
             timestamp: serverTimestamp(), 
             read: false, 
             payload: payload || "",
             mediaUrl: finalMediaUrl || "",
-            coverUrl: finalCoverUrl || ""
+            coverUrl: finalCoverUrl || "",
+            
+            // 🌟 3. बैकएंड प्रोसेसर के लिए आवश्यक फ़ील्ड्स
+            receiverId: targetUid, // सर्वर इसे पढ़कर रिसीवर का पता लगाता है
+            userId: targetUid,     // बैकअप फील्ड
+            pushSent: false        // सर्वर को सूचित करता है कि अभी पुश नोटिफिकेशन भेजना बाकी है
         });
     } catch(e) {
-        console.error("Error sending notification:", e);
+        console.error("Error sending notification safely:", e);
     }
 }
 window.sendNotification = sendNotification;
