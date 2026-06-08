@@ -17,6 +17,7 @@ window.chatRawFile = null;
 window.chatMediaBase64 = null;
 window.chatMediaType = 'text';
 window.typingTimeout = null;
+window.isSendingMessage = false; // 🌟 डुप्लीकेट सेंडिंग रोकने के लिए लॉक
 
 let fullInboxUsers = [];     
 let displayInboxUsers = [];  
@@ -25,8 +26,8 @@ let isFetchingInbox = false;
 
 window.unsubscribeChatList = null;
 window.unsubscribeUnread = null;
-let unsubscribeUserStatus = null;
-let unsubscribeTyping = null;
+window.unsubscribeUserStatus = null; // 🌟 विंडो स्कोप में बदला
+window.unsubscribeTyping = null;     // 🌟 विंडो स्कोप में बदला
 window.unsubscribeChat = null;
 
 let selectedMsgId = null;
@@ -577,7 +578,10 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
             try { drafts = JSON.parse(localStorage.getItem('loveChats_drafts') || "{}"); } catch(e){}
             msgInputEl.value = drafts[targetUid] || "";
             msgInputEl.onkeydown = (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.handleSendMsg(); }
+                if (e.key === 'Enter' && !e.shiftKey) { 
+                    e.preventDefault(); 
+                    if (!window.isSendingMessage) window.handleSendMsg(); 
+                }
             };
         }
 
@@ -769,18 +773,16 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                             }
                             
                             // 🎧 AUDIO, VIDEO AND IMAGE FIX
-if (msg.mediaUrl && !isShare) {
+                            if (msg.mediaUrl && !isShare) {
                                     if (msg.mediaType === 'video') { 
                                         cardHtml = `<div class="chat-vid-box" onclick="window.viewFullMedia('${msg.mediaUrl}', 'video')"><img src="${msg.mediaUrl.replace(/\.[^/.]+$/, ".jpg")}" class="chat-media-preview" loading="lazy"><i class="fa-solid fa-circle-play"></i></div>`; 
                                     } else if (msg.mediaType === 'audio') { 
                                         cardHtml = `
                                         <div class="insta-audio-player">
-                                            <!-- 🌟 NEW: data-duration binds database time to fix browser metadata bugs -->
                                             <audio id="audio-${id}" data-duration="${msg.duration || 0}" src="${msg.mediaUrl}" ontimeupdate="window.updateAudioProgress('${id}')" onended="window.resetAudio('${id}')"></audio>
                                             <div class="audio-play-btn" onclick="window.toggleAudioPlay('${id}')">
                                                 <i id="play-icon-${id}" class="fa-solid fa-play"></i>
                                             </div>
-                                            <!-- Custom Waveform Progress & Realtime Timer Display -->
                                             <div class="audio-waveform-container">
                                                 <div class="audio-waveform-progress" id="progress-${id}" onclick="window.seekAudioWaveform('${id}', event)">
                                                     ${window.generateWaveformHTML()}
@@ -1013,6 +1015,8 @@ setInterval(() => {
 // --- SENDING TEXT / IMAGES ---
 // ==========================================
 window.handleSendMsg = () => {
+    if (window.isSendingMessage) return; // 🌟 सेंडिंग प्रोसेस लॉक
+
     const currentUser = window.currentUser;
     const currentUserData = window.currentUserData || {};
     const db = window.db;
@@ -1022,6 +1026,8 @@ window.handleSendMsg = () => {
     
     if(!window.currentChatId || (!text && !window.chatRawFile)) return;
     
+    window.isSendingMessage = true; // 🌟 लॉक चालू करें
+
     const targetRoomId = window.currentChatId.roomId;
     const targetUserId = window.currentChatId.targetUid;
     const isFakeChat = window.currentChatId.isFake;
@@ -1053,23 +1059,30 @@ window.handleSendMsg = () => {
     const replyThumb = document.getElementById('reply-preview-img');
     if(replyThumb) replyThumb.style.display = 'none';
 
+    // 🌟 तात्कालिक क्लियरिंग ताकि 'Enter' या बटन दोबारा दबाने पर वही मीडिया दोबारा अपलोड न होने लगे
+    const fileToUpload = window.chatRawFile;
+    const mediaTypeToUpload = window.chatMediaType;
+    const mediaBase64ToUpload = window.chatMediaBase64;
+
+    window.chatRawFile = null;
+    window.chatMediaBase64 = null;
+    document.getElementById('chat-file-preview-text').style.display = 'none';
+
     (async () => {
         try {
             let url = null; let type = 'text';
-            if(window.chatRawFile) {
+            if(fileToUpload) {
                 const progressBar = document.getElementById('chat-progress-bar');
                 if(progressBar) progressBar.style.width = '5%';
-                let blobToUpload = window.chatRawFile;
-                if(window.chatMediaType === 'image' && window.chatMediaBase64) {
-                     const res = await fetch(window.chatMediaBase64);
+                let blobToUpload = fileToUpload;
+                if(mediaTypeToUpload === 'image' && mediaBase64ToUpload) {
+                     const res = await fetch(mediaBase64ToUpload);
                      blobToUpload = await res.blob();
                 }
                 if(typeof window.uploadFile === 'function') {
                     const uploadData = await window.uploadFile(blobToUpload, (p) => { if(progressBar) progressBar.style.width = p + "%"; });
                     url = uploadData.url; type = uploadData.type;
                 }
-                window.chatRawFile = null;
-                document.getElementById('chat-file-preview-text').style.display = 'none';
                 if(progressBar) progressBar.style.width = '0%';
             }
 
@@ -1097,6 +1110,8 @@ window.handleSendMsg = () => {
             if(progressBar) progressBar.style.width = '0%'; 
             console.error("Message Error:", e);
             if(typeof window.showToast === 'function') window.showToast("Error", "Message failed to send.", currentUser?.photoURL);
+        } finally {
+            window.isSendingMessage = false; // 🌟 प्रक्रिया पूरी होने पर लॉक खोलें
         }
     })(); 
 };
@@ -1142,8 +1157,8 @@ window.closeChat = () => {
     if(window.chatResizeObserver) { window.chatResizeObserver.disconnect(); window.chatResizeObserver = null; }
 
     if(window.unsubscribeChat) { window.unsubscribeChat(); window.unsubscribeChat = null; }
-    if(unsubscribeUserStatus) { unsubscribeUserStatus(); unsubscribeUserStatus = null; }
-    if(unsubscribeTyping) { unsubscribeTyping(); unsubscribeTyping = null; }
+    if(window.unsubscribeUserStatus) { window.unsubscribeUserStatus(); window.unsubscribeUserStatus = null; }
+    if(window.unsubscribeTyping) { window.unsubscribeTyping(); window.unsubscribeTyping = null; }
     
     const chatMessagesArea = document.getElementById('chat-messages-area');
     if(chatMessagesArea) chatMessagesArea.innerHTML = ""; 
