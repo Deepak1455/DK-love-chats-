@@ -1,12 +1,12 @@
-// =====================================================================================
+// ==========================================
 // --- FIREBASE IMPORTS FOR CHAT ---
-// =====================================================================================
+// ==========================================
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, setDoc, getDoc, getDocs, where, writeBatch, limitToLast, collectionGroup } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-// =====================================================================================
+// ==========================================
 // --- CHAT GLOBAL VARIABLES ---
-// =====================================================================================
+// ==========================================
 window.chatDrafts = JSON.parse(localStorage.getItem('loveChats_drafts') || "{}");
 window.unreadCounts = window.unreadCounts || {};
 window.allCachedUsers = window.allCachedUsers || [];
@@ -17,7 +17,6 @@ window.chatRawFile = null;
 window.chatMediaBase64 = null;
 window.chatMediaType = 'text';
 window.typingTimeout = null;
-window.isSendingMessage = false; // 🌟 तात्कालिक सेंडिंग प्रोसेस लॉक
 
 let fullInboxUsers = [];     
 let displayInboxUsers = [];  
@@ -26,8 +25,8 @@ let isFetchingInbox = false;
 
 window.unsubscribeChatList = null;
 window.unsubscribeUnread = null;
-window.unsubscribeUserStatus = null; // 🌟 ग्लोबल विंडो ऑब्जेक्ट स्कोपिंग
-window.unsubscribeTyping = null;     // 🌟 ग्लोबल विंडो ऑब्जेक्ट स्कोपिंग
+let unsubscribeUserStatus = null;
+let unsubscribeTyping = null;
 window.unsubscribeChat = null;
 
 let selectedMsgId = null;
@@ -38,9 +37,9 @@ let startTouchY = 0;
 let selectedInboxUid = null;
 let moodTimeout = null;
 
-// =====================================================================================
+// ==========================================
 // --- AUTO START CHAT SYSTEM ---
-// =====================================================================================
+// ==========================================
 const auth = getAuth();
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -57,9 +56,9 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// =====================================================================================
+// ==========================================
 // --- UNREAD MESSAGES & NOTIFICATIONS ---
-// =====================================================================================
+// ==========================================
 window.startUnreadListener = () => {
     const currentUser = window.currentUser;
     const db = window.db;
@@ -104,9 +103,9 @@ window.updateBottomBadgeLocal = () => {
     }
 };
 
-// =====================================================================================
+// ==========================================
 // --- INBOX PAGINATION & RENDER LOGIC ---
-// =====================================================================================
+// ==========================================
 window.loadUserList = async () => {
     const currentUser = window.currentUser;
     const db = window.db;
@@ -242,9 +241,9 @@ window.loadMoreInboxUsers = () => {
     currentInboxIndex += 20; isFetchingInbox = false;
 };
 
-// =====================================================================================
+// ==========================================
 // --- SETTINGS & CHAT LOCK SYSTEM ---
-// =====================================================================================
+// ==========================================
 window.saveChatPassword = async () => {
     const currentUser = window.currentUser;
     const currentUserData = window.currentUserData;
@@ -366,9 +365,9 @@ window.verifyChatPassword = () => {
     }
 };
 
-// =====================================================================================
+// ==========================================
 // --- CHAT DRAFTS & TYPING ---
-// =====================================================================================
+// ==========================================
 window.saveDraft = (uid, text) => {
     window.chatDrafts = window.chatDrafts || {};
     if(text && text.trim().length > 0) window.chatDrafts[uid] = text;
@@ -423,9 +422,9 @@ window.cancelReply = () => {
     if(inputArea) inputArea.style.borderRadius = "40px";
 };
 
-// =====================================================================================
+// ==========================================
 // --- CLOUDINARY UPLOAD HELPER ---
-// =====================================================================================
+// ==========================================
 window.currentUploadXHR = null; 
 window.uploadFile = function(file, onProgress) {
     return new Promise((resolve, reject) => {
@@ -465,9 +464,9 @@ window.uploadFile = function(file, onProgress) {
     });
 };
 
-// =====================================================================================
+// ==========================================
 // --- NAVIGATION: CLICK TO OPEN REEL/POST/STORY ---
-// =====================================================================================
+// ==========================================
 window.openSharedContentFromChat = (type, targetId, ownerId) => {
     const chatRoom = document.getElementById('chat-room');
     if (chatRoom && window.currentChatId) {
@@ -515,9 +514,9 @@ window.getSeenTimeAgo = (timestamp) => {
     return `Seen ${Math.floor(diffHours / 24)} d`;
 };
 
-// =====================================================================================
-// --- CHAT ROOM INITIALIZATION & RENDER (SMOOTH & FAST NO-BOUNCE VERSION) ---
-// =====================================================================================
+// ==========================================
+// --- CHAT ROOM INITIALIZATION & RENDER (BUG FIXED) ---
+// ==========================================
 window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
     try {
         const chatRoom = document.getElementById('chat-room');
@@ -578,10 +577,7 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
             try { drafts = JSON.parse(localStorage.getItem('loveChats_drafts') || "{}"); } catch(e){}
             msgInputEl.value = drafts[targetUid] || "";
             msgInputEl.onkeydown = (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { 
-                    e.preventDefault(); 
-                    if (!window.isSendingMessage) window.handleSendMsg(); 
-                }
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.handleSendMsg(); }
             };
         }
 
@@ -676,7 +672,7 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
         });
         if(area) window.chatResizeObserver.observe(area);
 
-        const loadMessagesWithLimit = () => {
+const loadMessagesWithLimit = () => {
             const q = query(collection(db, "chats", roomId, "messages"), orderBy("timestamp", "asc"), limitToLast(window.chatMsgLimit));
             if(window.unsubscribeChat) window.unsubscribeChat();
             
@@ -693,6 +689,7 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                 let didISendNewMessage = false;
                 let didIReceiveNewMessage = false;
 
+                // केवल पहली बार लोड होने पर एरिया क्लियर करें
                 if (isFirstLoad && !window.isFetchingHistory) { area.innerHTML = ""; }
 
                 snapshot.docChanges().forEach((change) => {
@@ -702,9 +699,10 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                     if (change.type === "added" || change.type === "modified") {
                         const isMe = msg.senderId === currentUser.uid;
                         const alreadyExists = document.getElementById(`wrapper-${id}`);
+                        const isDeleted = msg.deleted || msg.text === "🚫 Message deleted";
                         
                         if (change.type === "added") {
-                            // 🌟 टाइमर केवल वास्तविक नए संदेश पर ही ट्रिगर होगा (पुष्टि होने पर दुबारा नहीं)
+                            // 🌟 सेंडिंग और रिसीविंग स्टेटस पर डुप्लीकेट स्क्रॉलिंग रोकें
                             if (isMe) {
                                 if (!alreadyExists) didISendNewMessage = true; 
                             } else {
@@ -713,6 +711,7 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                             }
                         }
 
+                        // अनरीड डिवाइडर सेटअप
                         if (!isMe && msg.seen === false && unreadMsgCount > 0 && !window.firstUnreadMsgId && change.type === "added") {
                             window.firstUnreadMsgId = id;
                             const unreadDivider = document.createElement('div');
@@ -732,31 +731,48 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                             isNewElement = true; 
                         }
                         
-                        // 🌟 टाइमस्टैम्प लॉक: एक बार एट्रिब्यूट सेट होने के बाद, सर्वर सिंक इसे री-सॉर्ट नहीं करेगा
+                        // 🌟 टाइमस्टैम्प लॉकिंग: सर्वर रिस्पॉन्स के समय कंपन (Flicker) रोकता है
                         const existingTs = wrapperDiv.getAttribute('data-timestamp');
                         const tsMillis = msg.timestamp?.toMillis ? msg.timestamp.toMillis() : (existingTs ? parseInt(existingTs) : Date.now());
                         wrapperDiv.setAttribute('data-timestamp', tsMillis);
 
+                        // रिएक्शंस तैयार करें
+                        let reactionsHtml = "";
+                        if (msg.reactions && !isDeleted) {
+                            const totalCount = Object.keys(msg.reactions).length;
+                            const grouped = {}; 
+                            Object.entries(msg.reactions).forEach(([uid, emoji]) => { 
+                                if (!grouped[emoji]) grouped[emoji] = []; 
+                                grouped[emoji].push(uid); 
+                            });
+                            const entries = Object.entries(grouped);
+                            if (entries.length > 0) {
+                                reactionsHtml = `<div class="msg-reactions-wrapper">`;
+                                entries.forEach(([emoji, uids]) => {
+                                    reactionsHtml += `<div class="reaction-item-clean"><span class="reaction-emoji-only">${emoji}</span>${uids.length > 1 ? `<span class="reaction-count-num">${uids.length}</span>` : ''}</div>`;
+                                });
+                                reactionsHtml += `</div>`;
+                            }
+                        }
+
+                        // रिप्लाई हेडर और कार्ड डेटा सेटअप
                         let replyHeaderHtml = "";
                         let replyCardHtml = "";
-
-                        if (msg.replyToId && !msg.deleted) {
+                        if (msg.replyToId && !isDeleted) {
                             let myLiveDP = currentUserData?.avatarBase64 || currentUser?.photoURL;
                             let displayDP = isMe ? myLiveDP : (msg.repliedOwnerPhoto || msg.repliedByPhoto);
                             if (!displayDP) {
                                 const repliedUser = allCachedUsers.find(u => u.uid === msg.replyToId);
                                 displayDP = repliedUser ? (repliedUser.avatarBase64 || repliedUser.photoURL) : 'https://i.pravatar.cc/150';
                             }
-
                             let labelText = isMe ? "You replied" : `${(msg.repliedOwnerName || msg.replyToName).split(' ')[0]} replied`;
-                            replyHeaderHtml = `<div class="reply-external-header fade-in-up" style="display:flex; align-items:center; gap:6px; margin-bottom:4px; padding:0 8px;"><img src="${displayDP}" style="width:18px; height:18px; border-radius:50%; border:1.2px solid var(--primary); object-fit:cover;" loading="lazy"><span style="font-size:0.68rem; font-weight:800; color:#777;">${labelText}</span></div>`;
+                            replyHeaderHtml = `<div class="reply-external-header" style="display:flex; align-items:center; gap:6px; margin-bottom:4px; padding:0 8px;"><img src="${displayDP}" style="width:18px; height:18px; border-radius:50%; border:1.2px solid var(--primary); object-fit:cover;" loading="lazy"><span style="font-size:0.68rem; font-weight:800; color:#777;">${labelText}</span></div>`;
                             let mediaThumbHtml = msg.replyMediaUrl ? `<img src="${msg.replyMediaUrl}" class="reply-card-media-thumb" style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-bottom:6px;" loading="lazy">` : "";
-                            replyCardHtml = `<div class="reply-card-board reply-pop-effect" style="width: fit-content; max-width: 250px; min-width: 100px; height: auto; padding: 10px 14px; background: #f1f5f9 !important; border-radius: 18px; margin-bottom: -5px; display: flex; flex-direction: column;" onclick="window.scrollToMessage('${msg.replyToId}')"><div class="reply-card-content-area" style="background: transparent; position: relative;">${mediaThumbHtml}<div class="reply-card-body" style="position: static; background: transparent; color: #1e293b !important; font-size: 0.85rem; font-weight: 700; line-height: 1.3; padding: 0; display: block; overflow: hidden; text-overflow: ellipsis;">${msg.replyToText || ""}</div></div></div>`;
+                            replyCardHtml = `<div class="reply-card-board reply-pop-effect" style="width: fit-content; max-width: 250px; min-width: 100px; padding: 10px 14px; background: #f1f5f9 !important; border-radius: 18px; margin-bottom: -5px; display: flex; flex-direction: column;" onclick="window.scrollToMessage('${msg.replyToId}')"><div class="reply-card-content-area">${mediaThumbHtml}<div class="reply-card-body" style="color: #1e293b !important; font-size: 0.85rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis;">${msg.replyToText || ""}</div></div></div>`;
                         }
 
                         let cardHtml = "";
                         let textHtml = "";
-                        const isDeleted = msg.deleted || msg.text === "🚫 Message deleted";
 
                         if (isDeleted) {
                             textHtml = `<div class="msg-deleted-text"><i class="fa-solid fa-ban"></i> Message deleted</div>`;
@@ -777,104 +793,111 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                                 cardHtml = `<div class="chat-shared-standalone-card reply-pop-effect" onclick="${navAction}"><div class="shared-card-header"><img src="${ownerPhoto}" class="shared-card-dp" loading="lazy"><div class="shared-card-user-info"><span class="shared-card-name">${ownerName}</span><span class="shared-card-type"><i class="fa-solid ${icon}"></i> ${typeLabel}</span></div></div><div class="shared-card-body" style="aspect-ratio: 16/9; background: #e2e8f0; overflow: hidden; border-radius: 12px;"><img src="${mediaUrl?.replace(/\.[^/.]+$/, ".jpg")}" class="shared-card-img" style="width:100%; height:100%; object-fit:cover;" loading="lazy">${msg.isReelShare ? '<div class="shared-play-btn"><i class="fa-solid fa-play"></i></div>' : ''}</div><div class="shared-card-footer"><span>${actionText}</span><i class="fa-solid fa-chevron-right"></i></div></div>`;
                             }
                             
-                            // 🎧 AUDIO, VIDEO AND IMAGE FIX WITH PLACEHOLDERS (No layout shifts)
+                            // मीडिया रेंडरिंग (नो लेआउट शिफ्ट डिजाइन)
                             if (msg.mediaUrl && !isShare) {
-                                    if (msg.mediaType === 'video') { 
-                                        cardHtml = `<div class="chat-vid-box" style="aspect-ratio: 4/3; background: #e2e8f0; border-radius: 16px; overflow:hidden;" onclick="window.viewFullMedia('${msg.mediaUrl}', 'video')"><img src="${msg.mediaUrl.replace(/\.[^/.]+$/, ".jpg")}" class="chat-media-preview" style="width:100%; height:100%; object-fit:cover;" loading="lazy"><i class="fa-solid fa-circle-play"></i></div>`; 
-                                    } else if (msg.mediaType === 'audio') { 
-                                        cardHtml = `
-                                        <div class="insta-audio-player">
-                                            <audio id="audio-${id}" data-duration="${msg.duration || 0}" src="${msg.mediaUrl}" ontimeupdate="window.updateAudioProgress('${id}')" onended="window.resetAudio('${id}')"></audio>
-                                            <div class="audio-play-btn" onclick="window.toggleAudioPlay('${id}')">
-                                                <i id="play-icon-${id}" class="fa-solid fa-play"></i>
+                                if (msg.mediaType === 'video') { 
+                                    cardHtml = `<div class="chat-vid-box" style="aspect-ratio: 4/3; background: #e2e8f0; border-radius: 16px; overflow:hidden;" onclick="window.viewFullMedia('${msg.mediaUrl}', 'video')"><img src="${msg.mediaUrl.replace(/\.[^/.]+$/, ".jpg")}" class="chat-media-preview" style="width:100%; height:100%; object-fit:cover;" loading="lazy"><i class="fa-solid fa-circle-play"></i></div>`; 
+                                } else if (msg.mediaType === 'audio') { 
+                                    cardHtml = `
+                                    <div class="insta-audio-player">
+                                        <audio id="audio-${id}" data-duration="${msg.duration || 0}" src="${msg.mediaUrl}" ontimeupdate="window.updateAudioProgress('${id}')" onended="window.resetAudio('${id}')"></audio>
+                                        <div class="audio-play-btn" onclick="window.toggleAudioPlay('${id}')">
+                                            <i id="play-icon-${id}" class="fa-solid fa-play"></i>
+                                        </div>
+                                        <div class="audio-waveform-container">
+                                            <div class="audio-waveform-progress" id="progress-${id}" onclick="window.seekAudioWaveform('${id}', event)">
+                                                ${window.generateWaveformHTML()}
                                             </div>
-                                            <div class="audio-waveform-container">
-                                                <div class="audio-waveform-progress" id="progress-${id}" onclick="window.seekAudioWaveform('${id}', event)">
-                                                    ${window.generateWaveformHTML()}
-                                                </div>
-                                                <div class="audio-timer-display" id="timer-${id}">0:00</div>
-                                            </div>
-                                            <div class="audio-speed-btn" id="speed-${id}" onclick="window.changeAudioSpeed('${id}')">1x</div>
-                                        </div>`; 
-                                    } else { 
-                                        cardHtml = `<div style="max-width: 250px; aspect-ratio: 1; background: #e2e8f0; border-radius: 16px; overflow: hidden;"><img src="${msg.mediaUrl}" class="chat-media-preview" style="width:100%; height:100%; object-fit:cover;" loading="lazy" onclick="window.viewFullMedia('${msg.mediaUrl}', 'image')"></div>`; 
-                                    }
+                                            <div class="audio-timer-display" id="timer-${id}">0:00</div>
+                                        </div>
+                                        <div class="audio-speed-btn" id="speed-${id}" onclick="window.changeAudioSpeed('${id}')">1x</div>
+                                    </div>`; 
+                                } else { 
+                                    cardHtml = `<div style="max-width: 250px; aspect-ratio: 1; background: #e2e8f0; border-radius: 16px; overflow: hidden;"><img src="${msg.mediaUrl}" class="chat-media-preview" style="width:100%; height:100%; object-fit:cover;" loading="lazy" onclick="window.viewFullMedia('${msg.mediaUrl}', 'image')"></div>`; 
                                 }
-                                if (msg.text) { textHtml = `<div class="real-text-msg">${msg.text}</div>`; }
                             }
-                            
-                            const isPending = (change.type === "added") && change.doc.metadata.hasPendingWrites && !msg.timestamp;
-                            let timeStr = isPending ? `<span style="color:#94a3b8;">Sending... <i class="fa-solid fa-circle-notch fa-spin" style="font-size:0.7rem; margin-left:2px;"></i></span>` : window.formatChatMsgTime(msg.timestamp || { toDate: () => new Date() });
-                            
-                            let seenHtml = "";
-                            if (isMe && msg.seen && !isDeleted && !isFake && !isPending) {
-                                const seenAtTimestamp = msg.seenAt?.toMillis ? msg.seenAt.toMillis() : Date.now();
-                                seenHtml = `<span class="seen-label" data-time="${seenAtTimestamp}"> • ${window.getSeenTimeAgo(msg.seenAt)}</span>`;
+                            if (msg.text) { textHtml = `<div class="real-text-msg">${msg.text}</div>`; }
+                        }
+                        
+                        const isPending = (change.type === "added") && change.doc.metadata.hasPendingWrites && !msg.timestamp;
+                        let timeStr = isPending ? `<span style="color:#94a3b8;">Sending... <i class="fa-solid fa-circle-notch fa-spin" style="font-size:0.7rem; margin-left:2px;"></i></span>` : window.formatChatMsgTime(msg.timestamp || { toDate: () => new Date() });
+                        
+                        let seenHtml = "";
+                        if (isMe && msg.seen && !isDeleted && !isFake && !isPending) {
+                            const seenAtTimestamp = msg.seenAt?.toMillis ? msg.seenAt.toMillis() : Date.now();
+                            seenHtml = `<span class="seen-label" data-time="${seenAtTimestamp}"> • ${window.getSeenTimeAgo(msg.seenAt)}</span>`;
+                        }
+
+                        if (isNewElement) {
+                            // 🌟 पूरा HTML केवल पहली बार रेंडर होगा (मेमोरी अनुकूलित)
+                            wrapperDiv.innerHTML = `
+                                <div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div>
+                                <div class="message-container-unit" style="display:flex; flex-direction:column; ${isMe ? 'align-items:flex-end;' : 'align-items:flex-start;'}">
+                                    ${replyHeaderHtml}
+                                    ${replyCardHtml}
+                                    <div id="msg-${id}" class="message ${isMe ? 'msg-out' : 'msg-in'} standalone-mode" style="position:relative;">
+                                        ${cardHtml}
+                                        ${textHtml}
+                                        <div class="reactions-container-target">${reactionsHtml}</div>
+                                    </div>
+                                    <div class="message-meta-board">
+                                        <span class="meta-time">${timeStr} <span class="seen-status-target">${seenHtml}</span></span>
+                                    </div> 
+                                </div>`;
+
+                            // 🌟 स्मार्ट पोजीशन इंसर्शन (नो-लेआउट थ्रैश): नए संदेश को सीधे उसकी सही क्रोनोलॉजिकल जगह पर इंसर्ट करता है
+                            let anchor = document.getElementById('chat-bottom-anchor');
+                            let referenceEl = anchor;
+                            const existingWrappers = Array.from(area.querySelectorAll('.msg-wrapper'));
+
+                            for (let i = 0; i < existingWrappers.length; i++) {
+                                const currentTs = parseInt(existingWrappers[i].getAttribute('data-timestamp') || 0);
+                                if (currentTs > tsMillis) {
+                                    referenceEl = existingWrappers[i];
+                                    break;
+                                }
                             }
+                            area.insertBefore(wrapperDiv, referenceEl);
 
-                            let reactionsHtml = "";
-                            if (msg.reactions && !isDeleted) {
-                                const totalCount = Object.keys(msg.reactions).length;
-                                const grouped = {}; Object.entries(msg.reactions).forEach(([uid, emoji]) => { if (!grouped[emoji]) grouped[emoji] = []; grouped[emoji].push(uid); });
-                                const entries = Object.entries(grouped);
-                                if (entries.length > 0) {
-                                    reactionsHtml = `<div class="msg-reactions-wrapper">`;
-                                    entries.forEach(([emoji, uids]) => {
-                                        let dpStack = "";
-                                        if (totalCount > 1) {
-                                            dpStack = `<div class="reaction-dp-stack">`;
-                                            uids.slice(0, 3).forEach(uid => {
-                                                const u = allCachedUsers.find(x => x.uid === uid) || (uid === currentUser.uid ? currentUserData : null);
-                                                const pic = u ? (u.avatarBase64 || u.photoURL) : `https://ui-avatars.com/api/?name=U`;
-                                                dpStack += `<img src="${pic}" class="stack-dp-mini" loading="lazy">`;
-                                            });
-                                            dpStack += `</div>`;
-                                        }
-                                        reactionsHtml += `<div class="reaction-item-clean">${dpStack}<span class="reaction-emoji-only">${emoji}</span>${uids.length > 1 ? `<span class="reaction-count-num">${uids.length}</span>` : ''}</div>`;
-                                    });
-
-                                reactionsHtml += `</div>`;
+                            // तारीख का नया डिवाइडर जोड़ना (चुपचाप इंसर्ट करना)
+                            const currentLabel = typeof window.getDateLabel === 'function' ? window.getDateLabel({toDate: () => new Date(tsMillis)}) : "Today";
+                            const prevWrapper = wrapperDiv.previousElementSibling;
+                            if (prevWrapper && prevWrapper.classList.contains('msg-wrapper')) {
+                                const prevTs = parseInt(prevWrapper.getAttribute('data-timestamp') || 0);
+                                const prevLabel = typeof window.getDateLabel === 'function' ? window.getDateLabel({toDate: () => new Date(prevTs)}) : "Today";
+                                if (currentLabel !== prevLabel) {
+                                    const divider = document.createElement('div');
+                                    divider.className = 'chat-date-divider';
+                                    divider.innerText = currentLabel;
+                                    area.insertBefore(divider, wrapperDiv);
+                                }
+                            }
+                        } else {
+                            // 🌟 पुराना संदेश पहले से डोम में है: केवल सब-चेंजेस अपडेट करें (पुलिंग या ब्लिंक के बिना)
+                            const reactionTarget = wrapperDiv.querySelector('.reactions-container-target');
+                            if (reactionTarget && reactionTarget.innerHTML !== reactionsHtml) {
+                                reactionTarget.innerHTML = reactionsHtml;
+                            }
+                            const seenTarget = wrapperDiv.querySelector('.seen-status-target');
+                            if (seenTarget && !isPending && isMe) {
+                                seenTarget.innerHTML = seenHtml;
                             }
                         }
 
-                        wrapperDiv.innerHTML = `
-                            <div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div>
-                            <div class="message-container-unit" style="display:flex; flex-direction:column; ${isMe ? 'align-items:flex-end;' : 'align-items:flex-start;'}">
-                                ${replyHeaderHtml}
-                                ${replyCardHtml}
-                                <div id="msg-${id}" class="message ${isMe ? 'msg-out' : 'msg-in'} standalone-mode" style="position:relative;">
-                                    ${cardHtml}
-                                    ${textHtml}
-                                    ${reactionsHtml}
-                                </div>
-                                <div class="message-meta-board">
-                                    <span class="meta-time">${timeStr}${seenHtml}</span>
-                                </div> 
-                            </div>`;
-
-                        if (isNewElement) { area.appendChild(wrapperDiv); }
-
-                        // 📱 SMART TOUCH LOGIC FOR MESSAGES
+                        // इवेंट लिसनर्स बाइंड करें (केवल न्यू एलिमेंट्स पर)
                         const msgDiv = document.getElementById(`msg-${id}`);
-                        if (msgDiv) {
+                        if (msgDiv && isNewElement) {
                             msgDiv.oncontextmenu = (e) => { e.preventDefault(); window.openMsgOptions(id, isMe, msg.text); };
                             msgDiv.ondblclick = (e) => { e.stopPropagation(); window.handleMessageDoubleTap(msgDiv, id); };
                             
-                            let touchTimer = null;
-                            let lastTap = 0;
-                            let startY = 0;
-                            let startX = 0;
-
+                            let touchTimer = null; let lastTap = 0; let startY = 0; let startX = 0;
                             msgDiv.addEventListener('touchstart', (e) => {
-                                startX = e.touches[0].clientX;
-                                startY = e.touches[0].clientY;
+                                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
                                 touchTimer = setTimeout(() => { window.openMsgOptions(id, isMe, msg.text); }, 500); 
                             }, { passive: true });
-
                             msgDiv.addEventListener('touchmove', (e) => {
                                 if(Math.abs(e.touches[0].clientY - startY) > 10 || Math.abs(e.touches[0].clientX - startX) > 10) clearTimeout(touchTimer);
                             }, { passive: true });
-
                             msgDiv.addEventListener('touchend', (e) => {
                                 clearTimeout(touchTimer);
                                 const currentTime = new Date().getTime();
@@ -883,7 +906,7 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                                 lastTap = currentTime;
                             }, { passive: true });
                             
-                            if (change.type === "added" && !isDeleted) {
+                            if (!isDeleted) {
                                 let currentMsgMedia = msg.mediaUrl || msg.sharedPostUrl || msg.sharedReelUrl || msg.repliedStoryUrl || null;
                                 window.attachSwipeReplyListener(msgDiv, wrapperDiv, id, isMe ? "You" : targetName, msg.text || "Media Attachment", currentMsgMedia);
                             }
@@ -894,40 +917,17 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                     }
                 });
 
-                const msgWrappers = Array.from(area.querySelectorAll('.msg-wrapper, .unread-divider-mark'));
-                msgWrappers.sort((a, b) => {
-                    const tsA = parseInt(a.getAttribute('data-timestamp') || a.nextElementSibling?.getAttribute('data-timestamp') || 0);
-                    const tsB = parseInt(b.getAttribute('data-timestamp') || b.nextElementSibling?.getAttribute('data-timestamp') || 0);
-                    return tsA - tsB;
-                });
-                msgWrappers.forEach(wrapper => area.appendChild(wrapper));
-
-                // 🌟 लेआउट थ्रैशिंग कम करने के लिए तारीख केवल पहली बार या लंबाई बदलने पर व्यवस्थित होगी
-                document.querySelectorAll('.chat-date-divider:not(.unread-divider-mark)').forEach(el => el.remove());
-                let lastDivLabel = null;
-                area.querySelectorAll('.msg-wrapper').forEach(wrapper => {
-                    const ts = parseInt(wrapper.getAttribute('data-timestamp'));
-                    if(ts) {
-                        const label = typeof window.getDateLabel === 'function' ? window.getDateLabel({toDate: ()=>new Date(ts)}) : "Today";
-                        if (label !== lastDivLabel) {
-                             const divider = document.createElement('div');
-                             divider.className = 'chat-date-divider';
-                             divider.innerText = label;
-                             area.insertBefore(divider, wrapper);
-                             lastDivLabel = label;
-                        }
-                    }
-                });
-
+                // बॉटम एंकर स्थिरता सुनिश्चित करें
                 let anchor = document.getElementById('chat-bottom-anchor');
                 if(!anchor) {
                     anchor = document.createElement('div');
                     anchor.id = 'chat-bottom-anchor';
                     anchor.style.height = '1px';
                     anchor.style.width = '100%';
+                    area.appendChild(anchor);
                 }
-                area.appendChild(anchor);
 
+                // स्क्रॉल और इतिहास स्थिति रेंडर
                 if (isFirstLoad) {
                     if (window.isFetchingHistory) {
                         const heightDiff = area.scrollHeight - oldScrollHeight;
@@ -936,48 +936,17 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                         const loader = document.getElementById('chat-history-loader');
                         if (loader) loader.remove();
                     } else {
-                        if (window.firstUnreadMsgId && !window.hasScrolledToUnread) {
-                            const targetEl = document.getElementById(`wrapper-${window.firstUnreadMsgId}`);
-                            if (targetEl) {
-                                area.style.scrollBehavior = 'auto'; 
-                                targetEl.scrollIntoView({ block: 'center' });
-                                window.hasScrolledToUnread = true;
-                                if (alertBanner) {
-                                    alertBanner.innerHTML = `👇 ${unreadMsgCount} New Message${unreadMsgCount > 1 ? 's' : ''}`;
-                                    alertBanner.style.transform = 'translateX(-50%) translateY(0)';
-                                    alertBanner.style.opacity = '1';
-                                    setTimeout(() => {
-                                        alertBanner.style.transform = 'translateX(-50%) translateY(-50px)';
-                                        alertBanner.style.opacity = '0';
-                                    }, 4000); 
-                                }
-                            } else {
-                                area.style.scrollBehavior = 'auto'; 
-                                area.scrollTop = area.scrollHeight;
-                            }
-                        } else {
-                            area.style.scrollBehavior = 'auto'; 
-                            area.scrollTop = area.scrollHeight;
-                        }
+                        area.style.scrollBehavior = 'auto'; 
+                        area.scrollTop = area.scrollHeight;
                     }
                     isFirstLoad = false;
                 } else {
                     if (didISendNewMessage) area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
                     else if (didIReceiveNewMessage && isUserNearBottom) area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
-                    else if (didIReceiveNewMessage && !isUserNearBottom) {
-                        const sBtn = document.getElementById('chat-scroll-to-bottom-btn');
-                        if (sBtn) {
-                            sBtn.style.display = 'flex'; sBtn.style.background = '#ff4757'; 
-                            sBtn.style.transform = 'scale(1.2)';
-                            if(navigator.vibrate) navigator.vibrate(50); 
-                            setTimeout(() => { sBtn.style.transform = 'scale(1)'; }, 300);
-                        }
-                    } 
                     else if (isUserNearBottom) area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
                 }
             });
         };
-
         loadMessagesWithLimit();
 
         if (area) {
@@ -1017,12 +986,10 @@ setInterval(() => {
     });
 }, 10000);
 
-// =====================================================================================
+// ==========================================
 // --- SENDING TEXT / IMAGES ---
-// =====================================================================================
+// ==========================================
 window.handleSendMsg = () => {
-    if (window.isSendingMessage) return; // 🌟 सेंडिंग प्रोसेस लॉक
-
     const currentUser = window.currentUser;
     const currentUserData = window.currentUserData || {};
     const db = window.db;
@@ -1032,8 +999,6 @@ window.handleSendMsg = () => {
     
     if(!window.currentChatId || (!text && !window.chatRawFile)) return;
     
-    window.isSendingMessage = true; // 🌟 लॉक चालू करें
-
     const targetRoomId = window.currentChatId.roomId;
     const targetUserId = window.currentChatId.targetUid;
     const isFakeChat = window.currentChatId.isFake;
@@ -1065,30 +1030,23 @@ window.handleSendMsg = () => {
     const replyThumb = document.getElementById('reply-preview-img');
     if(replyThumb) replyThumb.style.display = 'none';
 
-    // 🌟 तात्कालिक क्लियरिंग ताकि 'Enter' या बटन दोबारा दबाने पर वही मीडिया दोबारा अपलोड न होने लगे
-    const fileToUpload = window.chatRawFile;
-    const mediaTypeToUpload = window.chatMediaType;
-    const mediaBase64ToUpload = window.chatMediaBase64;
-
-    window.chatRawFile = null;
-    window.chatMediaBase64 = null;
-    document.getElementById('chat-file-preview-text').style.display = 'none';
-
     (async () => {
         try {
             let url = null; let type = 'text';
-            if(fileToUpload) {
+            if(window.chatRawFile) {
                 const progressBar = document.getElementById('chat-progress-bar');
                 if(progressBar) progressBar.style.width = '5%';
-                let blobToUpload = fileToUpload;
-                if(mediaTypeToUpload === 'image' && mediaBase64ToUpload) {
-                     const res = await fetch(mediaBase64ToUpload);
+                let blobToUpload = window.chatRawFile;
+                if(window.chatMediaType === 'image' && window.chatMediaBase64) {
+                     const res = await fetch(window.chatMediaBase64);
                      blobToUpload = await res.blob();
                 }
                 if(typeof window.uploadFile === 'function') {
                     const uploadData = await window.uploadFile(blobToUpload, (p) => { if(progressBar) progressBar.style.width = p + "%"; });
                     url = uploadData.url; type = uploadData.type;
                 }
+                window.chatRawFile = null;
+                document.getElementById('chat-file-preview-text').style.display = 'none';
                 if(progressBar) progressBar.style.width = '0%';
             }
 
@@ -1116,15 +1074,13 @@ window.handleSendMsg = () => {
             if(progressBar) progressBar.style.width = '0%'; 
             console.error("Message Error:", e);
             if(typeof window.showToast === 'function') window.showToast("Error", "Message failed to send.", currentUser?.photoURL);
-        } finally {
-            window.isSendingMessage = false; // 🌟 प्रक्रिया पूरी होने पर लॉक खोलें
         }
     })(); 
 };
 
-// =====================================================================================
+// ==========================================
 // --- MSG OPTIONS & DELETE ---
-// =====================================================================================
+// ==========================================
 window.openMsgOptions = (msgId, isMe, text) => {
     selectedMsgId = msgId; selectedMsgText = text;
     const modal = document.getElementById('msg-options-modal');
@@ -1163,8 +1119,8 @@ window.closeChat = () => {
     if(window.chatResizeObserver) { window.chatResizeObserver.disconnect(); window.chatResizeObserver = null; }
 
     if(window.unsubscribeChat) { window.unsubscribeChat(); window.unsubscribeChat = null; }
-    if(window.unsubscribeUserStatus) { window.unsubscribeUserStatus(); window.unsubscribeUserStatus = null; }
-    if(window.unsubscribeTyping) { window.unsubscribeTyping(); window.unsubscribeTyping = null; }
+    if(unsubscribeUserStatus) { unsubscribeUserStatus(); unsubscribeUserStatus = null; }
+    if(unsubscribeTyping) { unsubscribeTyping(); unsubscribeTyping = null; }
     
     const chatMessagesArea = document.getElementById('chat-messages-area');
     if(chatMessagesArea) chatMessagesArea.innerHTML = ""; 
@@ -1206,9 +1162,9 @@ window.handleCopyMessage = () => {
     window.closeMsgOptions();
 };
 
-// =====================================================================================
+// ==========================================
 // --- REACTIONS & DOUBLE TAP ---
-// =====================================================================================
+// ==========================================
 window.triggerEmojiExplosion = (emoji, x, y) => {
     const container = document.getElementById('emoji-animation-container');
     if (!container) return;
@@ -1311,9 +1267,9 @@ window.handleMessageDoubleTap = async (element, msgId) => {
     } catch (e) { console.error("Double tap update error:", e); }
 }; 
 
-// =====================================================================================
+// ==========================================
 // --- SWIPE TO REPLY ---
-// =====================================================================================
+// ==========================================
 window.activateReplyMode = (msgId, userName, text, mediaUrl = null, ownerName = null, ownerDp = null) => {
     window.currentReplyData = { id: msgId, name: userName, text: text, media: mediaUrl, ownerName: ownerName, ownerDp: ownerDp };
     document.getElementById('reply-to-name').innerText = ownerName || userName;
@@ -1375,9 +1331,9 @@ window.attachSwipeReplyListener = (messageEl, wrapperEl, msgId, userName, text, 
     });
 };
 
-// =====================================================================================
+// ==========================================
 // --- CHAT PROFILE & MOODS ---
-// =====================================================================================
+// ==========================================
 window.analyzeAndApplyMood = (text, timestamp) => {
     if(!document.getElementById('chat-room').classList.contains('active')) return;
     if(timestamp && timestamp.toDate) { if(Date.now() - timestamp.toDate().getTime() > 5000) return; }
@@ -1659,9 +1615,9 @@ window.closeChatProfile = () => {
     if (modal) { modal.classList.remove('active'); if(navigator.vibrate) navigator.vibrate(30); }
 };
 
-// =====================================================================================
+// =========================================================
 // --- INBOX LONG PRESS ACTIONS ---
-// =====================================================================================
+// =========================================================
 window.startInboxPress = (uid, name, event) => {
     const el = event.currentTarget; startTouchY = event.touches ? event.touches[0].clientY : 0;
     isInboxLongPress = false; if(inboxLongPressTimer) clearTimeout(inboxLongPressTimer);
