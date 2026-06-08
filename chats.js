@@ -689,7 +689,6 @@ const loadMessagesWithLimit = () => {
                 let didISendNewMessage = false;
                 let didIReceiveNewMessage = false;
 
-                // केवल पहली बार लोड होने पर एरिया क्लियर करें
                 if (isFirstLoad && !window.isFetchingHistory) { area.innerHTML = ""; }
 
                 snapshot.docChanges().forEach((change) => {
@@ -702,7 +701,7 @@ const loadMessagesWithLimit = () => {
                         const isDeleted = msg.deleted || msg.text === "🚫 Message deleted";
                         
                         if (change.type === "added") {
-                            // 🌟 सेंडिंग और रिसीविंग स्टेटस पर डुप्लीकेट स्क्रॉलिंग रोकें
+                            // सेंडिंग और सिंकिंग के समय दो बार होने वाले जंप को रोकें
                             if (isMe) {
                                 if (!alreadyExists) didISendNewMessage = true; 
                             } else {
@@ -731,12 +730,12 @@ const loadMessagesWithLimit = () => {
                             isNewElement = true; 
                         }
                         
-                        // 🌟 टाइमस्टैम्प लॉकिंग: सर्वर रिस्पॉन्स के समय कंपन (Flicker) रोकता है
+                        // टाइमस्टैम्प लॉकिंग: सर्वर रिस्पॉन्स के समय कार्ड्स का स्थान बदलने से रोकता है
                         const existingTs = wrapperDiv.getAttribute('data-timestamp');
                         const tsMillis = msg.timestamp?.toMillis ? msg.timestamp.toMillis() : (existingTs ? parseInt(existingTs) : Date.now());
                         wrapperDiv.setAttribute('data-timestamp', tsMillis);
 
-                        // रिएक्शंस तैयार करें
+                        // रिएक्शंस तैयार करना
                         let reactionsHtml = "";
                         if (msg.reactions && !isDeleted) {
                             const totalCount = Object.keys(msg.reactions).length;
@@ -755,7 +754,7 @@ const loadMessagesWithLimit = () => {
                             }
                         }
 
-                        // रिप्लाई हेडर और कार्ड डेटा सेटअप
+                        // रिप्लाई कार्ड सेटअप
                         let replyHeaderHtml = "";
                         let replyCardHtml = "";
                         if (msg.replyToId && !isDeleted) {
@@ -766,9 +765,9 @@ const loadMessagesWithLimit = () => {
                                 displayDP = repliedUser ? (repliedUser.avatarBase64 || repliedUser.photoURL) : 'https://i.pravatar.cc/150';
                             }
                             let labelText = isMe ? "You replied" : `${(msg.repliedOwnerName || msg.replyToName).split(' ')[0]} replied`;
-                            replyHeaderHtml = `<div class="reply-external-header" style="display:flex; align-items:center; gap:6px; margin-bottom:4px; padding:0 8px;"><img src="${displayDP}" style="width:18px; height:18px; border-radius:50%; border:1.2px solid var(--primary); object-fit:cover;" loading="lazy"><span style="font-size:0.68rem; font-weight:800; color:#777;">${labelText}</span></div>`;
+                            replyHeaderHtml = `<div class="reply-external-header fade-in-up" style="display:flex; align-items:center; gap:6px; margin-bottom:4px; padding:0 8px;"><img src="${displayDP}" style="width:18px; height:18px; border-radius:50%; border:1.2px solid var(--primary); object-fit:cover;" loading="lazy"><span style="font-size:0.68rem; font-weight:800; color:#777;">${labelText}</span></div>`;
                             let mediaThumbHtml = msg.replyMediaUrl ? `<img src="${msg.replyMediaUrl}" class="reply-card-media-thumb" style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-bottom:6px;" loading="lazy">` : "";
-                            replyCardHtml = `<div class="reply-card-board reply-pop-effect" style="width: fit-content; max-width: 250px; min-width: 100px; padding: 10px 14px; background: #f1f5f9 !important; border-radius: 18px; margin-bottom: -5px; display: flex; flex-direction: column;" onclick="window.scrollToMessage('${msg.replyToId}')"><div class="reply-card-content-area">${mediaThumbHtml}<div class="reply-card-body" style="color: #1e293b !important; font-size: 0.85rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis;">${msg.replyToText || ""}</div></div></div>`;
+                            replyCardHtml = `<div class="reply-card-board reply-pop-effect" style="width: fit-content; max-width: 250px; min-width: 100px; height: auto; padding: 10px 14px; background: #f1f5f9 !important; border-radius: 18px; margin-bottom: -5px; display: flex; flex-direction: column;" onclick="window.scrollToMessage('${msg.replyToId}')"><div class="reply-card-content-area" style="background: transparent; position: relative;">${mediaThumbHtml}<div class="reply-card-body" style="position: static; background: transparent; color: #1e293b !important; font-size: 0.85rem; font-weight: 700; line-height: 1.3; padding: 0; display: block; overflow: hidden; text-overflow: ellipsis;">${msg.replyToText || ""}</div></div></div>`;
                         }
 
                         let cardHtml = "";
@@ -793,7 +792,7 @@ const loadMessagesWithLimit = () => {
                                 cardHtml = `<div class="chat-shared-standalone-card reply-pop-effect" onclick="${navAction}"><div class="shared-card-header"><img src="${ownerPhoto}" class="shared-card-dp" loading="lazy"><div class="shared-card-user-info"><span class="shared-card-name">${ownerName}</span><span class="shared-card-type"><i class="fa-solid ${icon}"></i> ${typeLabel}</span></div></div><div class="shared-card-body" style="aspect-ratio: 16/9; background: #e2e8f0; overflow: hidden; border-radius: 12px;"><img src="${mediaUrl?.replace(/\.[^/.]+$/, ".jpg")}" class="shared-card-img" style="width:100%; height:100%; object-fit:cover;" loading="lazy">${msg.isReelShare ? '<div class="shared-play-btn"><i class="fa-solid fa-play"></i></div>' : ''}</div><div class="shared-card-footer"><span>${actionText}</span><i class="fa-solid fa-chevron-right"></i></div></div>`;
                             }
                             
-                            // मीडिया रेंडरिंग (नो लेआउट शिफ्ट डिजाइन)
+                            // ऑडियो, वीडियो और मीडिया रेंडरिंग (स्टेबल नो-जंप डिज़ाइन)
                             if (msg.mediaUrl && !isShare) {
                                 if (msg.mediaType === 'video') { 
                                     cardHtml = `<div class="chat-vid-box" style="aspect-ratio: 4/3; background: #e2e8f0; border-radius: 16px; overflow:hidden;" onclick="window.viewFullMedia('${msg.mediaUrl}', 'video')"><img src="${msg.mediaUrl.replace(/\.[^/.]+$/, ".jpg")}" class="chat-media-preview" style="width:100%; height:100%; object-fit:cover;" loading="lazy"><i class="fa-solid fa-circle-play"></i></div>`; 
@@ -819,7 +818,8 @@ const loadMessagesWithLimit = () => {
                             if (msg.text) { textHtml = `<div class="real-text-msg">${msg.text}</div>`; }
                         }
                         
-                        const isPending = (change.type === "added") && change.doc.metadata.hasPendingWrites && !msg.timestamp;
+                        // 🌟 पेंडिंग स्टेटस चेक (कमिटमेंट और रीयल-टाइम अपडेट के लिए मजबूत)
+                        const isPending = change.doc.metadata.hasPendingWrites && !msg.timestamp;
                         let timeStr = isPending ? `<span style="color:#94a3b8;">Sending... <i class="fa-solid fa-circle-notch fa-spin" style="font-size:0.7rem; margin-left:2px;"></i></span>` : window.formatChatMsgTime(msg.timestamp || { toDate: () => new Date() });
                         
                         let seenHtml = "";
@@ -829,7 +829,7 @@ const loadMessagesWithLimit = () => {
                         }
 
                         if (isNewElement) {
-                            // 🌟 पूरा HTML केवल पहली बार रेंडर होगा (मेमोरी अनुकूलित)
+                            // 🌟 पूरा HTML केवल पहली बार ही बिल्ड होगा
                             wrapperDiv.innerHTML = `
                                 <div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div>
                                 <div class="message-container-unit" style="display:flex; flex-direction:column; ${isMe ? 'align-items:flex-end;' : 'align-items:flex-start;'}">
@@ -841,11 +841,14 @@ const loadMessagesWithLimit = () => {
                                         <div class="reactions-container-target">${reactionsHtml}</div>
                                     </div>
                                     <div class="message-meta-board">
-                                        <span class="meta-time">${timeStr} <span class="seen-status-target">${seenHtml}</span></span>
+                                        <span class="meta-time">
+                                            <span class="time-text-target">${timeStr}</span>
+                                            <span class="seen-status-target">${seenHtml}</span>
+                                        </span>
                                     </div> 
                                 </div>`;
 
-                            // 🌟 स्मार्ट पोजीशन इंसर्शन (नो-लेआउट थ्रैश): नए संदेश को सीधे उसकी सही क्रोनोलॉजिकल जगह पर इंसर्ट करता है
+                            // स्मार्ट पोजीशनिंग इंसर्शन
                             let anchor = document.getElementById('chat-bottom-anchor');
                             let referenceEl = anchor;
                             const existingWrappers = Array.from(area.querySelectorAll('.msg-wrapper'));
@@ -859,7 +862,7 @@ const loadMessagesWithLimit = () => {
                             }
                             area.insertBefore(wrapperDiv, referenceEl);
 
-                            // तारीख का नया डिवाइडर जोड़ना (चुपचाप इंसर्ट करना)
+                            // तारीख का नया डिवाइडर केवल सीमा पर जोड़ना
                             const currentLabel = typeof window.getDateLabel === 'function' ? window.getDateLabel({toDate: () => new Date(tsMillis)}) : "Today";
                             const prevWrapper = wrapperDiv.previousElementSibling;
                             if (prevWrapper && prevWrapper.classList.contains('msg-wrapper')) {
@@ -873,18 +876,25 @@ const loadMessagesWithLimit = () => {
                                 }
                             }
                         } else {
-                            // 🌟 पुराना संदेश पहले से डोम में है: केवल सब-चेंजेस अपडेट करें (पुलिंग या ब्लिंक के बिना)
+                            // 🌟 पहले से मौजूद मैसेज: री-रेंडर करने के बजाय विशिष्ट सब-चेंजेस अपडेट करें
                             const reactionTarget = wrapperDiv.querySelector('.reactions-container-target');
                             if (reactionTarget && reactionTarget.innerHTML !== reactionsHtml) {
                                 reactionTarget.innerHTML = reactionsHtml;
                             }
+                            
+                            // 🌟 BUG FIX: "Sending..." स्थिति को वास्तविक सर्वर समय से सुचारू रूप से बदलें
+                            const timeTarget = wrapperDiv.querySelector('.time-text-target');
+                            if (timeTarget && timeTarget.innerHTML !== timeStr) {
+                                timeTarget.innerHTML = timeStr;
+                            }
+
                             const seenTarget = wrapperDiv.querySelector('.seen-status-target');
-                            if (seenTarget && !isPending && isMe) {
+                            if (seenTarget && isMe) {
                                 seenTarget.innerHTML = seenHtml;
                             }
                         }
 
-                        // इवेंट लिसनर्स बाइंड करें (केवल न्यू एलिमेंट्स पर)
+                        // इवेंट बाइंडिंग (केवल न्यू एलिमेंट्स के लिए)
                         const msgDiv = document.getElementById(`msg-${id}`);
                         if (msgDiv && isNewElement) {
                             msgDiv.oncontextmenu = (e) => { e.preventDefault(); window.openMsgOptions(id, isMe, msg.text); };
@@ -917,7 +927,7 @@ const loadMessagesWithLimit = () => {
                     }
                 });
 
-                // बॉटम एंकर स्थिरता सुनिश्चित करें
+                // बॉटम एंकर सुरक्षा
                 let anchor = document.getElementById('chat-bottom-anchor');
                 if(!anchor) {
                     anchor = document.createElement('div');
@@ -927,7 +937,6 @@ const loadMessagesWithLimit = () => {
                     area.appendChild(anchor);
                 }
 
-                // स्क्रॉल और इतिहास स्थिति रेंडर
                 if (isFirstLoad) {
                     if (window.isFetchingHistory) {
                         const heightDiff = area.scrollHeight - oldScrollHeight;
