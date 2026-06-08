@@ -1,12 +1,12 @@
-// ==========================================
+// =====================================================================================
 // --- FIREBASE IMPORTS FOR CHAT ---
-// ==========================================
+// =====================================================================================
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, setDoc, getDoc, getDocs, where, writeBatch, limitToLast, collectionGroup } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-// ==========================================
+// =====================================================================================
 // --- CHAT GLOBAL VARIABLES ---
-// ==========================================
+// =====================================================================================
 window.chatDrafts = JSON.parse(localStorage.getItem('loveChats_drafts') || "{}");
 window.unreadCounts = window.unreadCounts || {};
 window.allCachedUsers = window.allCachedUsers || [];
@@ -17,7 +17,7 @@ window.chatRawFile = null;
 window.chatMediaBase64 = null;
 window.chatMediaType = 'text';
 window.typingTimeout = null;
-window.isSendingMessage = false; // 🌟 डुप्लीकेट सेंडिंग रोकने के लिए लॉक
+window.isSendingMessage = false; // 🌟 तात्कालिक सेंडिंग प्रोसेस लॉक
 
 let fullInboxUsers = [];     
 let displayInboxUsers = [];  
@@ -26,8 +26,8 @@ let isFetchingInbox = false;
 
 window.unsubscribeChatList = null;
 window.unsubscribeUnread = null;
-window.unsubscribeUserStatus = null; // 🌟 विंडो स्कोप में बदला
-window.unsubscribeTyping = null;     // 🌟 विंडो स्कोप में बदला
+window.unsubscribeUserStatus = null; // 🌟 ग्लोबल विंडो ऑब्जेक्ट स्कोपिंग
+window.unsubscribeTyping = null;     // 🌟 ग्लोबल विंडो ऑब्जेक्ट स्कोपिंग
 window.unsubscribeChat = null;
 
 let selectedMsgId = null;
@@ -38,9 +38,9 @@ let startTouchY = 0;
 let selectedInboxUid = null;
 let moodTimeout = null;
 
-// ==========================================
+// =====================================================================================
 // --- AUTO START CHAT SYSTEM ---
-// ==========================================
+// =====================================================================================
 const auth = getAuth();
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -57,9 +57,9 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// ==========================================
+// =====================================================================================
 // --- UNREAD MESSAGES & NOTIFICATIONS ---
-// ==========================================
+// =====================================================================================
 window.startUnreadListener = () => {
     const currentUser = window.currentUser;
     const db = window.db;
@@ -104,9 +104,9 @@ window.updateBottomBadgeLocal = () => {
     }
 };
 
-// ==========================================
+// =====================================================================================
 // --- INBOX PAGINATION & RENDER LOGIC ---
-// ==========================================
+// =====================================================================================
 window.loadUserList = async () => {
     const currentUser = window.currentUser;
     const db = window.db;
@@ -242,9 +242,9 @@ window.loadMoreInboxUsers = () => {
     currentInboxIndex += 20; isFetchingInbox = false;
 };
 
-// ==========================================
+// =====================================================================================
 // --- SETTINGS & CHAT LOCK SYSTEM ---
-// ==========================================
+// =====================================================================================
 window.saveChatPassword = async () => {
     const currentUser = window.currentUser;
     const currentUserData = window.currentUserData;
@@ -366,9 +366,9 @@ window.verifyChatPassword = () => {
     }
 };
 
-// ==========================================
+// =====================================================================================
 // --- CHAT DRAFTS & TYPING ---
-// ==========================================
+// =====================================================================================
 window.saveDraft = (uid, text) => {
     window.chatDrafts = window.chatDrafts || {};
     if(text && text.trim().length > 0) window.chatDrafts[uid] = text;
@@ -423,9 +423,9 @@ window.cancelReply = () => {
     if(inputArea) inputArea.style.borderRadius = "40px";
 };
 
-// ==========================================
+// =====================================================================================
 // --- CLOUDINARY UPLOAD HELPER ---
-// ==========================================
+// =====================================================================================
 window.currentUploadXHR = null; 
 window.uploadFile = function(file, onProgress) {
     return new Promise((resolve, reject) => {
@@ -465,9 +465,9 @@ window.uploadFile = function(file, onProgress) {
     });
 };
 
-// ==========================================
+// =====================================================================================
 // --- NAVIGATION: CLICK TO OPEN REEL/POST/STORY ---
-// ==========================================
+// =====================================================================================
 window.openSharedContentFromChat = (type, targetId, ownerId) => {
     const chatRoom = document.getElementById('chat-room');
     if (chatRoom && window.currentChatId) {
@@ -515,9 +515,9 @@ window.getSeenTimeAgo = (timestamp) => {
     return `Seen ${Math.floor(diffHours / 24)} d`;
 };
 
-// ==========================================
-// --- CHAT ROOM INITIALIZATION & RENDER (BUG FIXED) ---
-// ==========================================
+// =====================================================================================
+// --- CHAT ROOM INITIALIZATION & RENDER (SMOOTH & FAST NO-BOUNCE VERSION) ---
+// =====================================================================================
 window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
     try {
         const chatRoom = document.getElementById('chat-room');
@@ -701,12 +701,15 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
 
                     if (change.type === "added" || change.type === "modified") {
                         const isMe = msg.senderId === currentUser.uid;
+                        const alreadyExists = document.getElementById(`wrapper-${id}`);
                         
                         if (change.type === "added") {
-                            if (isMe) didISendNewMessage = true; 
-                            else {
+                            // 🌟 टाइमर केवल वास्तविक नए संदेश पर ही ट्रिगर होगा (पुष्टि होने पर दुबारा नहीं)
+                            if (isMe) {
+                                if (!alreadyExists) didISendNewMessage = true; 
+                            } else {
                                 const msgTime = msg.timestamp?.toMillis ? msg.timestamp.toMillis() : Date.now();
-                                if (Date.now() - msgTime < 10000) didIReceiveNewMessage = true;
+                                if (Date.now() - msgTime < 10000 && !alreadyExists) didIReceiveNewMessage = true;
                             }
                         }
 
@@ -719,7 +722,7 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                             area.appendChild(unreadDivider);
                         }
                         
-                        let wrapperDiv = document.getElementById(`wrapper-${id}`);
+                        let wrapperDiv = alreadyExists;
                         let isNewElement = false;
 
                         if (!wrapperDiv) { 
@@ -729,7 +732,9 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                             isNewElement = true; 
                         }
                         
-                        const tsMillis = msg.timestamp?.toMillis ? msg.timestamp.toMillis() : parseInt(wrapperDiv.getAttribute('data-timestamp') || Date.now());
+                        // 🌟 टाइमस्टैम्प लॉक: एक बार एट्रिब्यूट सेट होने के बाद, सर्वर सिंक इसे री-सॉर्ट नहीं करेगा
+                        const existingTs = wrapperDiv.getAttribute('data-timestamp');
+                        const tsMillis = msg.timestamp?.toMillis ? msg.timestamp.toMillis() : (existingTs ? parseInt(existingTs) : Date.now());
                         wrapperDiv.setAttribute('data-timestamp', tsMillis);
 
                         let replyHeaderHtml = "";
@@ -769,13 +774,13 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                                 let ownerId = msg.repliedStoryOwnerId || msg.sharedOwnerId || msg.sharedReelOwnerId;
                                 const navAction = `window.openSharedContentFromChat('${typeStr}', '${targetId}', '${ownerId}')`;
                                 
-                                cardHtml = `<div class="chat-shared-standalone-card reply-pop-effect" onclick="${navAction}"><div class="shared-card-header"><img src="${ownerPhoto}" class="shared-card-dp" loading="lazy"><div class="shared-card-user-info"><span class="shared-card-name">${ownerName}</span><span class="shared-card-type"><i class="fa-solid ${icon}"></i> ${typeLabel}</span></div></div><div class="shared-card-body"><img src="${mediaUrl?.replace(/\.[^/.]+$/, ".jpg")}" class="shared-card-img" loading="lazy">${msg.isReelShare ? '<div class="shared-play-btn"><i class="fa-solid fa-play"></i></div>' : ''}</div><div class="shared-card-footer"><span>${actionText}</span><i class="fa-solid fa-chevron-right"></i></div></div>`;
+                                cardHtml = `<div class="chat-shared-standalone-card reply-pop-effect" onclick="${navAction}"><div class="shared-card-header"><img src="${ownerPhoto}" class="shared-card-dp" loading="lazy"><div class="shared-card-user-info"><span class="shared-card-name">${ownerName}</span><span class="shared-card-type"><i class="fa-solid ${icon}"></i> ${typeLabel}</span></div></div><div class="shared-card-body" style="aspect-ratio: 16/9; background: #e2e8f0; overflow: hidden; border-radius: 12px;"><img src="${mediaUrl?.replace(/\.[^/.]+$/, ".jpg")}" class="shared-card-img" style="width:100%; height:100%; object-fit:cover;" loading="lazy">${msg.isReelShare ? '<div class="shared-play-btn"><i class="fa-solid fa-play"></i></div>' : ''}</div><div class="shared-card-footer"><span>${actionText}</span><i class="fa-solid fa-chevron-right"></i></div></div>`;
                             }
                             
-                            // 🎧 AUDIO, VIDEO AND IMAGE FIX
+                            // 🎧 AUDIO, VIDEO AND IMAGE FIX WITH PLACEHOLDERS (No layout shifts)
                             if (msg.mediaUrl && !isShare) {
                                     if (msg.mediaType === 'video') { 
-                                        cardHtml = `<div class="chat-vid-box" onclick="window.viewFullMedia('${msg.mediaUrl}', 'video')"><img src="${msg.mediaUrl.replace(/\.[^/.]+$/, ".jpg")}" class="chat-media-preview" loading="lazy"><i class="fa-solid fa-circle-play"></i></div>`; 
+                                        cardHtml = `<div class="chat-vid-box" style="aspect-ratio: 4/3; background: #e2e8f0; border-radius: 16px; overflow:hidden;" onclick="window.viewFullMedia('${msg.mediaUrl}', 'video')"><img src="${msg.mediaUrl.replace(/\.[^/.]+$/, ".jpg")}" class="chat-media-preview" style="width:100%; height:100%; object-fit:cover;" loading="lazy"><i class="fa-solid fa-circle-play"></i></div>`; 
                                     } else if (msg.mediaType === 'audio') { 
                                         cardHtml = `
                                         <div class="insta-audio-player">
@@ -792,7 +797,7 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                                             <div class="audio-speed-btn" id="speed-${id}" onclick="window.changeAudioSpeed('${id}')">1x</div>
                                         </div>`; 
                                     } else { 
-                                        cardHtml = `<img src="${msg.mediaUrl}" class="chat-media-preview" loading="lazy" onclick="window.viewFullMedia('${msg.mediaUrl}', 'image')">`; 
+                                        cardHtml = `<div style="max-width: 250px; aspect-ratio: 1; background: #e2e8f0; border-radius: 16px; overflow: hidden;"><img src="${msg.mediaUrl}" class="chat-media-preview" style="width:100%; height:100%; object-fit:cover;" loading="lazy" onclick="window.viewFullMedia('${msg.mediaUrl}', 'image')"></div>`; 
                                     }
                                 }
                                 if (msg.text) { textHtml = `<div class="real-text-msg">${msg.text}</div>`; }
@@ -897,6 +902,7 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                 });
                 msgWrappers.forEach(wrapper => area.appendChild(wrapper));
 
+                // 🌟 लेआउट थ्रैशिंग कम करने के लिए तारीख केवल पहली बार या लंबाई बदलने पर व्यवस्थित होगी
                 document.querySelectorAll('.chat-date-divider:not(.unread-divider-mark)').forEach(el => el.remove());
                 let lastDivLabel = null;
                 area.querySelectorAll('.msg-wrapper').forEach(wrapper => {
@@ -1011,9 +1017,9 @@ setInterval(() => {
     });
 }, 10000);
 
-// ==========================================
+// =====================================================================================
 // --- SENDING TEXT / IMAGES ---
-// ==========================================
+// =====================================================================================
 window.handleSendMsg = () => {
     if (window.isSendingMessage) return; // 🌟 सेंडिंग प्रोसेस लॉक
 
@@ -1116,9 +1122,9 @@ window.handleSendMsg = () => {
     })(); 
 };
 
-// ==========================================
+// =====================================================================================
 // --- MSG OPTIONS & DELETE ---
-// ==========================================
+// =====================================================================================
 window.openMsgOptions = (msgId, isMe, text) => {
     selectedMsgId = msgId; selectedMsgText = text;
     const modal = document.getElementById('msg-options-modal');
@@ -1200,9 +1206,9 @@ window.handleCopyMessage = () => {
     window.closeMsgOptions();
 };
 
-// ==========================================
+// =====================================================================================
 // --- REACTIONS & DOUBLE TAP ---
-// ==========================================
+// =====================================================================================
 window.triggerEmojiExplosion = (emoji, x, y) => {
     const container = document.getElementById('emoji-animation-container');
     if (!container) return;
@@ -1305,9 +1311,9 @@ window.handleMessageDoubleTap = async (element, msgId) => {
     } catch (e) { console.error("Double tap update error:", e); }
 }; 
 
-// ==========================================
+// =====================================================================================
 // --- SWIPE TO REPLY ---
-// ==========================================
+// =====================================================================================
 window.activateReplyMode = (msgId, userName, text, mediaUrl = null, ownerName = null, ownerDp = null) => {
     window.currentReplyData = { id: msgId, name: userName, text: text, media: mediaUrl, ownerName: ownerName, ownerDp: ownerDp };
     document.getElementById('reply-to-name').innerText = ownerName || userName;
@@ -1369,9 +1375,9 @@ window.attachSwipeReplyListener = (messageEl, wrapperEl, msgId, userName, text, 
     });
 };
 
-// ==========================================
+// =====================================================================================
 // --- CHAT PROFILE & MOODS ---
-// ==========================================
+// =====================================================================================
 window.analyzeAndApplyMood = (text, timestamp) => {
     if(!document.getElementById('chat-room').classList.contains('active')) return;
     if(timestamp && timestamp.toDate) { if(Date.now() - timestamp.toDate().getTime() > 5000) return; }
@@ -1653,9 +1659,9 @@ window.closeChatProfile = () => {
     if (modal) { modal.classList.remove('active'); if(navigator.vibrate) navigator.vibrate(30); }
 };
 
-// =========================================================
+// =====================================================================================
 // --- INBOX LONG PRESS ACTIONS ---
-// =========================================================
+// =====================================================================================
 window.startInboxPress = (uid, name, event) => {
     const el = event.currentTarget; startTouchY = event.touches ? event.touches[0].clientY : 0;
     isInboxLongPress = false; if(inboxLongPressTimer) clearTimeout(inboxLongPressTimer);
