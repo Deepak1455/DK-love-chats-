@@ -18,7 +18,7 @@ window.chatMediaBase64 = null;
 window.chatMediaType = 'text';
 window.typingTimeout = null;
 
-// 🌟 नया: फ़्रंटएंड डबल-सबमिशन रोकने के लिए सेंडिंग लॉक स्टेट
+// फ़्रंटएंड डबल-सबमिशन रोकने के लिए सेंडिंग लॉक स्टेट
 window.isMessageSending = false;
 
 let fullInboxUsers = [];     
@@ -642,8 +642,6 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
             }
         });
 
-        // 🌟 सुधार (Seen Bug fix): 2 सेकंड की अनावश्यक देरी (setTimeout) को पूरी तरह हटाकर
-        // चैट रूम खुलते ही बिना किसी देरी के संदेशों को 'seen' मार्क किया जाता है।
         if(!isFake) {
             const qSeen = query(collection(db, "chats", roomId, "messages"), where("senderId", "==", targetUid), where("seen", "==", false));
             getDocs(qSeen).then(snap => {
@@ -984,7 +982,7 @@ setInterval(() => {
 }, 10000);
 
 // ==========================================
-// --- SENDING TEXT / IMAGES (BUG RESOLVED) ---
+// --- SENDING TEXT / IMAGES (SMART COUNTER IDs) ---
 // ==========================================
 window.handleSendMsg = () => {
     const currentUser = window.currentUser;
@@ -994,8 +992,7 @@ window.handleSendMsg = () => {
     const input = document.getElementById('msg-input'); 
     const text = input.value.trim();
     
-    // 🌟 सुरक्षा और अनुकूलन (Optimistic Send Lock): 
-    // यदि संदेश भेजने की प्रक्रिया पहले से चल रही है, तो अन्य सबमिशन रोकें।
+    // सुरक्षा लॉक: यदि संदेश भेजने की प्रक्रिया पहले से चल रही है, तो रोकें।
     if (window.isMessageSending) return;
     if(!window.currentChatId || (!text && !window.chatRawFile)) return;
     
@@ -1052,16 +1049,42 @@ window.handleSendMsg = () => {
                 if(progressBar) progressBar.style.width = '0%';
             }
 
-            setDoc(doc(db, "chats", targetRoomId), {
+            // 🌟 1. चैट रूम का डेटा प्राप्त करके करंट काउंटर्स पढ़ें (Sequential IDs)
+            const roomRef = doc(db, "chats", targetRoomId);
+            const roomSnap = await getDoc(roomRef);
+            const roomData = roomSnap.exists() ? roomSnap.data() : {};
+
+            let customId = "";
+            let updateFields = {
                 users: [currentUser.uid, targetUserId],
                 lastMessage: text || (url ? `Sent a ${type}` : "Sent a message"),
-                timestamp: serverTimestamp() 
-            }, { merge: true });
+                timestamp: serverTimestamp()
+            };
 
-            await addDoc(collection(db, "chats", targetRoomId, "messages"), {
+            // 🌟 2. संदेश के प्रकार (Type) के अनुसार इंक्रीमेंटिंग आईडी तय करें
+            if (type === 'video') {
+                const currentCount = (roomData.videoCount || 0) + 1;
+                customId = `video${currentCount}`;
+                updateFields.videoCount = currentCount;
+            } else if (type === 'image') {
+                const currentCount = (roomData.photoCount || 0) + 1;
+                customId = `photo${currentCount}`;
+                updateFields.photoCount = currentCount;
+            } else { // Standard text messages / audio
+                const currentCount = (roomData.messageCount || 0) + 1;
+                customId = `message${currentCount}`;
+                updateFields.messageCount = currentCount;
+            }
+
+            // 🌟 3. सेट-डॉक (setDoc) के ज़रिए कस्टम क्रमबद्ध आईडी पर मैसेज लिखें
+            const msgRef = doc(db, "chats", targetRoomId, "messages", customId);
+            await setDoc(msgRef, {
                 text, mediaUrl: url, mediaType: type, senderId: currentUser.uid, receiverId: targetUserId, 
                 seen: false, timestamp: serverTimestamp(), ...replyPayload 
             });
+
+            // 🌟 4. रूम के काउंटर और लास्ट मैसेज को अपडेट करें
+            await setDoc(roomRef, updateFields, { merge: true });
 
             updateDoc(doc(db, "users", currentUser.uid), { typingTo: null });
 
@@ -1363,7 +1386,7 @@ window.applyChatMood = (mood) => {
     overlay.innerHTML = ''; overlay.className = `mood-${mood}`; 
 
     if(mood === 'romantic') {
-        for(let i=0; i<25; i++) { let p = document.createElement('div'); p.className = 'mood-petal'; p.style.left = Math.random() * 100 + 'vw'; p.style.animationDuration = (Math.random() * 3 + 3) + 's'; p.style.animationDelay = Math.random() * 2 + 's'; overlay.appendChild(p); }
+        for(let i=0; i<25; i++) { let p = document.createElement('div'); p.className = 'mood-petal'; p.style.left = Math.offSetWidth || Math.random() * 100 + 'vw'; p.style.animationDuration = (Math.random() * 3 + 3) + 's'; p.style.animationDelay = Math.random() * 2 + 's'; overlay.appendChild(p); }
     } else if(mood === 'angry') {
         for(let i=0; i<35; i++) { let e = document.createElement('div'); e.className = 'mood-ember'; e.style.left = Math.random() * 100 + 'vw'; e.style.animationDuration = (Math.random() * 2 + 1) + 's'; e.style.animationDelay = Math.random() * 1 + 's'; overlay.appendChild(e); }
     } else if(mood === 'sad') {
