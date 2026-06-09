@@ -239,6 +239,9 @@ window.checkAndRedirectPendingDeepLinks = async () => {
 // ==========================================
 // --- 🌟 PWA DEEP LINK ROUTING SYSTEM ---
 // ==========================================
+// ==========================================
+// --- 🌟 PWA DEEP LINK ROUTING SYSTEM (BUG RESOLVED) ---
+// ==========================================
 function handleDeepLinking() {
     const urlParams = new URLSearchParams(window.location.search);
     const openChatUserId = urlParams.get('openChat');
@@ -247,42 +250,64 @@ function handleDeepLinking() {
 
     // 1. यदि चैट नोटिफिकेशन पर क्लिक किया गया हो
     if (openChatUserId) {
-        console.log("Routing to Chat with User:", openChatUserId);
+        console.log("[Deep-Link] Routing to Chat with User:", openChatUserId);
         
         if (typeof window.switchTab === 'function') {
             window.switchTab('chat');
         }
         
-        if (typeof window.openChat === 'function') {
-            window.openChat(openChatUserId);
-        } else if (typeof window.startChatWith === 'function') {
-            window.startChatWith(openChatUserId);
-        }
+        // 🌟 सुरक्षा फ़ेच और रीयल-टाइम रेंडर (सही फ़ंक्शन बाइंडिंग):
+        // नॉन-एक्ज़िस्टेंट फ़ंक्शंस के बजाय सीधे 'window.startPrivateChat' को कॉल किया जाता है।
+        const checkAndOpenChatRoom = async () => {
+            let targetUser = window.allCachedUsers?.find(u => u.uid === openChatUserId);
+            if (!targetUser && window.db) {
+                try {
+                    const uDoc = await window.getDoc(window.doc(window.db, "users", openChatUserId));
+                    if (uDoc.exists()) targetUser = uDoc.data();
+                } catch (e) {
+                    console.error("[Deep-Link] Firestore fetch failed:", e.message);
+                }
+            }
+            
+            const name = targetUser ? targetUser.name : "User";
+            const photo = targetUser ? (targetUser.avatarBase64 || targetUser.photoURL) : "https://i.pravatar.cc/150";
+            
+            if (typeof window.startPrivateChat === 'function') {
+                window.startPrivateChat(openChatUserId, name, photo);
+            }
+        };
+
+        // फ़ायरस्टोर इनिशियलाइज़ होने के बाद चैट रूम खोलें
+        setTimeout(checkAndOpenChatRoom, 1400);
+
+        // 🌟 100% पक्का एड्रेस बार क्लीनर (Address Bar Sanitizer):
+        // राउटिंग होते ही यूआरएल से 'openChat=...' को चुपचाप डिलीट करता है ताकि आगे की नेविगेशन क्रैश न हो।
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
     } 
     // 2. यदि किसी पोस्ट के नोटिफिकेशन पर क्लिक किया गया हो
     else if (viewPostId) {
-        console.log("Routing to Single Post View:", viewPostId);
-        
+        console.log("[Deep-Link] Routing to Single Post View:", viewPostId);
         if (typeof window.openSinglePostView === 'function') {
             window.openSinglePostView(viewPostId);
         }
-    } 
-    // 3. यदि किसी रील या स्टोरी के नोटिफिकेशन पर क्लिक किया गया हो
-    else if (viewReelId) {
-        console.log("Routing to Reels View for Reel:", viewReelId);
         
+        // यूआरएल क्लीनर
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+    } 
+    // 3. यदि किसी रील के नोटिफिकेशन पर क्लिक किया गया हो
+    else if (viewReelId) {
+        console.log("[Deep-Link] Routing to Reels View for Reel:", viewReelId);
         if (typeof window.switchTab === 'function') {
             window.switchTab('reels');
-            // यहाँ रील लोड करने या स्क्रॉल करने का कोड आ सकता है
         }
+        
+        // यूआरएल क्लीनर
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
     }
 }
-
-// ऐप लोड होने पर और ब्राउज़र का इतिहास बदलने (URL Parameter बदलाव) पर इसे ट्रिगर करें
-window.addEventListener('DOMContentLoaded', () => {
-    // 1.2 सेकंड का डिले दिया गया है ताकि फायरबेस से डेटा और फ्रेंड्स लिस्ट बैकग्राउंड में लोड हो सके
-    setTimeout(handleDeepLinking, 1200); 
-});
 
 window.addEventListener('popstate', handleDeepLinking);
 
