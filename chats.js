@@ -18,6 +18,9 @@ window.chatMediaBase64 = null;
 window.chatMediaType = 'text';
 window.typingTimeout = null;
 
+// 🌟 नया: फ़्रंटएंड डबल-सबमिशन रोकने के लिए सेंडिंग लॉक स्टेट
+window.isMessageSending = false;
+
 let fullInboxUsers = [];     
 let displayInboxUsers = [];  
 let currentInboxIndex = 0;
@@ -515,7 +518,7 @@ window.getSeenTimeAgo = (timestamp) => {
 };
 
 // ==========================================
-// --- CHAT ROOM INITIALIZATION & RENDER (BUG FIXED) ---
+// --- CHAT ROOM INITIALIZATION & RENDER (seen bug resolved) ---
 // ==========================================
 window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
     try {
@@ -639,18 +642,17 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
             }
         });
 
+        // 🌟 सुधार (Seen Bug fix): 2 सेकंड की अनावश्यक देरी (setTimeout) को पूरी तरह हटाकर
+        // चैट रूम खुलते ही बिना किसी देरी के संदेशों को 'seen' मार्क किया जाता है।
         if(!isFake) {
-            setTimeout(() => {
-                if(!window.currentChatId || window.currentChatId.roomId !== roomId) return;
-                const qSeen = query(collection(db, "chats", roomId, "messages"), where("senderId", "==", targetUid), where("seen", "==", false));
-                getDocs(qSeen).then(snap => {
-                    if(!snap.empty) {
-                        const batch = writeBatch(db);
-                        snap.forEach(d => batch.update(d.ref, { seen: true, seenAt: serverTimestamp() }));
-                        batch.commit().catch(()=>{});
-                    }
-                });
-            }, 2000); 
+            const qSeen = query(collection(db, "chats", roomId, "messages"), where("senderId", "==", targetUid), where("seen", "==", false));
+            getDocs(qSeen).then(snap => {
+                if(!snap.empty) {
+                    const batch = writeBatch(db);
+                    snap.forEach(d => batch.update(d.ref, { seen: true, seenAt: serverTimestamp() }));
+                    batch.commit().catch(()=>{});
+                }
+            }).catch(()=>{});
         }
 
         window.chatMsgLimit = 50;
@@ -672,7 +674,7 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
         });
         if(area) window.chatResizeObserver.observe(area);
 
-const loadMessagesWithLimit = () => {
+        const loadMessagesWithLimit = () => {
             const q = query(collection(db, "chats", roomId, "messages"), orderBy("timestamp", "asc"), limitToLast(window.chatMsgLimit));
             if(window.unsubscribeChat) window.unsubscribeChat();
             
@@ -701,7 +703,6 @@ const loadMessagesWithLimit = () => {
                         const isDeleted = msg.deleted || msg.text === "🚫 Message deleted";
                         
                         if (change.type === "added") {
-                            // सेंडिंग और सिंकिंग के समय दो बार होने वाले जंप को रोकें
                             if (isMe) {
                                 if (!alreadyExists) didISendNewMessage = true; 
                             } else {
@@ -710,7 +711,6 @@ const loadMessagesWithLimit = () => {
                             }
                         }
 
-                        // अनरीड डिवाइडर सेटअप
                         if (!isMe && msg.seen === false && unreadMsgCount > 0 && !window.firstUnreadMsgId && change.type === "added") {
                             window.firstUnreadMsgId = id;
                             const unreadDivider = document.createElement('div');
@@ -730,12 +730,10 @@ const loadMessagesWithLimit = () => {
                             isNewElement = true; 
                         }
                         
-                        // टाइमस्टैम्प लॉकिंग: सर्वर रिस्पॉन्स के समय कार्ड्स का स्थान बदलने से रोकता है
                         const existingTs = wrapperDiv.getAttribute('data-timestamp');
                         const tsMillis = msg.timestamp?.toMillis ? msg.timestamp.toMillis() : (existingTs ? parseInt(existingTs) : Date.now());
                         wrapperDiv.setAttribute('data-timestamp', tsMillis);
 
-                        // रिएक्शंस तैयार करना
                         let reactionsHtml = "";
                         if (msg.reactions && !isDeleted) {
                             const totalCount = Object.keys(msg.reactions).length;
@@ -754,7 +752,6 @@ const loadMessagesWithLimit = () => {
                             }
                         }
 
-                        // रिप्लाई कार्ड सेटअप
                         let replyHeaderHtml = "";
                         let replyCardHtml = "";
                         if (msg.replyToId && !isDeleted) {
@@ -792,7 +789,6 @@ const loadMessagesWithLimit = () => {
                                 cardHtml = `<div class="chat-shared-standalone-card reply-pop-effect" onclick="${navAction}"><div class="shared-card-header"><img src="${ownerPhoto}" class="shared-card-dp" loading="lazy"><div class="shared-card-user-info"><span class="shared-card-name">${ownerName}</span><span class="shared-card-type"><i class="fa-solid ${icon}"></i> ${typeLabel}</span></div></div><div class="shared-card-body" style="aspect-ratio: 16/9; background: #e2e8f0; overflow: hidden; border-radius: 12px;"><img src="${mediaUrl?.replace(/\.[^/.]+$/, ".jpg")}" class="shared-card-img" style="width:100%; height:100%; object-fit:cover;" loading="lazy">${msg.isReelShare ? '<div class="shared-play-btn"><i class="fa-solid fa-play"></i></div>' : ''}</div><div class="shared-card-footer"><span>${actionText}</span><i class="fa-solid fa-chevron-right"></i></div></div>`;
                             }
                             
-                            // ऑडियो, वीडियो और मीडिया रेंडरिंग (स्टेबल नो-जंप डिज़ाइन)
                             if (msg.mediaUrl && !isShare) {
                                 if (msg.mediaType === 'video') { 
                                     cardHtml = `<div class="chat-vid-box" style="aspect-ratio: 4/3; background: #e2e8f0; border-radius: 16px; overflow:hidden;" onclick="window.viewFullMedia('${msg.mediaUrl}', 'video')"><img src="${msg.mediaUrl.replace(/\.[^/.]+$/, ".jpg")}" class="chat-media-preview" style="width:100%; height:100%; object-fit:cover;" loading="lazy"><i class="fa-solid fa-circle-play"></i></div>`; 
@@ -818,7 +814,6 @@ const loadMessagesWithLimit = () => {
                             if (msg.text) { textHtml = `<div class="real-text-msg">${msg.text}</div>`; }
                         }
                         
-                        // 🌟 पेंडिंग स्टेटस चेक (कमिटमेंट और रीयल-टाइम अपडेट के लिए मजबूत)
                         const isPending = change.doc.metadata.hasPendingWrites && !msg.timestamp;
                         let timeStr = isPending ? `<span style="color:#94a3b8;">Sending... <i class="fa-solid fa-circle-notch fa-spin" style="font-size:0.7rem; margin-left:2px;"></i></span>` : window.formatChatMsgTime(msg.timestamp || { toDate: () => new Date() });
                         
@@ -829,7 +824,6 @@ const loadMessagesWithLimit = () => {
                         }
 
                         if (isNewElement) {
-                            // 🌟 पूरा HTML केवल पहली बार ही बिल्ड होगा
                             wrapperDiv.innerHTML = `
                                 <div class="swipe-reply-icon"><i class="fa-solid fa-reply"></i></div>
                                 <div class="message-container-unit" style="display:flex; flex-direction:column; ${isMe ? 'align-items:flex-end;' : 'align-items:flex-start;'}">
@@ -848,7 +842,6 @@ const loadMessagesWithLimit = () => {
                                     </div> 
                                 </div>`;
 
-                            // स्मार्ट पोजीशनिंग इंसर्शन
                             let anchor = document.getElementById('chat-bottom-anchor');
                             let referenceEl = anchor;
                             const existingWrappers = Array.from(area.querySelectorAll('.msg-wrapper'));
@@ -862,7 +855,6 @@ const loadMessagesWithLimit = () => {
                             }
                             area.insertBefore(wrapperDiv, referenceEl);
 
-                            // तारीख का नया डिवाइडर केवल सीमा पर जोड़ना
                             const currentLabel = typeof window.getDateLabel === 'function' ? window.getDateLabel({toDate: () => new Date(tsMillis)}) : "Today";
                             const prevWrapper = wrapperDiv.previousElementSibling;
                             if (prevWrapper && prevWrapper.classList.contains('msg-wrapper')) {
@@ -876,13 +868,11 @@ const loadMessagesWithLimit = () => {
                                 }
                             }
                         } else {
-                            // 🌟 पहले से मौजूद मैसेज: री-रेंडर करने के बजाय विशिष्ट सब-चेंजेस अपडेट करें
                             const reactionTarget = wrapperDiv.querySelector('.reactions-container-target');
                             if (reactionTarget && reactionTarget.innerHTML !== reactionsHtml) {
                                 reactionTarget.innerHTML = reactionsHtml;
                             }
                             
-                            // 🌟 BUG FIX: "Sending..." स्थिति को वास्तविक सर्वर समय से सुचारू रूप से बदलें
                             const timeTarget = wrapperDiv.querySelector('.time-text-target');
                             if (timeTarget && timeTarget.innerHTML !== timeStr) {
                                 timeTarget.innerHTML = timeStr;
@@ -894,7 +884,6 @@ const loadMessagesWithLimit = () => {
                             }
                         }
 
-                        // इवेंट बाइंडिंग (केवल न्यू एलिमेंट्स के लिए)
                         const msgDiv = document.getElementById(`msg-${id}`);
                         if (msgDiv && isNewElement) {
                             msgDiv.oncontextmenu = (e) => { e.preventDefault(); window.openMsgOptions(id, isMe, msg.text); };
@@ -927,7 +916,6 @@ const loadMessagesWithLimit = () => {
                     }
                 });
 
-                // बॉटम एंकर सुरक्षा
                 let anchor = document.getElementById('chat-bottom-anchor');
                 if(!anchor) {
                     anchor = document.createElement('div');
@@ -996,7 +984,7 @@ setInterval(() => {
 }, 10000);
 
 // ==========================================
-// --- SENDING TEXT / IMAGES ---
+// --- SENDING TEXT / IMAGES (BUG RESOLVED) ---
 // ==========================================
 window.handleSendMsg = () => {
     const currentUser = window.currentUser;
@@ -1006,8 +994,13 @@ window.handleSendMsg = () => {
     const input = document.getElementById('msg-input'); 
     const text = input.value.trim();
     
+    // 🌟 सुरक्षा और अनुकूलन (Optimistic Send Lock): 
+    // यदि संदेश भेजने की प्रक्रिया पहले से चल रही है, तो अन्य सबमिशन रोकें।
+    if (window.isMessageSending) return;
     if(!window.currentChatId || (!text && !window.chatRawFile)) return;
     
+    window.isMessageSending = true; // लॉक सक्रिय करें
+
     const targetRoomId = window.currentChatId.roomId;
     const targetUserId = window.currentChatId.targetUid;
     const isFakeChat = window.currentChatId.isFake;
@@ -1065,7 +1058,7 @@ window.handleSendMsg = () => {
                 timestamp: serverTimestamp() 
             }, { merge: true });
 
-            addDoc(collection(db, "chats", targetRoomId, "messages"), {
+            await addDoc(collection(db, "chats", targetRoomId, "messages"), {
                 text, mediaUrl: url, mediaType: type, senderId: currentUser.uid, receiverId: targetUserId, 
                 seen: false, timestamp: serverTimestamp(), ...replyPayload 
             });
@@ -1082,7 +1075,10 @@ window.handleSendMsg = () => {
             const progressBar = document.getElementById('chat-progress-bar');
             if(progressBar) progressBar.style.width = '0%'; 
             console.error("Message Error:", e);
+            input.value = text; // विफलता पर पाठ पुनर्स्थापित करें (Text Restore)
             if(typeof window.showToast === 'function') window.showToast("Error", "Message failed to send.", currentUser?.photoURL);
+        } finally {
+            window.isMessageSending = false; // लॉक हटा दें
         }
     })(); 
 };
