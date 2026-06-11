@@ -18,7 +18,7 @@ window.chatMediaBase64 = null;
 window.chatMediaType = 'text';
 window.typingTimeout = null;
 
-// फ़्रंटएंड डबल-सबमिशन रोकने के लिए सेंडिंग锁 स्टेट
+// फ़्रंटएंड डबल-सबमिशन रोकने के लिए सेंडिंग लॉक स्टेट
 window.isMessageSending = false;
 
 let fullInboxUsers = [];     
@@ -369,7 +369,7 @@ window.verifyChatPassword = () => {
 };
 
 // ==========================================
-// --- CHAT DRAFTS & TYPING ---
+// --- CHAT DRAFTS, REPLY & TYPING ---
 // ==========================================
 window.saveDraft = (uid, text) => {
     window.chatDrafts = window.chatDrafts || {};
@@ -415,6 +415,15 @@ window.handleChatFileSelect = () => {
         txt.innerText = `Attach: ${window.chatMediaType}`; 
         txt.style.display = 'block';
     }
+};
+
+// 🌟 सुधार: cancelReply फ़ंक्शन को पुनर्स्थापित (restore) किया गया
+window.cancelReply = () => {
+    window.currentReplyData = null;
+    const bar = document.getElementById('reply-preview-bar');
+    if(bar) bar.classList.add('hidden');
+    const inputArea = document.querySelector('.chat-input-area');
+    if(inputArea) inputArea.style.borderRadius = "40px";
 };
 
 // ==========================================
@@ -1068,8 +1077,7 @@ window.handleSendMsg = () => {
                 updateFields.messageCount = currentCount;
             }
 
-            // 🌟 3. सेट-डॉक (setDoc) के ज़रिए कस्टम क्रमबद्ध आईडी पर मैसेज लिखें 
-            // सुधार: बैकएंड सर्वर डिटेक्शन के लिए 'notificationSent: false' शामिल किया गया है
+            // 🌟 3. सेट-डॉक (setDoc) के ज़रिए कस्टम क्रमबद्ध आईडी पर मैसेज लिखें
             const msgRef = doc(db, "chats", targetRoomId, "messages", customId);
             await setDoc(msgRef, {
                 text, 
@@ -1079,7 +1087,7 @@ window.handleSendMsg = () => {
                 receiverId: targetUserId, 
                 seen: false, 
                 timestamp: serverTimestamp(), 
-                notificationSent: false, // 👈 यह फ़ील्ड यहाँ जोड़ी गई है
+                notificationSent: false, 
                 ...replyPayload 
             });
 
