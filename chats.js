@@ -1089,7 +1089,7 @@ window.handleSendMsg = () => {
             updateDoc(doc(db, "users", currentUser.uid), { typingTo: null });
 
             if(!isFakeChat) {
-                if(typeof window.sendNotification === 'function') window.sendNotification(targetUserId, 'message', text ? text : `Sent a ${type}`);
+                // 🌟 अपडेट: क्लाइंट साइड नोटिफिकेशन को निष्क्रिय किया गया। अब बैकएंड नोड सर्वर खुद इसे हैंडल करेगा।
                 const timestamp = Date.now();
                 setDoc(doc(db, "users", currentUser.uid), { lastActive: timestamp, interactions: { [targetUserId]: timestamp } }, { merge: true });
                 setDoc(doc(db, "users", targetUserId), { interactions: { [currentUser.uid]: timestamp } }, { merge: true });
@@ -1643,9 +1643,9 @@ window.closeChatProfile = () => {
     if (modal) { modal.classList.remove('active'); if(navigator.vibrate) navigator.vibrate(30); }
 };
 
-// =========================================================
+// ==========================================
 // --- INBOX LONG PRESS ACTIONS ---
-// =========================================================
+// ==========================================
 window.startInboxPress = (uid, name, event) => {
     const el = event.currentTarget; startTouchY = event.touches ? event.touches[0].clientY : 0;
     isInboxLongPress = false; if(inboxLongPressTimer) clearTimeout(inboxLongPressTimer);
