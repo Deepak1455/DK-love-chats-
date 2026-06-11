@@ -18,7 +18,7 @@ window.chatMediaBase64 = null;
 window.chatMediaType = 'text';
 window.typingTimeout = null;
 
-// फ़्रंटएंड डबल-सबमिशन रोकने के लिए सेंडिंग लॉक स्टेट
+// फ़्रंटएंड डबल-सबमिशन रोकने के लिए सेंडिंग锁 स्टेट
 window.isMessageSending = false;
 
 let fullInboxUsers = [];     
@@ -417,14 +417,6 @@ window.handleChatFileSelect = () => {
     }
 };
 
-window.cancelReply = () => {
-    window.currentReplyData = null;
-    const bar = document.getElementById('reply-preview-bar');
-    if(bar) bar.classList.add('hidden');
-    const inputArea = document.querySelector('.chat-input-area');
-    if(inputArea) inputArea.style.borderRadius = "40px";
-};
-
 // ==========================================
 // --- CLOUDINARY UPLOAD HELPER ---
 // ==========================================
@@ -518,7 +510,7 @@ window.getSeenTimeAgo = (timestamp) => {
 };
 
 // ==========================================
-// --- CHAT ROOM INITIALIZATION & RENDER (seen bug resolved) ---
+// --- CHAT ROOM INITIALIZATION & RENDER ---
 // ==========================================
 window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
     try {
@@ -1076,11 +1068,19 @@ window.handleSendMsg = () => {
                 updateFields.messageCount = currentCount;
             }
 
-            // 🌟 3. सेट-डॉक (setDoc) के ज़रिए कस्टम क्रमबद्ध आईडी पर मैसेज लिखें
+            // 🌟 3. सेट-डॉक (setDoc) के ज़रिए कस्टम क्रमबद्ध आईडी पर मैसेज लिखें 
+            // सुधार: बैकएंड सर्वर डिटेक्शन के लिए 'notificationSent: false' शामिल किया गया है
             const msgRef = doc(db, "chats", targetRoomId, "messages", customId);
             await setDoc(msgRef, {
-                text, mediaUrl: url, mediaType: type, senderId: currentUser.uid, receiverId: targetUserId, 
-                seen: false, timestamp: serverTimestamp(), ...replyPayload 
+                text, 
+                mediaUrl: url, 
+                mediaType: type, 
+                senderId: currentUser.uid, 
+                receiverId: targetUserId, 
+                seen: false, 
+                timestamp: serverTimestamp(), 
+                notificationSent: false, // 👈 यह फ़ील्ड यहाँ जोड़ी गई है
+                ...replyPayload 
             });
 
             // 🌟 4. रूम के काउंटर और लास्ट मैसेज को अपडेट करें
@@ -1089,7 +1089,6 @@ window.handleSendMsg = () => {
             updateDoc(doc(db, "users", currentUser.uid), { typingTo: null });
 
             if(!isFakeChat) {
-                // 🌟 अपडेट: क्लाइंट साइड नोटिफिकेशन को निष्क्रिय किया गया। अब बैकएंड नोड सर्वर खुद इसे हैंडल करेगा।
                 const timestamp = Date.now();
                 setDoc(doc(db, "users", currentUser.uid), { lastActive: timestamp, interactions: { [targetUserId]: timestamp } }, { merge: true });
                 setDoc(doc(db, "users", targetUserId), { interactions: { [currentUser.uid]: timestamp } }, { merge: true });
