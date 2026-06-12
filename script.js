@@ -397,27 +397,29 @@ window.addEventListener('popstate', (event) => {
     
 
 const activeModals = [
-        { id: 'media-viewer-modal', class: 'active', close: () => window.closeFullScreenMedia() },
-        { id: 'notif-full-modal', class: 'hidden', isHidden: true, close: () => window.toggleNotifFullModal(false) }, 
-        { id: 'single-post-view-modal', class: 'hidden', isHidden: true, close: () => window.closeSinglePostView(true) },
-        { id: 'story-view-modal', class: 'hidden', isHidden: true, close: () => window.closeStory() },
-        { id: 'story-editor-modal', class: 'hidden', isHidden: true, close: () => window.closeStoryEditor() },
-        { id: 'offline-radar-modal', class: 'hidden', isHidden: true, close: () => window.closeRadar() },
-        { id: 'global-search-modal', class: 'hidden', isHidden: true, close: () => window.closeGlobalSearch() },
-        { id: 'msg-options-modal', class: 'hidden', isHidden: true, close: () => window.closeMsgOptions() },
-        { id: 'inbox-options-modal', class: 'hidden', isHidden: true, close: () => window.closeInboxOptions() },
-        { id: 'comments-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('comments-modal', false) },
-        { id: 'share-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('share-modal', false) },
-        { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
-        { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
-        { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
-        { id: 'create-post-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('create-post-modal', false) },
-        { id: 'password-prompt-modal', class: 'hidden', isHidden: true, close: () => window.cancelUnlockChat() },
-        { id: 'story-viewers-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('story-viewers-modal', false) },
-        { id: 'custom-alert-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomAlert() },
-        { id: 'custom-confirm-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomConfirm() },
-        { id: 'exit-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('exit-modal', false) }
-    ];
+    { id: 'chat-profile-modal', class: 'active', close: () => window.closeChatProfile() },
+    { id: 'chat-room', class: 'active', close: () => window.closeChat() }, // 🌟 नया: चैट रूम क्लोजिंग हैंडलर
+    { id: 'media-viewer-modal', class: 'active', close: () => window.closeFullScreenMedia() },
+    { id: 'notif-full-modal', class: 'hidden', isHidden: true, close: () => window.toggleNotifFullModal(false) }, 
+    { id: 'single-post-view-modal', class: 'hidden', isHidden: true, close: () => window.closeSinglePostView(true) },
+    { id: 'story-view-modal', class: 'hidden', isHidden: true, close: () => window.closeStory() },
+    { id: 'story-editor-modal', class: 'hidden', isHidden: true, close: () => window.closeStoryEditor() },
+    { id: 'offline-radar-modal', class: 'hidden', isHidden: true, close: () => window.closeRadar() },
+    { id: 'global-search-modal', class: 'hidden', isHidden: true, close: () => window.closeGlobalSearch() },
+    { id: 'msg-options-modal', class: 'hidden', isHidden: true, close: () => window.closeMsgOptions() },
+    { id: 'inbox-options-modal', class: 'hidden', isHidden: true, close: () => window.closeInboxOptions() },
+    { id: 'comments-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('comments-modal', false) },
+    { id: 'share-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('share-modal', false) },
+    { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
+    { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
+    { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
+    { id: 'create-post-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('create-post-modal', false) },
+    { id: 'password-prompt-modal', class: 'hidden', isHidden: true, close: () => window.cancelUnlockChat() },
+    { id: 'story-viewers-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('story-viewers-modal', false) },
+    { id: 'custom-alert-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomAlert() },
+    { id: 'custom-confirm-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomConfirm() },
+    { id: 'exit-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('exit-modal', false) }
+];
     for (let modal of activeModals) {
         const el = document.getElementById(modal.id);
         if (el) {
