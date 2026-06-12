@@ -417,7 +417,6 @@ window.handleChatFileSelect = () => {
     }
 };
 
-// 🌟 सुधार: cancelReply फ़ंक्शन को पुनर्स्थापित (restore) किया गया
 window.cancelReply = () => {
     window.currentReplyData = null;
     const bar = document.getElementById('reply-preview-bar');
@@ -523,8 +522,18 @@ window.getSeenTimeAgo = (timestamp) => {
 // ==========================================
 window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
     try {
+        // 🌟 सुरक्षा अपडेट: नई चैट खोलते ही पुराना खुला हुआ प्रोफाइल बंद कर दें
+        if (typeof window.closeChatProfile === 'function') {
+            window.closeChatProfile();
+        }
+
         const chatRoom = document.getElementById('chat-room');
         if(chatRoom) chatRoom.classList.add('active'); 
+
+        // 🌟 स्मार्ट नेविगेशन: हिस्ट्री में स्टेप दर्ज करें ताकि बैक बटन से चैट बंद हो
+        if (!history.state || history.state.view !== 'chat-room') {
+            history.pushState({ view: 'chat-room' }, "");
+        }
         
         const titleEl = document.getElementById('chat-room-title');
         const imgEl = document.getElementById('chat-header-img');
@@ -1128,6 +1137,11 @@ window.openMsgOptions = (msgId, isMe, text) => {
 };
 
 window.closeChat = () => { 
+    // 🌟 सुरक्षा अपडेट: चैट बंद करते समय प्रोफाइल modal भी बंद हो जाए
+    if (typeof window.closeChatProfile === 'function') {
+        window.closeChatProfile();
+    }
+
     if(window.currentChatId) {
         const inputEl = document.getElementById('msg-input');
         if(inputEl) window.saveDraft(window.currentChatId.targetUid, inputEl.value);
@@ -1595,6 +1609,11 @@ window.openChatProfile = async () => {
     if(navigator.vibrate) navigator.vibrate(40);
     modal.classList.add('active');
 
+    // 🌟 स्मार्ट नेविगेशन: हिस्ट्री में स्टेप दर्ज करें ताकि बैक बटन से प्रोफाइल बंद हो
+    if (!history.state || history.state.view !== 'chat-profile') {
+        history.pushState({ view: 'chat-profile' }, "");
+    }
+
     try {
         const q = query(collection(window.db, "chats", roomId, "messages"), orderBy("timestamp", "desc"), limitToLast(200));
         const snap = await getDocs(q);
@@ -1707,3 +1726,70 @@ window.handleDeleteChat = async () => {
         else window.loadMoreInboxUsers();
     } catch(e) {}
 };
+
+// ==========================================
+// --- SMART EXIT / ACTIVE MODALS CONFIG ---
+// ==========================================
+const activeModals = [
+    { id: 'chat-profile-modal', class: 'active', close: () => window.closeChatProfile() },
+    { id: 'chat-room', class: 'active', close: () => window.closeChat() }, // 🌟 नया: चैट रूम क्लोजिंग हैंडलर
+    { id: 'media-viewer-modal', class: 'active', close: () => window.closeFullScreenMedia() },
+    { id: 'notif-full-modal', class: 'hidden', isHidden: true, close: () => window.toggleNotifFullModal(false) }, 
+    { id: 'single-post-view-modal', class: 'hidden', isHidden: true, close: () => window.closeSinglePostView(true) },
+    { id: 'story-view-modal', class: 'hidden', isHidden: true, close: () => window.closeStory() },
+    { id: 'story-editor-modal', class: 'hidden', isHidden: true, close: () => window.closeStoryEditor() },
+    { id: 'offline-radar-modal', class: 'hidden', isHidden: true, close: () => window.closeRadar() },
+    { id: 'global-search-modal', class: 'hidden', isHidden: true, close: () => window.closeGlobalSearch() },
+    { id: 'msg-options-modal', class: 'hidden', isHidden: true, close: () => window.closeMsgOptions() },
+    { id: 'inbox-options-modal', class: 'hidden', isHidden: true, close: () => window.closeInboxOptions() },
+    { id: 'comments-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('comments-modal', false) },
+    { id: 'share-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('share-modal', false) },
+    { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
+    { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
+    { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
+    { id: 'create-post-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('create-post-modal', false) },
+    { id: 'password-prompt-modal', class: 'hidden', isHidden: true, close: () => window.cancelUnlockChat() },
+    { id: 'story-viewers-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('story-viewers-modal', false) },
+    { id: 'custom-alert-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomAlert() },
+    { id: 'custom-confirm-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomConfirm() },
+    { id: 'exit-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('exit-modal', false) }
+];
+
+// ==========================================
+// --- SMART EXIT HARDWARE BACK LISTENER ---
+// ==========================================
+// यह फंक्शन बैक बटन दबाने पर एक-एक करके खुली हुई स्क्रीन को सुचारू रूप से बंद करता है
+window.handleSmartExitNavigation = () => {
+    let modalClosed = false;
+
+    // 1. सबसे पहले खुली हुई Modal स्क्रीन को बंद करें
+    for (let modal of activeModals) {
+        const el = document.getElementById(modal.id);
+        if (el && el.classList.contains(modal.class)) {
+            modal.close();
+            modalClosed = true;
+            break;
+        }
+    }
+
+    // 2. यदि कोई modal खुला नहीं है, और यूजर केवल चैट लिस्ट स्क्रीन पर है:
+    if (!modalClosed) {
+        const chatListEl = document.getElementById('chat-list-container');
+        if (chatListEl && chatListEl.offsetParent !== null) {
+            if (typeof window.switchTab === 'function') {
+                window.switchTab('home'); // सुचारू रूप से होम फ़ीड पर भेजें
+            }
+        }
+    }
+};
+
+// पॉपस्टेट (Hardware Back Button) और एस्केप की (Escape Key) के लिए लिसनर
+window.addEventListener('popstate', (event) => {
+    window.handleSmartExitNavigation();
+});
+
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        window.handleSmartExitNavigation();
+    }
+});
