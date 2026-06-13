@@ -38,7 +38,9 @@ isSupported().then((supported) => {
 }).catch((err) => {
     console.error("FCM Compatibility Check Error:", err);
 });
-
+// Smart Back-Navigation Globals
+window.navHistoryStack = []; // खुले हुए मोबाइल्स/चैट रूम्स का ट्रैक रखने के लिए
+let lastBackPressTime = 0;   // डबल-टैप एक्जिट डिटेक्शन के लिए
 // Exposing missing Firestore functions for share.js and other files
 window.addDoc = addDoc;
 window.setDoc = setDoc;
@@ -358,9 +360,37 @@ window.addEventListener('load', () => {
     if(scrubber) scrubber.addEventListener('input', onScrubberInput);
 });
 
+// =========================================================
+// --- SMART BACK-NAVIGATION & NAVIGATION STACK SYSTEM ---
+// =========================================================
+
+// 1. जब कोई मोडल या चैट खुले, तो इसे स्टैक में दर्ज करें
+window.pushNavigationState = (type, closeFunc) => {
+    const stateId = type + '_' + Date.now();
+    if (!window.navHistoryStack) window.navHistoryStack = [];
+    window.navHistoryStack.push({ id: stateId, type: type, close: closeFunc });
+    
+    // ब्राउज़र हिस्ट्री में नकली स्टेट पुश करें
+    history.pushState({ navStateId: stateId }, null, window.location.href);
+};
+
+// 2. जब यूजर खुद क्लोज बटन दबाकर मोडल बंद करे, तो हिस्ट्री को सिंक्रोनाइज करें
+window.popNavigationState = (type) => {
+    if (window.navHistoryStack && window.navHistoryStack.length > 0) {
+        const lastState = window.navHistoryStack[window.navHistoryStack.length - 1];
+        if (lastState.type === type) {
+            window.navHistoryStack.pop();
+            window.history.back(); // बैक करके नकली स्टेट को हटा दें
+        }
+    }
+};
+
+// 3. मुख्य Popstate इवेंट लिसनर (सीक्वेंशियल फ्लो अपडेटेड)
 window.addEventListener('popstate', (event) => {
+    // बैक बटन दबाए जाने पर डिफ़ॉल्ट रूप से PWA को बंद होने से बचाने के लिए स्टेट को रीस्टोर करें
     history.pushState({ app: 'lovechats' }, null, window.location.href);
 
+    // [A] शेयर की गई पोस्ट से बैक आने पर पुनः चैट रूम खोलने का लॉजिक
     if (window.returnToChatData && window.targetSharedPostId) {
         const homeView = document.getElementById('home-view');
         const reelsView = document.getElementById('reels-view');
@@ -394,58 +424,75 @@ window.addEventListener('popstate', (event) => {
     }
 
     if (typeof window.toggleSharedReturnButton === 'function') window.toggleSharedReturnButton(false);
-    
 
-const activeModals = [
-    { id: 'chat-profile-modal', class: 'active', close: () => window.closeChatProfile() },
-    { id: 'chat-room', class: 'active', close: () => window.closeChat() }, // 🌟 नया: चैट रूम क्लोजिंग हैंडलर
-    { id: 'media-viewer-modal', class: 'active', close: () => window.closeFullScreenMedia() },
-    { id: 'notif-full-modal', class: 'hidden', isHidden: true, close: () => window.toggleNotifFullModal(false) }, 
-    { id: 'single-post-view-modal', class: 'hidden', isHidden: true, close: () => window.closeSinglePostView(true) },
-    { id: 'story-view-modal', class: 'hidden', isHidden: true, close: () => window.closeStory() },
-    { id: 'story-editor-modal', class: 'hidden', isHidden: true, close: () => window.closeStoryEditor() },
-    { id: 'offline-radar-modal', class: 'hidden', isHidden: true, close: () => window.closeRadar() },
-    { id: 'global-search-modal', class: 'hidden', isHidden: true, close: () => window.closeGlobalSearch() },
-    { id: 'msg-options-modal', class: 'hidden', isHidden: true, close: () => window.closeMsgOptions() },
-    { id: 'inbox-options-modal', class: 'hidden', isHidden: true, close: () => window.closeInboxOptions() },
-    { id: 'comments-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('comments-modal', false) },
-    { id: 'share-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('share-modal', false) },
-    { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
-    { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
-    { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
-    { id: 'create-post-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('create-post-modal', false) },
-    { id: 'password-prompt-modal', class: 'hidden', isHidden: true, close: () => window.cancelUnlockChat() },
-    { id: 'story-viewers-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('story-viewers-modal', false) },
-    { id: 'custom-alert-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomAlert() },
-    { id: 'custom-confirm-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomConfirm() },
-    { id: 'exit-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('exit-modal', false) }
-];
+    // [B] प्राथमिकता 1: स्मार्ट नेविगेशन स्टैक की जांच (जैसे ChatProfile -> ChatRoom)
+    if (window.navHistoryStack && window.navHistoryStack.length > 0) {
+        const stateToClose = window.navHistoryStack.pop();
+        if (stateToClose && typeof stateToClose.close === 'function') {
+            stateToClose.close();
+            return;
+        }
+    }
+
+    // [C] प्राथमिकता 2 (सुरक्षा जाल): सीधे खुले मॉडलों की सूची को स्कैन करना (Legacy Fallback)
+    const activeModals = [
+        { id: 'chat-profile-modal', class: 'active', isHidden: false, close: () => window.closeChatProfile() },
+        { id: 'media-viewer-modal', class: 'active', isHidden: false, close: () => window.closeFullScreenMedia() },
+        { id: 'notif-full-modal', class: 'hidden', isHidden: true, close: () => window.toggleNotifFullModal(false) }, 
+        { id: 'single-post-view-modal', class: 'hidden', isHidden: true, close: () => window.closeSinglePostView(true) },
+        { id: 'story-view-modal', class: 'hidden', isHidden: true, close: () => window.closeStory() },
+        { id: 'story-editor-modal', class: 'hidden', isHidden: true, close: () => window.closeStoryEditor() },
+        { id: 'offline-radar-modal', class: 'hidden', isHidden: true, close: () => window.closeRadar() },
+        { id: 'global-search-modal', class: 'hidden', isHidden: true, close: () => window.closeGlobalSearch() },
+        { id: 'msg-options-modal', class: 'hidden', isHidden: true, close: () => window.closeMsgOptions() },
+        { id: 'inbox-options-modal', class: 'hidden', isHidden: true, close: () => window.closeInboxOptions() },
+        { id: 'comments-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('comments-modal', false) },
+        { id: 'share-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('share-modal', false) },
+        { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
+        { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
+        { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
+        { id: 'create-post-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('create-post-modal', false) },
+        { id: 'password-prompt-modal', class: 'hidden', isHidden: true, close: () => window.cancelUnlockChat() },
+        { id: 'story-viewers-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('story-viewers-modal', false) },
+        { id: 'custom-alert-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomAlert() },
+        { id: 'custom-confirm-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomConfirm() },
+        { id: 'exit-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('exit-modal', false) }
+    ];
+
     for (let modal of activeModals) {
         const el = document.getElementById(modal.id);
         if (el) {
             const isOpen = modal.isHidden ? !el.classList.contains('hidden') : el.classList.contains('active');
-            if (isOpen) { modal.close(); return; }
+            if (isOpen) { 
+                modal.close(); 
+                return; 
+            }
         }
     }
 
+    // [D] चैट रूम बंद करने का लॉजिक (Fallback सुरक्षा के लिए)
     const chatRoom = document.getElementById('chat-room');
     if (chatRoom && chatRoom.classList.contains('active')) { 
         if(typeof window.closeChat === 'function') window.closeChat(); 
         return; 
     }
 
+    // [E] इनबॉक्स लिस्ट (Messages tab) से होम फीड पर वापस जाने का लॉजिक
     const homeView = document.getElementById('home-view');
     if (homeView && !homeView.classList.contains('active-view')) { 
         if(typeof window.switchTab === 'function') window.switchTab('home'); 
         return; 
     }
 
+    // [F] अंतिम चरण: होम व्यू स्क्रॉल रीसेट और एक्जिट मोडल डिस्प्ले
     if (homeView && homeView.classList.contains('active-view')) {
-        if (homeView.scrollTop > 200) { homeView.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+        if (homeView.scrollTop > 200) { 
+            homeView.scrollTo({ top: 0, behavior: 'smooth' }); 
+            return; 
+        }
         if(typeof window.toggleModal === 'function') window.toggleModal('exit-modal', true);
     }
 });
-
 // ==========================================
 // --- UTILITY & HELPER FUNCTIONS ---
 // ==========================================
