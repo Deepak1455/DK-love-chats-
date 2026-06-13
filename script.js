@@ -386,6 +386,32 @@ window.popNavigationState = (type) => {
 };
 
 // 3. मुख्य Popstate इवेंट लिसनर (सीक्वेंशियल फ्लो अपडेटेड)
+// =========================================================
+// --- SMART APP EXIT ENGINE ---
+// =========================================================
+
+/**
+ * ऐप से पूरी तरह बाहर निकलने (Exit) के लिए सुरक्षित फ़ंक्शन।
+ * ब्राउज़र सुरक्षा सीमाओं के कारण, PWA को बंद करने के लिए window.close() 
+ * और 'about:blank' रीडायरेक्शन दोनों का उपयोग किया गया है।
+ */
+window.confirmAppExit = () => {
+    if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]); // एक्जिट के लिए हैप्टिक फीडबैक
+    }
+    
+    // वर्तमान सत्र के ड्राफ्ट को साफ़ करने या सहेजने का कार्य यहाँ करें
+    
+    // ब्राउज़र विंडो बंद करने का प्रयास
+    window.close();
+    
+    // सामान्य ब्राउज़र वातावरण के लिए फॉलबैक
+    setTimeout(() => {
+        window.location.href = "about:blank";
+    }, 150);
+};
+
+// पूर्व घोषित 'lastBackPressTime' का उपयोग करते हुए 'popstate' श्रोता (Listener) में बदलाव:
 window.addEventListener('popstate', (event) => {
     // बैक बटन दबाए जाने पर डिफ़ॉल्ट रूप से PWA को बंद होने से बचाने के लिए स्टेट को रीस्टोर करें
     history.pushState({ app: 'lovechats' }, null, window.location.href);
@@ -484,15 +510,38 @@ window.addEventListener('popstate', (event) => {
         return; 
     }
 
-    // [F] अंतिम चरण: होम व्यू स्क्रॉल रीसेट और एक्जिट मोडल डिस्प्ले
+    // [F] अंतिम चरण: स्मार्ट एग्जिट लॉजिक (स्मार्टफोन बैक बटन हैंडलर)
     if (homeView && homeView.classList.contains('active-view')) {
+        // यदि यूजर होम स्क्रीन पर बहुत नीचे स्क्रॉल कर चुका है, तो पहला बैक बटन केवल ऊपर स्क्रॉल करेगा।
         if (homeView.scrollTop > 200) { 
             homeView.scrollTo({ top: 0, behavior: 'smooth' }); 
             return; 
         }
-        if(typeof window.toggleModal === 'function') window.toggleModal('exit-modal', true);
+
+        const currentTime = Date.now();
+        const doubleTapInterval = 2000; // 2 सेकंड की समय सीमा
+
+        // यदि यूजर 2 सेकंड के भीतर दोबारा बैक बटन दबाता है
+        if (currentTime - lastBackPressTime < doubleTapInterval) {
+            window.confirmAppExit(); // सीधे ऐप बंद करें
+        } else {
+            lastBackPressTime = currentTime;
+            
+            // दृश्य फीडबैक के लिए कस्टमाइज़्ड एग्जिट पुष्टिकरण मोडल खोलें
+            if (typeof window.toggleModal === 'function') {
+                window.toggleModal('exit-modal', true);
+            }
+            
+            // वैकल्पिक: यूजर अनुभव को बढ़ाने के लिए हल्का टोस्ट मैसेज
+            if (typeof showToast === 'function') {
+                let userPhoto = currentUserData?.avatarBase64 || currentUser?.photoURL;
+                showToast("Exit Application", "Press back once more to close", userPhoto);
+            }
+        }
     }
 });
+
+
 // ==========================================
 // --- UTILITY & HELPER FUNCTIONS ---
 // ==========================================
