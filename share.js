@@ -8,8 +8,28 @@ let filteredShareListUids = [];
 let currentShareListIndex = 0; 
 let isFetchingShareList = false;
 
-const APP_SHARE_URL = "https://www.xhp.life/?m=1";
+// बेस URL को नए डोमेन पर अपडेट किया गया है
+const APP_SHARE_URL = "https://deepak1455.github.io/DK-love-chats-/";
 const APP_SHARE_TEXT = "Hey! ❤️ Join me on DK Love Chats - A secure and fun way to chat! ❤️ Join here: ";
+
+// ==========================================
+// --- SHARE URL GENERATOR HELPER ---
+// ==========================================
+/**
+ * पोस्ट, रील या स्टोरी के लिए सटीक और क्लीन यूआरएल जेनरेट करता है।
+ */
+window.getGenerateShareUrl = (id, type, mediaType) => {
+    if (!id) return APP_SHARE_URL;
+    const baseUrl = APP_SHARE_URL.endsWith('/') ? APP_SHARE_URL : APP_SHARE_URL + '/';
+    
+    if (type === 'story') {
+        return `${baseUrl}?story=${id}`;
+    } else if (mediaType === 'video' || type === 'reel') {
+        return `${baseUrl}?reel=${id}`;
+    } else {
+        return `${baseUrl}?post=${id}`;
+    }
+};
 
 // ==========================================
 // --- CORE UTILITIES ---
@@ -451,11 +471,13 @@ window.shareExternalPlatform = (platform) => {
     let shareText = "Hey! ❤️ Join me on DK Love Chats!";
 
     if (sharePayload && sharePayload.id) {
-        if (sharePayload.mediaType === 'video') {
-            finalShareUrl = `${APP_SHARE_URL}&reel=${sharePayload.id}`;
+        finalShareUrl = window.getGenerateShareUrl(sharePayload.id, sharePayload.type, sharePayload.mediaType);
+        
+        if (sharePayload.mediaType === 'video' || sharePayload.type === 'reel') {
             shareText = `Hey! Check out this awesome Reel on DK Love Chats: ${finalShareUrl}`;
+        } else if (sharePayload.type === 'story') {
+            shareText = `Hey! Check out this Story on DK Love Chats: ${finalShareUrl}`;
         } else {
-            finalShareUrl = `${APP_SHARE_URL}&post=${sharePayload.id}`;
             shareText = `Hey! Check out this post on DK Love Chats: ${finalShareUrl}`;
         }
     }
@@ -486,11 +508,7 @@ window.copyCurrentItemLink = () => {
     let finalShareUrl = APP_SHARE_URL;
 
     if (sharePayload && sharePayload.id) {
-        if (sharePayload.mediaType === 'video') {
-            finalShareUrl = `${APP_SHARE_URL}&reel=${sharePayload.id}`;
-        } else {
-            finalShareUrl = `${APP_SHARE_URL}&post=${sharePayload.id}`;
-        }
+        finalShareUrl = window.getGenerateShareUrl(sharePayload.id, sharePayload.type, sharePayload.mediaType);
     }
 
     if (navigator.vibrate) navigator.vibrate(15);
@@ -498,7 +516,8 @@ window.copyCurrentItemLink = () => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(finalShareUrl).then(() => {
             if (typeof window.showToast === 'function') {
-                window.showToast("Link Copied!", "Reel/Post link is ready to share.", window.currentUserData?.avatarBase64 || window.currentUser?.photoURL, "success");
+                const label = sharePayload?.type === 'story' ? 'Story' : (sharePayload?.mediaType === 'video' ? 'Reel' : 'Post');
+                window.showToast("Link Copied!", `${label} link is ready to share.`, window.currentUserData?.avatarBase64 || window.currentUser?.photoURL, "success");
             }
         }).catch(() => {
             window.fallbackCopyText(finalShareUrl, "Link copied!");
@@ -597,7 +616,8 @@ window.shareApp = () => {
 };
 
 window.copyLink = (pid) => {
-    navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?post=' + pid);
+    const finalLink = window.getGenerateShareUrl(pid, 'post', 'image');
+    navigator.clipboard.writeText(finalLink);
     if (typeof window.showToast === 'function') {
         window.showToast("Success", "Link copied to clipboard", window.currentUser?.photoURL);
     }
