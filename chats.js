@@ -105,7 +105,40 @@ window.updateBottomBadgeLocal = () => {
         else bottomBadge.style.display = 'none';
     }
 };
+// ==========================================
+// --- SMART DEBOUNCED SEARCH ---
+// ==========================================
 
+// यह फ़ंक्शन सर्च बार को डिटेक्ट करके उस पर डिबाउंस इवेंट बाइंड करता है
+window.setupSearchDebounce = () => {
+    const searchInput = document.getElementById('chat-list-search');
+    if (searchInput && !searchInput.dataset.debouncedBound) {
+        searchInput.dataset.debouncedBound = "true";
+        
+        // यदि HTML में पहले से ऑन-इनपुट एट्रिब्यूट लगा है तो उसे हटा दें ताकि डबल-फिल्टर न हो
+        searchInput.removeAttribute('oninput');
+        
+        let debounceTimer;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                window.filterChatList();
+            }, 180); // 150ms से 200ms के बीच का सबसे रिस्पॉन्सिव समय
+        });
+    }
+};
+
+// एचटीएमएल से सीधे मैन्युअल कॉल करने के लिए बैकअप ग्लोबल फ़ंक्शन
+let searchDebounceTimeout = null;
+window.handleSearchInput = () => {
+    if (searchDebounceTimeout) clearTimeout(searchDebounceTimeout);
+    searchDebounceTimeout = setTimeout(() => {
+        window.filterChatList();
+    }, 180);
+};
+// ==========================================
+// --- INBOX PAGINATION & RENDER LOGIC ---
+// ==========================================
 // ==========================================
 // --- INBOX PAGINATION & RENDER LOGIC ---
 // ==========================================
@@ -115,6 +148,9 @@ window.loadUserList = async () => {
     const listContainer = document.getElementById('chat-list-container');
     if(!listContainer || !currentUser || !db) return;
     
+    // 🌟 स्मार्ट अपडेट: सर्च इनपुट पर डिबाउंस लागू करें
+    window.setupSearchDebounce();
+
     if(window.unsubscribeChatList) window.unsubscribeChatList();
 
     window.unsubscribeChatList = onSnapshot(query(collection(db, "users")), (snapshot) => {
@@ -149,101 +185,211 @@ window.loadUserList = async () => {
         window.filterChatList();
     });
 };
+// ==========================================
+// --- INBOX RECONCILIATION HELPER ---
+// ==========================================
+// यह फ़ंक्शन प्रत्येक कार्ड का HTML डेटा और लाइव स्टेटस तैयार करता है
+window.getInboxUserHTML = (user, currentUser, currentUserData, lockedChats) => {
+    const userId = user.uid;
+    const img = user.avatarBase64 || user.photoURL || "https://i.pravatar.cc/150";
+    const isLocked = lockedChats.includes(userId);
+    const hasDraft = (window.chatDrafts || {})[userId];
+    
+    let count = (window.unreadCounts || {})[userId] || 0; 
+    if (isLocked) count = 0; 
+    
+    let badgeHtml = "", nameStyle = "color: #000; font-weight: 700;", previewStyle = "color: #64748b; font-weight: 500;";
 
+    if (count > 0) {
+        badgeHtml = `<div class="unread-badge">${count > 99 ? '99+' : count}</div>`;
+        nameStyle = "color: #000; font-weight: 900;"; 
+        previewStyle = "color: var(--primary); font-weight: 800;"; 
+    }
+
+    let statusHtml = "";
+    const isTypingToMe = user.typingTo === currentUser.uid && (user.typingExpiry > Date.now());
+
+    if (isTypingToMe) {
+        statusHtml = `<span class="active-status" style="color: #00b894; font-weight: 900; animation: pulse 1.5s infinite;"><i class="fa-solid fa-pen-clip"></i> typing...</span>`;
+    } else if (hasDraft) {
+        statusHtml = `<span class="active-status" style="color: #ff4757; font-weight: 700;">Draft: ${hasDraft}</span>`; 
+    } else {
+        const isOnline = (Date.now() - user.lastActive) < 120000; 
+        statusHtml = isOnline ? `<span class="active-status" style="color: #00b894; font-weight: 800;">Online</span>` : `<span class="active-status" style="color: #94a3b8;">${typeof window.timeAgo === 'function' ? window.timeAgo(user.lastActive) : 'Offline'}</span>`;
+    }
+    
+    const hasStory = window.allGroupedStories && window.allGroupedStories[userId];
+    let avatarClass = "user-avatar";
+    let avatarClick = `event.stopPropagation(); if(typeof window.viewFullMedia === 'function') window.viewFullMedia('${img}', 'image')`;
+
+    if (hasStory) {
+        avatarClass = typeof window.hasUnseenStories === 'function' && window.hasUnseenStories(userId) ? "user-avatar story-active" : "user-avatar story-seen";
+        avatarClick = `event.stopPropagation(); if(typeof window.viewStoryGroup === 'function') window.viewStoryGroup('${userId}')`;
+    }
+
+    const lockBadgeHtml = isLocked ? `<div class="locked-chat-badge" style="position:absolute; bottom:-2px; left:-2px; background:#ffffff; color:#ff4757; font-size:0.65rem; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #ff4757; z-index:5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><i class="fa-solid fa-lock"></i></div>` : '';
+    const safeName = user.name ? user.name.replace(/'/g, "\\'") : "User";
+    const isOnlineDot = (Date.now() - user.lastActive) < 120000;
+
+    return {
+        img,
+        avatarClass,
+        avatarClick,
+        lockBadgeHtml,
+        isOnlineDot,
+        nameStyle,
+        previewStyle,
+        statusHtml,
+        badgeHtml,
+        count,
+        safeName
+    };
+};
+
+// बिना पूरा DOM रीसेट किए कार्ड को इन-प्लेस अपडेट करने या री-ऑर्डर करने वाला स्मार्ट फ़ंक्शन
+window.createOrUpdateInboxCard = (user, index, listContainer) => {
+    const currentUser = window.currentUser;
+    const currentUserData = window.currentUserData || {};
+    const lockedChats = currentUserData.lockedChats || [];
+    const userId = user.uid;
+
+    const info = window.getInboxUserHTML(user, currentUser, currentUserData, lockedChats);
+    let card = document.getElementById(`inbox-user-${userId}`);
+
+    if (!card) {
+        // नया कार्ड बनाएँ (लेआउट शिफ्ट रोकने के लिए विज़िबिलिटी और हाइट फिक्स की गई है)
+        card = document.createElement('div');
+        card.id = `inbox-user-${userId}`;
+        card.className = "chat-item";
+        card.style.cssText = "background: #ffffff; border-radius: 20px; margin: 10px 15px; border: 1.5px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; align-items: center; padding: 12px 15px; min-height: 80px; content-visibility: auto; contain-intrinsic-size: 80px;";
+        
+        card.setAttribute('onmousedown', `window.startInboxPress('${userId}', '${info.safeName}', event)`);
+        card.setAttribute('onmouseup', `window.cancelInboxPress(event)`);
+        card.setAttribute('onmouseleave', `window.cancelInboxPress(event)`);
+        card.setAttribute('ontouchstart', `window.startInboxPress('${userId}', '${info.safeName}', event)`);
+        card.setAttribute('ontouchend', `window.cancelInboxPress(event)`);
+        card.setAttribute('ontouchmove', `window.cancelInboxPress(event)`);
+        card.setAttribute('onclick', `window.handleInboxClick('${userId}', '${info.safeName}', '${info.img}', event)`);
+
+        card.innerHTML = `
+            <div style="position:relative; width: 55px; height: 55px; flex-shrink: 0;">
+                <img class="avatar-target ${info.avatarClass}" src="${info.img}" style="width:55px; height:55px; border-radius:50%; object-fit:cover; border: 2px solid #f8fafc; display: block;" onclick="${info.avatarClick}" loading="lazy">
+                <div class="lock-badge-target">${info.lockBadgeHtml}</div>
+                <div class="online-dot-target" style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#00b894; border-radius:50%; border:2.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:${info.isOnlineDot ? 'block' : 'none'};"></div>
+            </div>
+            <div style="flex:1; margin-left:15px; display:flex; flex-direction:column; justify-content:center; overflow:hidden;">
+                <div class="name-target" style="font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${info.nameStyle}">${user.name}</div>
+                <div class="status-target" style="font-size:0.85rem; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${info.previewStyle}">${info.statusHtml}</div>
+            </div>
+            <div class="meta-target chat-item-meta" style="min-width: 30px; display: flex; justify-content: flex-end; align-items: center; flex-shrink: 0;">
+                ${info.badgeHtml} 
+                ${info.count === 0 ? '<i class="fa-solid fa-chevron-right" style="font-size:0.8rem; color: #cbd5e1;"></i>' : ''}
+            </div>
+        `;
+    } else {
+        // यदि कार्ड पहले से मौजूद है, तो केवल लाइव डेटा को बदलें (Recomputation को रोकने के लिए)
+        const imgEl = card.querySelector('.avatar-target');
+        if (imgEl) {
+            if (imgEl.src !== info.img) imgEl.src = info.img;
+            imgEl.className = `avatar-target ${info.avatarClass}`;
+            imgEl.setAttribute('onclick', info.avatarClick);
+        }
+        
+        const lockEl = card.querySelector('.lock-badge-target');
+        if (lockEl && lockEl.innerHTML !== info.lockBadgeHtml) lockEl.innerHTML = info.lockBadgeHtml;
+
+        const dotEl = card.querySelector('.online-dot-target');
+        if (dotEl) dotEl.style.display = info.isOnlineDot ? 'block' : 'none';
+
+        const nameEl = card.querySelector('.name-target');
+        if (nameEl) {
+            if (nameEl.innerText !== user.name) nameEl.innerText = user.name;
+            nameEl.style.cssText = `font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${info.nameStyle}`;
+        }
+
+        const statusEl = card.querySelector('.status-target');
+        if (statusEl && statusEl.innerHTML !== info.statusHtml) {
+            statusEl.innerHTML = info.statusHtml;
+            statusEl.style.cssText = `font-size:0.85rem; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${info.previewStyle}`;
+        }
+
+        const metaEl = card.querySelector('.meta-target');
+        const targetMetaHTML = `${info.badgeHtml} ${info.count === 0 ? '<i class="fa-solid fa-chevron-right" style="font-size:0.8rem; color: #cbd5e1;"></i>' : ''}`;
+        if (metaEl && metaEl.innerHTML !== targetMetaHTML) metaEl.innerHTML = targetMetaHTML;
+    }
+
+    // कार्ड को अपनी सही इंडेक्स पोजीशन पर भेजें (स्मूथ री-ऑर्डरिंग)
+    if (listContainer.children[index] !== card) {
+        listContainer.insertBefore(card, listContainer.children[index] || null);
+    }
+};
+
+// ==========================================
+// --- INBOX FILTER & LOAD ---
+// ==========================================
 window.filterChatList = () => {
     const queryText = document.getElementById('chat-list-search')?.value.toLowerCase().trim();
     const listContainer = document.getElementById('chat-list-container');
+    if (!listContainer) return;
+    
     const allCachedUsers = window.allCachedUsers || [];
+    let nextDisplayUsers = [];
     
     if (queryText) {
-        displayInboxUsers = allCachedUsers.filter(u => (u.name || "").toLowerCase().includes(queryText) || (u.username || "").toLowerCase().includes(queryText));
+        nextDisplayUsers = allCachedUsers.filter(u => 
+            (u.name || "").toLowerCase().includes(queryText) || 
+            (u.username || "").toLowerCase().includes(queryText)
+        );
     } else { 
-        displayInboxUsers = [...fullInboxUsers]; 
+        nextDisplayUsers = [...fullInboxUsers]; 
     }
 
-    currentInboxIndex = 0; listContainer.innerHTML = ""; 
+    // सर्च या फ़िल्टर बदलते समय पुराने अप्रसांगिक कार्ड्स को हटा दें
+    const nextUids = new Set(nextDisplayUsers.slice(0, 20).map(u => u.uid));
+    Array.from(listContainer.children).forEach(child => {
+        const id = child.id?.replace("inbox-user-", "");
+        if (id && !nextUids.has(id)) {
+            child.remove();
+        }
+    });
+
+    displayInboxUsers = nextDisplayUsers;
+    currentInboxIndex = 0; 
     
-    if(displayInboxUsers.length === 0) {
-        if (queryText) listContainer.innerHTML = `<div style="text-align:center; padding:50px; color:#aaa;">No users found</div>`;
-        else listContainer.innerHTML = `<div style="text-align:center; padding:50px; color:#aaa;"><i class="fa-regular fa-comments" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i><br>No recent messages.<br>Search above to start chatting!</div>`;
+    if (displayInboxUsers.length === 0) {
+        if (queryText) {
+            listContainer.innerHTML = `<div style="text-align:center; padding:50px; color:#aaa;">No users found</div>`;
+        } else {
+            listContainer.innerHTML = `<div style="text-align:center; padding:50px; color:#aaa;"><i class="fa-regular fa-comments" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i><br>No recent messages.<br>Search above to start chatting!</div>`;
+        }
         return;
     }
+
+    // खाली स्थान या प्लेसहोल्डर टेक्स्ट साफ़ करें
+    if (listContainer.querySelector('.fa-comments') || listContainer.innerText.includes("No users found")) {
+        listContainer.innerHTML = "";
+    }
+
     window.loadMoreInboxUsers();
 };
 
 window.loadMoreInboxUsers = () => {
-    const currentUser = window.currentUser;
-    const currentUserData = window.currentUserData || {};
-
-    if (isFetchingInbox || currentInboxIndex >= displayInboxUsers.length) return;
+    const listContainer = document.getElementById('chat-list-container');
+    if (!listContainer || isFetchingInbox || currentInboxIndex >= displayInboxUsers.length) return;
     
     isFetchingInbox = true; 
-    const listContainer = document.getElementById('chat-list-container');
-    const loaderId = 'inbox-loader-' + Date.now();
-    listContainer.insertAdjacentHTML('beforeend', `<div id="${loaderId}" style="text-align:center; padding:15px;"><div class="splash-loader" style="width:25px;height:25px;margin:0 auto;border-width:2px;border-color:var(--primary);"></div></div>`);
     
+    // लोकल ऐरे से 20 यूज़र का सेगमेंट लें
     const chunk = displayInboxUsers.slice(currentInboxIndex, currentInboxIndex + 20);
-    let htmlChunk = ""; 
-    const lockedChats = currentUserData.lockedChats || [];
-
-    chunk.forEach(user => {
-        const userId = user.uid, img = user.avatarBase64 || user.photoURL || "https://i.pravatar.cc/150";
-        const isLocked = lockedChats.includes(userId), hasDraft = (window.chatDrafts || {})[userId];
-        
-        let count = (window.unreadCounts || {})[userId] || 0; 
-        if (isLocked) count = 0; 
-        
-        let badgeHtml = "", nameStyle = "color: #000; font-weight: 700;", previewStyle = "color: #64748b; font-weight: 500;";
-
-        if (count > 0) {
-            badgeHtml = `<div class="unread-badge">${count > 99 ? '99+' : count}</div>`;
-            nameStyle = "color: #000; font-weight: 900;"; previewStyle = "color: var(--primary); font-weight: 800;"; 
-        }
-
-        let statusHtml = "";
-        const isTypingToMe = user.typingTo === currentUser.uid && (user.typingExpiry > Date.now());
-
-        if (isTypingToMe) statusHtml = `<span class="active-status" style="color: #00b894; font-weight: 900; animation: pulse 1.5s infinite;"><i class="fa-solid fa-pen-clip"></i> typing...</span>`;
-        else if (hasDraft) statusHtml = `<span class="active-status" style="color: #ff4757; font-weight: 700;">Draft: ${hasDraft}</span>`; 
-        else {
-            const isOnline = (Date.now() - user.lastActive) < 120000; 
-            statusHtml = isOnline ? `<span class="active-status" style="color: #00b894; font-weight: 800;">Online</span>` : `<span class="active-status" style="color: #94a3b8;">${typeof window.timeAgo === 'function' ? window.timeAgo(user.lastActive) : 'Offline'}</span>`;
-        }
-        
-        const hasStory = window.allGroupedStories && window.allGroupedStories[userId];
-        let avatarClass = "user-avatar", avatarClick = `event.stopPropagation(); if(typeof window.viewFullMedia === 'function') window.viewFullMedia('${img}', 'image')`;
-
-        if (hasStory) {
-            avatarClass = typeof window.hasUnseenStories === 'function' && window.hasUnseenStories(userId) ? "user-avatar story-active" : "user-avatar story-seen";
-            avatarClick = `event.stopPropagation(); if(typeof window.viewStoryGroup === 'function') window.viewStoryGroup('${userId}')`;
-        }
-
-        const lockBadgeHtml = isLocked ? `<div class="locked-chat-badge" style="position:absolute; bottom:-2px; left:-2px; background:#ffffff; color:#ff4757; font-size:0.65rem; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #ff4757; z-index:5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><i class="fa-solid fa-lock"></i></div>` : '';
-        const safeName = user.name ? user.name.replace(/'/g, "\\'") : "User";
-
-        htmlChunk += `
-        <div class="chat-item fade-in" style="background: #ffffff; border-radius: 20px; margin: 10px 15px; border: 1.5px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.03);"
-             onmousedown="window.startInboxPress('${userId}', '${safeName}', event)" onmouseup="window.cancelInboxPress(event)" onmouseleave="window.cancelInboxPress(event)"
-             ontouchstart="window.startInboxPress('${userId}', '${safeName}', event)" ontouchend="window.cancelInboxPress(event)" ontouchmove="window.cancelInboxPress(event)"
-             onclick="window.handleInboxClick('${userId}', '${safeName}', '${img}', event)">
-            <div style="position:relative; width: 55px; height: 55px;">
-                <img src="${img}" class="${avatarClass}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border: 2px solid #f8fafc;" onclick="${avatarClick}" loading="lazy">
-                ${lockBadgeHtml}
-                ${(Date.now() - user.lastActive) < 120000 ? '<div style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#00b894; border-radius:50%; border:2.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>' : ''}
-            </div>
-            <div style="flex:1; margin-left:15px; display:flex; flex-direction:column; justify-content:center; overflow:hidden;">
-                <div style="font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${nameStyle}">${user.name}</div>
-                <div style="font-size:0.85rem; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${previewStyle}">${statusHtml}</div>
-            </div>
-            <div class="chat-item-meta" style="min-width: 30px;">${badgeHtml} ${count === 0 ? '<i class="fa-solid fa-chevron-right" style="font-size:0.8rem; color: #cbd5e1; margin-top:5px;"></i>' : ''}</div>
-        </div>`;
+    
+    chunk.forEach((user, idx) => {
+        const absoluteIndex = currentInboxIndex + idx;
+        window.createOrUpdateInboxCard(user, absoluteIndex, listContainer);
     });
 
-    const loaderEl = document.getElementById(loaderId); if (loaderEl) loaderEl.remove();
-    listContainer.insertAdjacentHTML('beforeend', htmlChunk);
-    currentInboxIndex += 20; isFetchingInbox = false;
+    currentInboxIndex += chunk.length; 
+    isFetchingInbox = false;
 };
-
 // ==========================================
 // --- SETTINGS & CHAT LOCK SYSTEM ---
 // ==========================================
@@ -522,6 +668,11 @@ window.getSeenTimeAgo = (timestamp) => {
 // ==========================================
 window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
     try {
+        // 🌟 स्मार्ट अपडेट: चैट रूम खुलते ही बैकग्राउंड में सर्च बार साफ़ करें
+        if (typeof window.resetInboxSearch === 'function') {
+            window.resetInboxSearch();
+        }
+
         // 🌟 सुरक्षा अपडेट: नई चैट खोलते ही पुराना खुला हुआ प्रोफाइल बंद कर दें
         if (typeof window.closeChatProfile === 'function') {
             window.closeChatProfile();
@@ -954,6 +1105,8 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
         };
         loadMessagesWithLimit();
 
+        
+
         if (area) {
             area.onscroll = () => {
                 if (area.scrollTop <= 5 && !window.isFetchingHistory) {
@@ -990,7 +1143,18 @@ setInterval(() => {
         }
     });
 }, 10000);
-
+// ==========================================
+// --- SMART SEARCH BAR RESET ---
+// ==========================================
+window.resetInboxSearch = () => {
+    const searchInput = document.getElementById('chat-list-search');
+    if (searchInput && searchInput.value !== "") {
+        searchInput.value = ""; // सर्च इनपुट खाली करें
+        
+        // सीधे फ़िल्टर को रन करें ताकि इनबॉक्स लिस्ट डिफ़ॉल्ट रूप में रीस्टोर हो जाए
+        window.filterChatList(); 
+    }
+};
 // ==========================================
 // --- SENDING TEXT / IMAGES (SMART COUNTER IDs) ---
 // ==========================================
@@ -1732,38 +1896,72 @@ window.handleDeleteChat = async () => {
 // ==========================================
 // --- SMART EXIT HARDWARE BACK LISTENER ---
 // ==========================================
-// यह फंक्शन बैक बटन दबाने पर एक-एक करके खुली हुई स्क्रीन को सुचारू रूप से बंद करता है
+// यह फंक्शन बैक बटन या एस्केप दबाने पर खुली हुई स्क्रीन को सुचारू रूप से बंद करता है
 window.handleSmartExitNavigation = () => {
     let modalClosed = false;
 
-    // 1. सबसे पहले खुली हुई Modal स्क्रीन को बंद करें
-    for (let modal of activeModals) {
-        const el = document.getElementById(modal.id);
-        if (el && el.classList.contains(modal.class)) {
-            modal.close();
+    // 1. यदि प्रोफाइल डिटेल्स मोडल खुला है, तो उसे बंद करें
+    const profileModal = document.getElementById('chat-profile-modal');
+    if (profileModal && profileModal.classList.contains('active')) {
+        if (typeof window.closeChatProfile === 'function') {
+            window.closeChatProfile();
             modalClosed = true;
-            break;
         }
     }
 
-    // 2. यदि कोई modal खुला नहीं है, और यूजर केवल चैट लिस्ट स्क्रीन पर है:
+    // 2. यदि मैसेज ऑप्शंस मोडल (Delete/Copy) खुला है, तो उसे बंद करें
+    if (!modalClosed) {
+        const msgOptionsModal = document.getElementById('msg-options-modal');
+        if (msgOptionsModal && !msgOptionsModal.classList.contains('hidden')) {
+            if (typeof window.closeMsgOptions === 'function') {
+                window.closeMsgOptions();
+                modalClosed = true;
+            }
+        }
+    }
+
+    // 3. यदि इनबॉक्स ऑप्शंस मोडल (Delete Chat) खुला है, तो उसे बंद करें
+    if (!modalClosed) {
+        const inboxOptionsModal = document.getElementById('inbox-options-modal');
+        if (inboxOptionsModal && !inboxOptionsModal.classList.contains('hidden')) {
+            if (typeof window.closeInboxOptions === 'function') {
+                window.closeInboxOptions();
+                modalClosed = true;
+            }
+        }
+    }
+
+    // 4. यदि चैट पासवर्ड अनलॉक प्रॉम्ट खुला है, तो उसे बंद करें
+    if (!modalClosed) {
+        const passwordModal = document.getElementById('password-prompt-modal');
+        if (passwordModal && !passwordModal.classList.contains('hidden')) {
+            if (typeof window.cancelUnlockChat === 'function') {
+                window.cancelUnlockChat();
+                modalClosed = true;
+            }
+        }
+    }
+
+    // 5. यदि मुख्य चैट रूम खुला है, तो उसे बंद करें
+    if (!modalClosed) {
+        const chatRoom = document.getElementById('chat-room');
+        if (chatRoom && chatRoom.classList.contains('active')) {
+            if (typeof window.closeChat === 'function') {
+                window.closeChat();
+                modalClosed = true;
+            }
+        }
+    }
+
+    // 6. यदि कोई भी मोडल या स्क्रीन खुली नहीं है, और यूजर केवल चैट लिस्ट स्क्रीन पर है:
     if (!modalClosed) {
         const chatListEl = document.getElementById('chat-list-container');
+        // जांचें कि चैट लिस्ट स्क्रीन यूजर के सामने वर्तमान में एक्टिव है या नहीं
         if (chatListEl && chatListEl.offsetParent !== null) {
             if (typeof window.switchTab === 'function') {
-                window.switchTab('home'); // सुचारू रूप से होम फ़ीड पर भेजें
+                window.switchTab('home'); // सुचारू रूप से होम फ़ीड पर रीडायरेक्ट करें
             }
         }
     }
 };
 
-// पॉपस्टेट (Hardware Back Button) और एस्केप की (Escape Key) के लिए लिसनर
-window.addEventListener('popstate', (event) => {
-    window.handleSmartExitNavigation();
-});
-
-window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-        window.handleSmartExitNavigation();
-    }
-});
