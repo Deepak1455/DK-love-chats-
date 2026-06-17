@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DK Love Chats ❤️ Ultimate</title>
     
-    <!-- 📱 iOS (Apple) और सामान्य PWA सेटिंग्स (Head में स्थानांतरित) -->
+    <!-- 📱 iOS (Apple) और सामान्य PWA सेटिंग्स -->
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,7 +17,7 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- 🎨 सभी CSS स्टाइलशीट्स (सुरक्षित रूप से Head में लाई गईं) -->
+    <!-- 🎨 सभी CSS स्टाइलशीट्स -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="call.css">
     <link rel="stylesheet" href="global-nav.css">
@@ -31,23 +32,56 @@
 </head>
 <body>
 
+<!-- 🌟 FULL SCREEN VERIFICATION HUB MODAL (PREMIUM ULTRA CLEAN INTERFACE) -->
+<div id="verification-hub-modal" class="hidden" style="
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: #ffffff; 
+    z-index: 5500; 
+    overflow-y: auto; 
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.15), visibility 0.35s; 
+    transform: translate3d(0, 100%, 0);
+    will-change: transform;
+">
+    <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; min-height: 100vh; box-sizing: border-box;">
+        
+        <!-- Header with Back Button -->
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding: 10px 0;">
+            <i class="fa-solid fa-arrow-left" style="font-size: 1.5rem; cursor: pointer; color: #000; padding: 5px;" onclick="window.closeVerificationHub()"></i>
+            <h3 style="margin: 0; font-weight: 900; font-size: 1.5rem; color: #000;">Verification Hub</h3>
+        </div>
+
+        <!-- Card Achievements Content Area -->
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; width: 100%;">
+            <div id="hub-verified-card-placeholder" style="width: 100%;">
+                <!-- Dynamic Details will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Footer Safety Disclaimer -->
+        <div style="text-align: center; font-size: 0.75rem; color: #64748b; margin-top: 30px; line-height: 1.4; padding-bottom: 15px;">
+            <i class="fa-solid fa-shield-halved"></i> DK Love Chats Secure System. Once criteria is fully accomplished, the verified badge automatically updates globally.
+        </div>
+    </div>
+</div>
+
 <!-- SINGLE POST VIEW MODAL -->
 <div id="single-post-view-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5500; display: flex; flex-direction: column; animation: fadeIn 0.3s;">
-    <!-- Modal Header -->
     <div style="padding: 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); background: #10002b;">
         <i class="fa-solid fa-arrow-left" style="font-size: 1.5rem; color: white; cursor: pointer;" onclick="closeSinglePostView()"></i>
         <h3 style="color: white; margin: 0; font-size: 1.1rem;">Post</h3>
     </div>
-
-    <!-- Post Content Area -->
     <div id="single-post-content" style="flex: 1; overflow-y: auto; padding-bottom: 50px;">
-        <!-- यहाँ JS के ज़रिये पूरी पोस्ट रेंडर होगी -->
+        <!-- JS द्वारा पोस्ट रेंडर होगी -->
     </div>
 </div>
+
 <!-- ADVANCED ALL SHARE MODAL -->
 <div id="all-share-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 9999; display: flex; align-items: flex-end; justify-content: center;">
     <div class="share-sheet fade-in-up" style="background: #151525; width: 100%; max-width: 500px; border-radius: 30px 30px 0 0; padding: 25px; text-align: center; border-top: 2px solid #ff006e;">
-        
         <div style="width: 50px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 10px; margin: 0 auto 25px;"></div>
         <h3 style="color: white; margin-bottom: 25px; font-weight: 800; font-size: 1.3rem;">Share DK Love Chats ❤️</h3>
 
@@ -74,49 +108,37 @@
             <input type="text" id="share-url-box" value="https://deepak1455.github.io/DK-love-chats-/" readonly style="background: transparent; border: none; color: #aaa; flex: 1; font-size: 0.9rem; outline: none;">
             <button onclick="copyAppURL()" style="background: #ff006e; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; cursor: pointer;">Copy Link</button>
         </div>
-
         <button onclick="closeAllShare()" style="background: transparent; border: none; color: #ff4757; font-weight: 800; font-size: 1.1rem; cursor: pointer; padding: 10px;">Close</button>
     </div>
 </div>
-<!-- DYNAMIC CUSTOM CONFIRM MODAL (CARD BOARD STYLE) -->
+
+<!-- DYNAMIC CUSTOM CONFIRM MODAL -->
 <div id="custom-confirm-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 0, 43, 0.9); backdrop-filter: blur(10px); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;">
     <div class="modal-content fade-in" style="background: linear-gradient(145deg, #1e1e2d, #10002b); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 30px; text-align: center; width: 100%; max-width: 320px; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 25px rgba(255, 71, 87, 0.2);">
-        
-        <!-- Dynamic Icon -->
         <div id="confirm-icon" style="font-size: 3.5rem; margin-bottom: 15px; color: #ff4757; filter: drop-shadow(0 0 15px rgba(255, 71, 87, 0.5));">
             <i class="fa-solid fa-triangle-exclamation"></i>
         </div>
-        
         <h3 id="confirm-title" style="margin-bottom: 10px; font-weight: 800; font-size: 1.4rem; color: white;">Confirm Action</h3>
         <p id="confirm-message" style="color: #ccc; font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;">Are you sure you want to do this?</p>
-        
-        <!-- Buttons -->
         <div style="display: flex; gap: 15px;">
-            <button onclick="closeCustomConfirm()" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 20px; font-weight: bold; font-size: 1rem; padding: 12px 0; cursor: pointer; transition: 0.2s;">
-                Cancel
-            </button>
-            <button onclick="executeDynamicConfirm()" style="flex: 1; background: linear-gradient(135deg, #ff4757, #ff6b81); border: none; color: white; border-radius: 20px; font-weight: bold; font-size: 1rem; padding: 12px 0; cursor: pointer; box-shadow: 0 8px 20px rgba(255, 71, 87, 0.4); transition: 0.2s;">
-                Yes
-            </button>
+            <button onclick="closeCustomConfirm()" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 20px; font-weight: bold; font-size: 1rem; padding: 12px 0; cursor: pointer; transition: 0.2s;">Cancel</button>
+            <button onclick="executeDynamicConfirm()" style="flex: 1; background: linear-gradient(135deg, #ff4757, #ff6b81); border: none; color: white; border-radius: 20px; font-weight: bold; font-size: 1rem; padding: 12px 0; cursor: pointer; box-shadow: 0 8px 20px rgba(255, 71, 87, 0.4); transition: 0.2s;">Yes</button>
         </div>
     </div>
 </div>
-<!-- CUSTOM ALERT MODAL (CARD BOARD STYLE) -->
+
+<!-- CUSTOM ALERT MODAL -->
 <div id="custom-alert-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 0, 43, 0.9); backdrop-filter: blur(10px); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;">
     <div class="modal-content fade-in" style="background: linear-gradient(145deg, #1e1e2d, #10002b); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 30px; text-align: center; max-width: 300px; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(255, 0, 110, 0.2);">
-        
         <div id="custom-alert-icon" style="font-size: 3.5rem; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255, 190, 11, 0.5));">
             <i class="fa-solid fa-triangle-exclamation"></i>
         </div>
-        
         <h3 id="custom-alert-title" style="margin-bottom: 10px; font-weight: 800; font-size: 1.3rem; color: white;">Alert</h3>
         <p id="custom-alert-message" style="color: #ccc; font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;">Message goes here</p>
-        
-        <button onclick="closeCustomAlert()" style="background: var(--primary-grad); border: none; color: white; border-radius: 20px; font-weight: bold; font-size: 1.1rem; padding: 12px 0; width: 100%; cursor: pointer; box-shadow: 0 5px 15px rgba(255,0,110,0.3); transition: 0.2s;">
-            Okay
-        </button>
+        <button onclick="closeCustomAlert()" style="background: var(--primary-grad); border: none; color: white; border-radius: 20px; font-weight: bold; font-size: 1.1rem; padding: 12px 0; width: 100%; cursor: pointer; box-shadow: 0 5px 15px rgba(255,0,110,0.3); transition: 0.2s;">Okay</button>
     </div>
 </div>
+
 <!-- MESSAGE OPTIONS POP-UP MENU -->
 <div id="msg-options-modal" class="hidden">
     <div class="msg-options-overlay" onclick="closeMsgOptions()"></div>
@@ -129,51 +151,44 @@
             <div class="reaction-emoji" onclick="handleReactionSelect('😢')">😢</div>
             <div class="reaction-emoji" onclick="handleReactionSelect('😡')">😡</div>
         </div>
-
         <div class="popup-header">Message Options</div>
-        
         <div id="msg-option-copy" class="msg-option-item" onclick="handleCopyMessage()">
             <div class="icon-circle"><i class="fa-regular fa-copy"></i></div>
             <span>Copy Text</span>
         </div>
-        
         <div id="msg-option-delete" class="msg-option-item delete-item" onclick="handleDeleteMessage()">
             <div class="icon-circle delete-circle"><i class="fa-regular fa-trash-can"></i></div>
             <span>Delete for Everyone</span>
         </div>
     </div>
 </div>
+
 <!-- INBOX CHAT OPTIONS MODAL (LONG PRESS) -->
 <div id="inbox-options-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; display: flex; justify-content: center; align-items: center;">
     <div class="msg-options-overlay" onclick="closeInboxOptions()"></div>
     <div class="msg-options-popup">
         <div class="popup-header">Chat Options</div>
-        
         <div id="inbox-option-delete" class="msg-option-item delete-item" onclick="handleDeleteChat()">
             <div class="icon-circle delete-circle"><i class="fa-solid fa-trash-can"></i></div>
             <span id="inbox-delete-text">Delete Chat</span>
         </div>
     </div>
 </div>
+
 <!-- Container for Super Reaction Animations -->
 <div id="emoji-animation-container"></div>
 
 <!-- 💎 ULTIMATE QUALITY ENHANCED SPLASH SCREEN -->
 <div id="splash-screen">
     <div class="quality-wrapper">
-        <!-- Minimalist Logo (No Text, No Animation) -->
         <div class="logo-viewport">
             <div class="glass-bg"></div>
             <i class="fa-solid fa-heart premium-heart"></i>
         </div>
-
-        <!-- Typography Enhancer -->
         <div class="brand-reveal">
             <h1 class="app-name-premium">LOVE CHATS</h1>
             <p class="app-tagline">SMART • SECURE • FAST</p>
         </div>
-
-        <!-- ⚡ LIQUID SMART LOADER -->
         <div class="loader-container-premium">
             <div class="status-row">
                 <span id="load-step">System Initializing...</span>
@@ -185,52 +200,39 @@
                 </div>
             </div>
         </div>
-        
         <div class="footer-secure">
             <i class="fa-solid fa-shield-check"></i> MILITARY-GRADE ENCRYPTION
         </div>
     </div>
 </div>
-    <!-- NETWORK STATUS -->
-    <div id="network-status">
-        <div class="net-dot"></div>
-        <span id="net-text">Checking...</span>
-    </div>
-    
-    <!-- PULL TO REFRESH LOADER -->
-    <div id="ptr-loader"><i class="fa-solid fa-rotate-right"></i></div>
-    <div id="refresh-indicator" class="refresh-loader"><i class="fa-solid fa-rotate-right fa-spin" style="color:var(--primary)"></i></div>
 
-<!-- NOTIFICATION FULL SCREEN MODAL (3D CARD BOARD UPDATE) -->
+<!-- NETWORK STATUS -->
+<div id="network-status">
+    <div class="net-dot"></div>
+    <span id="net-text">Checking...</span>
+</div>
+    
+<!-- PULL TO REFRESH LOADER -->
+<div id="ptr-loader"><i class="fa-solid fa-rotate-right"></i></div>
+<div id="refresh-indicator" class="refresh-loader"><i class="fa-solid fa-rotate-right fa-spin" style="color:var(--primary)"></i></div>
+
+<!-- NOTIFICATION FULL SCREEN MODAL -->
 <div id="notif-full-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 5000; overflow-y: auto;">
     <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px;">
-        
-        <!-- Header -->
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding: 10px 0;">
             <i class="fa-solid fa-arrow-left" style="font-size: 1.5rem; cursor: pointer; color: #000;" onclick="toggleNotifFullModal(false)"></i>
             <h3 style="margin: 0; font-weight: 900; font-size: 1.6rem; color: #000; letter-spacing: -0.5px;">Notifications</h3>
         </div>
-
-        <!-- 🚀 3D ALERT CARD: AUTO-DELETE MESSAGE -->
         <div style="background: #f1f5f9; padding: 18px 20px; border-radius: 24px; display: flex; align-items: center; gap: 15px; margin-bottom: 30px; position: relative; border: 3px solid transparent; background-image: linear-gradient(#f1f5f9, #f1f5f9), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b); background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 15px 30px rgba(0,0,0,0.06), inset 0 2px 5px rgba(255,255,255,1);">
-            
-            <!-- Icon Box -->
             <div style="width: 48px; height: 48px; background: #ffffff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--primary); box-shadow: 0 5px 15px rgba(255, 0, 110, 0.15);">
                 <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
-
-            <!-- Text Content -->
             <div style="flex: 1;">
                 <b style="display: block; color: #1a1a1a; font-size: 1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">Auto-Delete Active</b>
-                <p style="color: #64748b; font-size: 0.85rem; font-weight: 600; line-height: 1.4; margin: 2px 0 0 0;">
-                    To keep things fresh, notifications are cleared every 24 hours.
-                </p>
+                <p style="color: #64748b; font-size: 0.85rem; font-weight: 600; line-height: 1.4; margin: 2px 0 0 0;">To keep things fresh, notifications are cleared every 24 hours.</p>
             </div>
         </div>
-
-        <!-- Notification List (यहाँ नोटिफिकेशन्स लोड होंगे) -->
         <div id="notif-full-list" style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px;">
-            <!-- Notif Items will be injected here by script.js -->
             <div style="text-align:center; padding:50px; color:#ccc;">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
             </div>
@@ -238,405 +240,326 @@
     </div>
 </div>
 
-    <!-- PROGRESS MODAL -->
-    <div id="progress-modal" class="hidden">
-        <div class="modal-content fade-in" style="max-width:300px;">
-            <h3 id="progress-title" style="margin-bottom:10px;">Uploading...</h3>
-            <div style="font-size:2rem; font-weight:800; color:var(--success);" id="progress-percent">0%</div>
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill" id="progress-fill"></div>
-            </div>
-            <p style="margin-top:10px; font-size:0.8rem; color:#aaa;">Please wait...</p>
+<!-- PROGRESS MODAL -->
+<div id="progress-modal" class="hidden">
+    <div class="modal-content fade-in" style="max-width:300px;">
+        <h3 id="progress-title" style="margin-bottom:10px;">Uploading...</h3>
+        <div style="font-size:2rem; font-weight:800; color:var(--success);" id="progress-percent">0%</div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progress-fill"></div>
         </div>
-    </div>
-
-
-
-    <!-- AUTH SECTION -->
-    <section id="auth-section">
-        <div class="auth-card fade-in" id="login-form">
-            <h1 class="logo-text">DK Love Chats</h1>
-<div class="input-group">
-
-    <input type="text" placeholder="Username or Email" id="login-email" style="text-transform: lowercase; padding-right: 55px;" oninput="checkLoginUser()">
-    
-    <!-- Realtime DP -->
-    <img id="login-user-dp" src="" class="hidden" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; z-index: 5; box-shadow: 0 0 10px rgba(255,0,110,0.5);">
-    
-    <!-- Status Icon -->
-    <i id="login-user-icon" class="fa-solid fa-user" style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: #555; z-index: 5; transition: 0.3s;"></i>
-</div>
-            <div class="input-group"><input type="password" placeholder="Password" id="login-pass"></div>
-            <button class="btn-primary" id="btn-login-action" onclick="handleLogin()">Sign In</button>
-            <div class="auth-switch" onclick="toggleAuth('signup')">Create an Account</div>
-        </div>
-        <div class="auth-card hidden" id="signup-form">
-            <h1 class="logo-text">Join DK Chats</h1>
-            <div class="input-group">
-                <input type="text" placeholder="Username (e.g. @coolguy)" id="reg-username" oninput="checkUsernameAvailability()">
-                <i id="username-check-icon" class="fa-solid username-status"></i>
-            </div>
-
-            <div class="input-group"><input type="text" placeholder="Full Name" id="reg-name"></div>
-            <div class="input-group"><input type="email" placeholder="Email Address" id="reg-email"></div>
-            <div class="input-group"><input type="password" placeholder="Password" id="reg-pass"></div>
-<div class="input-group">
-    <input type="text" placeholder="Referral Code (Optional)" id="reg-referral-input">
-</div>
-            <button class="btn-primary" id="btn-signup-action" onclick="handleSignup()" disabled>Create Account</button>
-            <div class="auth-switch" onclick="toggleAuth('login')">Back to Sign In</div>
-
-        </div>
-
-<!-- Login Form के अंदर (btn-login-action के नीचे) -->
-<div class="auth-help-section" onclick="openInstagram()" style="margin-top: 20px; cursor: pointer; animation: fadeIn 0.8s;">
-    <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-bottom: 5px;">Facing issues? </p>
-    <div class="insta-auth-link">
-        <i class="fa-brands fa-instagram"></i> Open Instagram for Support
+        <p style="margin-top:10px; font-size:0.8rem; color:#aaa;">Please wait...</p>
     </div>
 </div>
 
+<!-- AUTH SECTION -->
+<section id="auth-section">
+    <div class="auth-card fade-in" id="login-form">
+        <h1 class="logo-text">DK Love Chats</h1>
+        <div class="input-group">
+            <input type="text" placeholder="Username or Email" id="login-email" style="text-transform: lowercase; padding-right: 55px;" oninput="checkLoginUser()">
+            <img id="login-user-dp" src="" class="hidden" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; z-index: 5; box-shadow: 0 0 10px rgba(255,0,110,0.5);">
+            <i id="login-user-icon" class="fa-solid fa-user" style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: #555; z-index: 5; transition: 0.3s;"></i>
+        </div>
+        <div class="input-group"><input type="password" placeholder="Password" id="login-pass"></div>
+        <button class="btn-primary" id="btn-login-action" onclick="handleLogin()">Sign In</button>
+        <div class="auth-switch" onclick="toggleAuth('signup')">Create an Account</div>
+    </div>
+    <div class="auth-card hidden" id="signup-form">
+        <h1 class="logo-text">Join DK Chats</h1>
+        <div class="input-group">
+            <input type="text" placeholder="Username (e.g. @coolguy)" id="reg-username" oninput="checkUsernameAvailability()">
+            <i id="username-check-icon" class="fa-solid username-status"></i>
+        </div>
+        <div class="input-group"><input type="text" placeholder="Full Name" id="reg-name"></div>
+        <div class="input-group"><input type="email" placeholder="Email Address" id="reg-email"></div>
+        <div class="input-group"><input type="password" placeholder="Password" id="reg-pass"></div>
+        <div class="input-group"><input type="text" placeholder="Referral Code (Optional)" id="reg-referral-input"></div>
+        <button class="btn-primary" id="btn-signup-action" onclick="handleSignup()" disabled>Create Account</button>
+        <div class="auth-switch" onclick="toggleAuth('login')">Back to Sign In</div>
+    </div>
+    <div class="auth-help-section" onclick="openInstagram()" style="margin-top: 20px; cursor: pointer; animation: fadeIn 0.8s;">
+        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-bottom: 5px;">Facing issues? </p>
+        <div class="insta-auth-link"><i class="fa-brands fa-instagram"></i> Open Instagram for Support</div>
+    </div>
+</section>
 
-
-    </section>
-<!-- MAINTENANCE MODAL (SERVER BREAK) -->
+<!-- MAINTENANCE MODAL -->
 <div id="maintenance-modal" class="hidden" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #10002b; z-index: 9999999; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;">
     <i class="fa-solid fa-person-digging" style="font-size: 6rem; color: #ffbe0b; margin-bottom: 20px; animation: bounce 2s infinite;"></i>
     <h1 style="color: white; font-size: 2.2rem; margin-bottom: 10px;">We'll be right back!</h1>
-    <p style="color: #ccc; font-size: 1rem; max-width: 320px; line-height: 1.5; margin-bottom: 30px;">
-        Our servers are currently undergoing maintenance to make DK Love Chats even better. Please check back after some time.
-    </p>
-    <div style="padding: 10px 20px; border: 1px solid var(--warning); color: var(--warning); border-radius: 30px; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">
-        STATUS: OFFLINE
-    </div>
+    <p style="color: #ccc; font-size: 1rem; max-width: 320px; line-height: 1.5; margin-bottom: 30px;">Our servers are currently undergoing maintenance to make DK Love Chats even better. Please check back after some time.</p>
+    <div style="padding: 10px 20px; border: 1px solid var(--warning); color: var(--warning); border-radius: 30px; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">STATUS: OFFLINE</div>
 </div>
+
 <!-- BANNED ACCOUNT MODAL -->
 <div id="banned-modal" class="hidden" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 0, 43, 0.98); backdrop-filter: blur(20px); z-index: 999999; justify-content: center; align-items: center; flex-direction: column; text-align: center; padding: 20px;">
-    
     <i class="fa-solid fa-user-lock" style="font-size: 5rem; color: #ff4757; margin-bottom: 20px;"></i>
     <h1 style="color: white; font-size: 2rem; margin-bottom: 10px;">Account Suspended!</h1>
-    
-    <p style="color: #ccc; max-width: 300px; font-size: 0.95rem; line-height: 1.5; margin-bottom: 30px;">
-        Your account has been banned by the Admin. You cannot login to DK Love Chats anymore.
-    </p>
-    
-    <button onclick="window.location.reload()" style="background: var(--danger); color: white; border: none; padding: 12px 40px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);">
-        Okay, Go Back
-    </button>
+    <p style="color: #ccc; max-width: 300px; font-size: 0.95rem; line-height: 1.5; margin-bottom: 30px;">Your account has been banned by the Admin. You cannot login to DK Love Chats anymore.</p>
+    <button onclick="window.location.reload()" style="background: var(--danger); color: white; border: none; padding: 12px 40px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);">Okay, Go Back</button>
 </div>
+
 <!-- SMART BACK BUTTON FOR CHAT REDIRECT -->
 <div id="smart-back-btn" class="hidden" onclick="handleSmartBack()">
     <i class="fa-solid fa-arrow-left"></i> Back
 </div>
-<!-- GLOBAL SEARCH MODAL (FULL SCREEN) -->
+
+<!-- GLOBAL SEARCH MODAL -->
 <div id="global-search-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-grad); z-index: 2500; display: flex; flex-direction: column; transition: 0.3s; transform: translateY(100%);">
-    
-    <!-- Search Header -->
     <div style="padding: 20px 15px 15px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(16, 0, 43, 0.95); backdrop-filter: blur(10px);">
         <i class="fa-solid fa-arrow-left" style="font-size: 1.4rem; color: white; cursor: pointer;" onclick="closeGlobalSearch()"></i>
-        
         <div style="position: relative; flex: 1;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 0.9rem;"></i>
             <input type="text" id="global-search-input" placeholder="Search friends by name or @username..." oninput="handleGlobalSearch()" style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; outline: none; font-size: 0.95rem; transition: 0.3s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);">
         </div>
     </div>
-    
-    <!-- Search Results -->
     <div id="global-search-results" style="flex: 1; overflow-y: auto; padding: 10px; padding-bottom: 80px;">
         <!-- Results will appear here -->
     </div>
 </div>
-    <!-- APP CONTAINER -->
-<!-- यह हिस्सा बहुत जरूरी है (Bug Fix) -->
+
+<!-- APP CONTAINER -->
 <input type="file" id="story-upload" accept="image/*,video/*" style="display: none;" onchange="openStoryEditor(this)">
-<div id="upload-status-area"></div> <!-- Instagram style upload bar के लिए -->
-    <div id="app-container" class="hidden">
-        <header id="main-header">
-            <div class="header-logo">DK Love Chats ❤️</div>
-            <div class="header-actions">
-                <div class="icon-btn" onclick="toggleNotificationDropdown()">
-                    <i class="fa-regular fa-bell"></i>
-                    <div id="header-notif-badge" class="notif-badge">0</div>
+<div id="app-container" class="hidden">
+    <header id="main-header">
+        <div class="header-logo">DK Love Chats ❤️</div>
+        <div class="header-actions">
+            <div class="icon-btn" onclick="toggleNotificationDropdown()">
+                <i class="fa-regular fa-bell"></i>
+                <div id="header-notif-badge" class="notif-badge">0</div>
+            </div>
+            <div class="icon-btn" onclick="openRadar()" style="color: #00b894; margin-right: 10px;">
+                <i class="fa-solid fa-satellite-dish"></i>
+            </div>
+        </div>
+    </header>
 
-                </div>
-<!-- Header Actions के अंदर इसे जोड़ें -->
-<div class="icon-btn" onclick="openRadar()" style="color: #00b894; margin-right: 10px;">
-    <i class="fa-solid fa-satellite-dish"></i>
-</div>
-
-        </header>
-
-<!-- GLOBAL UPDATE/NOTICE POP-UP -->
-<div id="global-notice-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 99999; display: flex; justify-content: center; align-items: center;">
-    <div class="modal-content fade-in" style="background: #10002b; border: 2px solid var(--primary); border-radius: 24px; padding: 30px; max-width: 320px; text-align: center; box-shadow: 0 0 50px rgba(255,0,110,0.4);">
-        <i class="fa-solid fa-rocket" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px; animation: bounce 2s infinite;"></i>
-        <h2 id="notice-ui-title" style="margin-bottom: 15px; color: white;">New Update!</h2>
-        <p id="notice-ui-msg" style="color: #ccc; font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;">Please download the new version to continue.</p>
-        
-        <a id="notice-ui-link" href="#" target="_blank" style="display: block; background: var(--primary-grad); color: white; padding: 15px; border-radius: 30px; text-decoration: none; font-weight: 800; font-size: 1.1rem; margin-bottom: 15px; box-shadow: 0 10px 20px rgba(255,0,110,0.3);">
-            Download Now
-        </a>
-        
-        <button id="notice-ui-close" onclick="document.getElementById('global-notice-modal').classList.add('hidden')" style="background: transparent; border: 1px solid #555; color: #aaa; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 600;">
-            Maybe Later
-        </button>
+    <!-- GLOBAL UPDATE/NOTICE POP-UP -->
+    <div id="global-notice-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 99999; display: flex; justify-content: center; align-items: center;">
+        <div class="modal-content fade-in" style="background: #10002b; border: 2px solid var(--primary); border-radius: 24px; padding: 30px; max-width: 320px; text-align: center; box-shadow: 0 0 50px rgba(255,0,110,0.4);">
+            <i class="fa-solid fa-rocket" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px; animation: bounce 2s infinite;"></i>
+            <h2 id="notice-ui-title" style="margin-bottom: 15px; color: white;">New Update!</h2>
+            <p id="notice-ui-msg" style="color: #ccc; font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;">Please download the new version to continue.</p>
+            <a id="notice-ui-link" href="#" target="_blank" style="display: block; background: var(--primary-grad); color: white; padding: 15px; border-radius: 30px; text-decoration: none; font-weight: 800; font-size: 1.1rem; margin-bottom: 15px; box-shadow: 0 10px 20px rgba(255,0,110,0.3);">Download Now</a>
+            <button id="notice-ui-close" onclick="document.getElementById('global-notice-modal').classList.add('hidden')" style="background: transparent; border: 1px solid #555; color: #aaa; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 600;">Maybe Later</button>
+        </div>
     </div>
-</div>
 
+    <!-- Main Scroll Area -->
+    <main id="main-content">
+        <div id="notif-perm-banner" class="hidden" onclick="enableNotifications()">
+            <span>🔔 Enable notifications for messages?</span>
+            <button class="perm-btn">Allow</button>
+        </div>
 
-        <!-- Main Scroll Area -->
-        <main id="main-content">
-            <div id="notif-perm-banner" class="hidden" onclick="enableNotifications()">
-                <span>🔔 Enable notifications for messages?</span>
-                <button class="perm-btn">Allow</button>
+        <!-- HOME FEED -->
+        <div id="home-view" class="view-section active-view">
+            <!-- 1. Instagram Style Top Upload Progress -->
+            <div id="upload-status-area"></div>
+
+            <!-- 🌟 SMART 3D PREMIUM PWA INSTALL CARD BOARD -->
+            <div id="pwa-install-card" class="pwa-active-card" style="
+                margin: 15px 15px 10px 15px; 
+                padding: 16px 20px; 
+                border-radius: 24px; 
+                background: #f1f5f9; 
+                display: flex; 
+                align-items: center; 
+                gap: 15px; 
+                position: relative; 
+                border: 3.5px solid transparent; 
+                background-image: linear-gradient(#f1f5f9, #f1f5f9), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b); 
+                background-origin: border-box; 
+                background-clip: padding-box, border-box; 
+                box-shadow: 0 10px 25px rgba(0,0,0,0.06), inset 0 2px 4px rgba(255,255,255,1);
+                will-change: transform, opacity;
+                transform: translate3d(0, 0, 0);
+                opacity: 1;
+                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            ">
+                <div style="width: 45px; height: 45px; background: #ffffff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ff006e; box-shadow: 0 5px 15px rgba(255, 0, 110, 0.15); flex-shrink: 0;">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+                <div style="flex: 1; text-align: left;">
+                    <b style="color: #1a1a1a; font-size: 0.95rem; font-weight: 900; display: block; text-transform: uppercase; letter-spacing: 0.5px;">Install Web App</b>
+                    <p style="color: #64748b; font-size: 0.8rem; font-weight: 700; line-height: 1.3; margin: 2px 0 0 0;">Add DK Love Chats to your home screen for full-screen view.</p>
+                </div>
+                <button onclick="window.triggerAppInstallation()" style="
+                    background: linear-gradient(135deg, #ff006e, #8338ec); 
+                    border: none; 
+                    color: white; 
+                    padding: 10px 18px; 
+                    border-radius: 15px; 
+                    font-weight: 800; 
+                    font-size: 0.8rem; 
+                    cursor: pointer; 
+                    box-shadow: 0 6px 15px rgba(255, 0, 110, 0.3); 
+                    flex-shrink: 0; 
+                    text-transform: uppercase; 
+                    letter-spacing: 0.5px; 
+                    transition: transform 0.1s ease;
+                " onmousedown="this.style.transform='scale(0.93)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.93)'" ontouchend="this.style.transform='scale(1)'">
+                    Install
+                </button>
             </div>
 
-<!-- HOME FEED -->
-<div id="home-view" class="view-section active-view">
-    
-    <!-- 1. Instagram Style Top Upload Progress (यह हिस्सा नया है) -->
-    <div id="upload-status-area"></div>
+            <script>
+                if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                    const card = document.getElementById('pwa-install-card');
+                    if (card) card.style.display = 'none';
+                }
+            </script>
 
-    <!-- 🌟 नया: SMART 3D PREMIUM PWA INSTALL CARD BOARD (Visible in Browser, Auto-Hidden in App) -->
-    <div id="pwa-install-card" class="pwa-active-card" style="
-        margin: 15px 15px 10px 15px; 
-        padding: 16px 20px; 
-        border-radius: 24px; 
-        background: #f1f5f9; 
+            <!-- 2. Stories Section -->
+            <div class="stories-bar" id="stories-container"></div>
+
+            <!-- 3. Main Post Feed -->
+            <div id="feed-container" style="padding-top: 10px; padding-bottom: 80px;">
+                <!-- SKELETON LOADERS -->
+                <div id="feed-skeleton-loader">
+                    <div class="post-skeleton skeleton">
+                        <div class="sk-header">
+                            <div class="sk-avatar skeleton"></div>
+                            <div class="sk-name skeleton"></div>
+                        </div>
+                        <div class="sk-img skeleton"></div>
+                        <div class="sk-text skeleton"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REELS VIEW -->
+        <div id="reels-view" class="view-section" style="padding: 0; background: #000;">
+            <div id="reels-container" class="reels-container"></div>
+        </div>
+
+        <!-- CHAT LIST -->
+        <div id="chat-view" class="view-section">
+            <div style="padding:20px 15px 5px; font-weight:800; font-size:1.8rem; letter-spacing:-1px; color:#fff;">Messages</div>
+            <div class="chat-search-container">
+                <input type="text" id="chat-list-search" class="chat-search-input" placeholder="Search friends..." oninput="filterChatList()">
+            </div>
+            <div id="active-now-bar" class="active-now-bar hidden"></div>
+            <div id="chat-list-container" style="padding-bottom: 80px;">
+                <div style="text-align:center; padding:50px; color:#aaa;"><div class="splash-loader" style="margin:0 auto; width:30px; height:30px; border-width:2px;"></div></div>
+            </div>
+        </div>
+
+        <!-- PROFILE VIEW -->
+        <div id="profile-view" class="view-section">
+            <div class="profile-header">
+                <i class="fa-solid fa-arrow-left profile-back-btn" onclick="switchTab('home')"></i>
+<!-- 👤 Profile Image Wrapped with Premium Verification Badge Overlay -->
+<div class="profile-dp-container" style="position: relative; display: inline-block; margin: 0 auto;">
+    <img id="profile-img" src="" onclick="viewFullMedia(this.src, 'image')">
+    
+    <!-- 🎖️ DP Overlap Verified Badge -->
+    <div id="profile-dp-badge" class="hidden" style="
+        position: absolute; 
+        bottom: 5px; 
+        right: 5px; 
+        background: #ffffff; 
+        border-radius: 50%; 
+        width: 32px; 
+        height: 32px; 
         display: flex; 
         align-items: center; 
-        gap: 15px; 
-        position: relative; 
-        border: 3.5px solid transparent; 
-        background-image: linear-gradient(#f1f5f9, #f1f5f9), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b); 
-        background-origin: border-box; 
-        background-clip: padding-box, border-box; 
-        box-shadow: 0 10px 25px rgba(0,0,0,0.06), inset 0 2px 4px rgba(255,255,255,1);
-        
-        /* Smooth GPU Animations */
-        will-change: transform, opacity;
-        transform: translate3d(0, 0, 0);
-        opacity: 1;
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        justify-content: center; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+        border: 2.5px solid #ff006e; 
+        z-index: 10;
+        animation: fadeIn 0.3s ease-out;
     ">
-        
-        <!-- Icon Box -->
-        <div style="width: 45px; height: 45px; background: #ffffff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ff006e; box-shadow: 0 5px 15px rgba(255, 0, 110, 0.15); flex-shrink: 0;">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-        </div>
-
-        <!-- Text Content (No White Text) -->
-        <div style="flex: 1; text-align: left;">
-            <b style="color: #1a1a1a; font-size: 0.95rem; font-weight: 900; display: block; text-transform: uppercase; letter-spacing: 0.5px;">Install Web App</b>
-            <p style="color: #64748b; font-size: 0.8rem; font-weight: 700; line-height: 1.3; margin: 2px 0 0 0;">Add DK Love Chats to your home screen for full-screen view.</p>
-        </div>
-
-        <!-- 3D Press Action Install Button -->
-        <button onclick="window.triggerAppInstallation()" style="
-            background: linear-gradient(135deg, #ff006e, #8338ec); 
-            border: none; 
-            color: white; 
-            padding: 10px 18px; 
-            border-radius: 15px; 
-            font-weight: 800; 
-            font-size: 0.8rem; 
-            cursor: pointer; 
-            box-shadow: 0 6px 15px rgba(255, 0, 110, 0.3); 
-            flex-shrink: 0; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-            transition: transform 0.1s ease;
-        " onmousedown="this.style.transform='scale(0.93)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.93)'" ontouchend="this.style.transform='scale(1)'">
-            Install
-        </button>
+        <!-- JS द्वारा 24px का गोल्ड टिक यहाँ रेंडर होगा -->
     </div>
-
-    <!-- 🌟 स्मार्ट चेक: यदि पहले से ही इंस्टॉल किए गए ऐप के अंदर खुला हो, तो इसे तुरंत छुपाएं -->
-    <script>
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-            const card = document.getElementById('pwa-install-card');
-            if (card) card.style.display = 'none';
-        }
-    </script>
-
-    <!-- 2. Stories Section -->
-    <div class="stories-bar" id="stories-container"></div>
-
-    <!-- 3. Main Post Feed -->
-    <div id="feed-container" style="padding-top: 10px; padding-bottom: 80px;">
-        
-        <!-- SKELETON LOADERS -->
-        <div id="feed-skeleton-loader">
-            <div class="post-skeleton skeleton">
-                <div class="sk-header">
-                    <div class="sk-avatar skeleton"></div>
-                    <div class="sk-name skeleton"></div>
+</div>
+                <div id="profile-follows-you-card" class="hidden fade-in">
+                    <i class="fa-solid fa-handshake-angle"></i> Follows You
                 </div>
-                <div class="sk-img skeleton"></div>
-                <div class="sk-text skeleton"></div>
+                <div class="profile-info-card fade-in">
+                    <h2 id="profile-name">User</h2>
+                    <p id="profile-username">@username</p>
+                    <div class="bio-divider"></div>
+                    <p id="profile-bio">No bio yet.</p>
+                </div>
+
+                <!-- REFERRAL CARD BOARD -->
+                <div id="my-referral-card" class="hidden fade-in" style="margin: 15px auto; width: 90%; max-width: 380px; background: linear-gradient(145deg, rgba(131, 56, 236, 0.1), rgba(0, 0, 0, 0.4)); border: 1px dashed var(--primary); border-radius: 20px; padding: 15px; text-align: center; backdrop-filter: blur(10px);">
+                    <p style="font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Invite Friends & Get 100 Followers</p>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; margin-bottom: 10px;">
+                        <span id="profile-refer-code" style="font-family: 'Courier New', Courier, monospace; font-weight: 800; font-size: 1.2rem; color: var(--primary); letter-spacing: 2px;">LOADING...</span>
+                        <i class="fa-regular fa-copy" style="color: white; cursor: pointer; font-size: 1.1rem;" onclick="copyReferCode()"></i>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
+                        <span style="font-size: 0.8rem; color: #ccc;" id="refer-progress-text">0/10 Refers</span>
+                        <span style="font-size: 0.75rem; color: var(--success); font-weight: 700;">+10 Followers / Refer</span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 8px; overflow: hidden;">
+                        <div id="refer-progress-fill" style="width: 0%; height: 100%; background: var(--primary-grad); transition: 0.5s;"></div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="profile-stats">
+                    <div class="stat-item"><span class="stat-val" id="profile-posts-count">0</span><span class="stat-label">Posts</span></div>
+                    <div class="stat-item" onclick="showFollowers()"><span class="stat-val" id="profile-followers-count">0</span><span class="stat-label">Followers</span></div>
+                    <div class="stat-item" onclick="showFollowing()"><span class="stat-val" id="profile-following-count">0</span><span class="stat-label">Following</span></div>
+                </div>
+
+                <!-- Actions -->
+                <div id="profile-actions" style="display:flex; justify-content:center; gap:10px; margin-top: 15px;"></div>
+            </div>
+
+            <div style="padding: 0 15px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600;">Posts</div>
             </div>
             
-            <div class="post-skeleton skeleton">
-                <div class="sk-header">
-                    <div class="sk-avatar skeleton"></div>
-                    <div class="sk-name skeleton"></div>
-                </div>
-                <div class="sk-img skeleton"></div>
-                <div class="sk-text skeleton"></div>
-            </div>
-        </div>
-        <!-- असल पोस्ट यहाँ लोड होंगे -->
-    </div>
-</div>
-
-<!-- REELS VIEW (NEW) -->
-<div id="reels-view" class="view-section" style="padding: 0; background: #000;">
-    <div id="reels-container" class="reels-container">
-        <!-- Reels will load here -->
-    </div>
-</div>
-            <!-- CHAT LIST -->
-            <div id="chat-view" class="view-section">
-                <div style="padding:20px 15px 5px; font-weight:800; font-size:1.8rem; letter-spacing:-1px; color:#fff;">Messages</div>
-                
-                <!-- SEARCH BAR -->
-                <div class="chat-search-container">
-                    <input type="text" id="chat-list-search" class="chat-search-input" placeholder="Search friends..." oninput="filterChatList()">
-                </div>
-
-                <!-- ACTIVE NOW BAR (ONLINE USERS) -->
-                <div id="active-now-bar" class="active-now-bar hidden"></div>
-
-                <div id="chat-list-container" style="padding-bottom: 80px;">
-                    <div style="text-align:center; padding:50px; color:#aaa;"><div class="splash-loader" style="margin:0 auto; width:30px; height:30px; border-width:2px;"></div></div>
-                </div>
+            <div class="profile-tabs">
+                <div class="profile-tab active" id="tab-posts" onclick="switchProfileTab('posts')"><i class="fa-solid fa-table-cells"></i></div>
+                <div class="profile-tab" id="tab-reels" onclick="switchProfileTab('reels')"><i class="fa-solid fa-clapperboard"></i></div>
             </div>
 
-<!-- PROFILE VIEW (UPDATED WITH CARD BOARD LOOK) -->
-<div id="profile-view" class="view-section">
-    <div class="profile-header">
-        <i class="fa-solid fa-arrow-left profile-back-btn" onclick="switchTab('home')"></i>
-        
-        <!-- Profile Image -->
-<!-- Profile Image -->
-        <img id="profile-img" src="" onclick="viewFullMedia(this.src, 'image')">
-        
-        <!-- NEW: Separate 'Follows You' Card Board -->
-        <div id="profile-follows-you-card" class="hidden fade-in">
-            <i class="fa-solid fa-handshake-angle"></i> Follows You
+            <!-- GRIDS (सुरक्षित सिंगल डिक्लेरेशन) -->
+            <div id="profile-posts-grid" class="profile-grid" style="padding-bottom: 90px;"></div>
+            <div id="profile-reels-grid" class="profile-grid hidden" style="padding-bottom: 90px;"></div>
         </div>
-        
-        
-        <!-- NEW: VIP Card Board for Info -->
-        <div class="profile-info-card fade-in">
-            <h2 id="profile-name">User</h2>
-            <p id="profile-username">@username</p>
-            <div class="bio-divider"></div>
-            <p id="profile-bio">No bio yet.</p>
-        </div>
-<!-- NEW: REFERRAL CARD BOARD (सिर्फ अपनी प्रोफाइल पर दिखेगा) -->
-<div id="my-referral-card" class="hidden fade-in" style="margin: 15px auto; width: 90%; max-width: 380px; background: linear-gradient(145deg, rgba(131, 56, 236, 0.1), rgba(0, 0, 0, 0.4)); border: 1px dashed var(--primary); border-radius: 20px; padding: 15px; text-align: center; backdrop-filter: blur(10px);">
-    <p style="font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Invite Friends & Get 100 Followers</p>
-    
-    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; margin-bottom: 10px;">
-        <span id="profile-refer-code" style="font-family: 'Courier New', Courier, monospace; font-weight: 800; font-size: 1.2rem; color: var(--primary); letter-spacing: 2px;">LOADING...</span>
-        <i class="fa-regular fa-copy" style="color: white; cursor: pointer; font-size: 1.1rem;" onclick="copyReferCode()"></i>
-    </div>
-
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
-        <span style="font-size: 0.8rem; color: #ccc;" id="refer-progress-text">0/10 Refers</span>
-        <span style="font-size: 0.75rem; color: var(--success); font-weight: 700;">+10 Followers / Refer</span>
-    </div>
-    
-    <!-- Progress Bar -->
-    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 8px; overflow: hidden;">
-        <div id="refer-progress-fill" style="width: 0%; height: 100%; background: var(--primary-grad); transition: 0.5s;"></div>
-    </div>
-</div>
-        <!-- Stats -->
-        <div class="profile-stats">
-            <div class="stat-item"><span class="stat-val" id="profile-posts-count">0</span><span class="stat-label">Posts</span></div>
-            <div class="stat-item" onclick="showFollowers()"><span class="stat-val" id="profile-followers-count">0</span><span class="stat-label">Followers</span></div>
-            <div class="stat-item" onclick="showFollowing()"><span class="stat-val" id="profile-following-count">0</span><span class="stat-label">Following</span></div>
-        </div>
-
-        <!-- Actions (Edit/Settings or Follow/Message) -->
-        <div id="profile-actions" style="display:flex; justify-content:center; gap:10px; margin-top: 15px;"></div>
-    </div>
-
-    <!-- TABS -->
-    <div style="padding: 0 15px;">
-        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600;">Posts</div>
-    </div>
-    
-    <div class="profile-tabs">
-        <div class="profile-tab active" id="tab-posts" onclick="switchProfileTab('posts')"><i class="fa-solid fa-table-cells"></i></div>
-        <div class="profile-tab" id="tab-reels" onclick="switchProfileTab('reels')"><i class="fa-solid fa-clapperboard"></i></div>
-    </div>
-
-    <!-- GRIDS -->
-    <div id="profile-posts-grid" class="profile-grid" style="padding-bottom: 90px;"></div>
-    <div id="profile-reels-grid" class="profile-grid hidden" style="padding-bottom: 90px;"></div>
+    </main>
 </div>
 
-<!-- GRIDS FOR POSTS AND REELS -->
-<div id="profile-posts-grid" class="profile-grid" style="padding-bottom: 90px;"></div>
-<div id="profile-reels-grid" class="profile-grid hidden" style="padding-bottom: 90px;"></div>
-            </div>
-        </main>
-
-<!-- NEW POST MODAL (FULLY UPDATED) -->
+<!-- NEW POST MODAL -->
 <div id="create-post-modal" class="hidden">
     <div class="modal-content">
-        <!-- टॉप हेडर (Exit और Share बटन के साथ) -->
         <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom: 20px;">
-            <!-- Exit बटन: अब यह closeNewPostModal() को कॉल करेगा ताकि एडिटर साफ़ हो जाए -->
             <i class="fa-solid fa-xmark" style="font-size: 1.5rem; color: white; cursor:pointer;" onclick="closeNewPostModal()"></i>
-            
             <h3 style="color: white; margin: 0; font-weight: 700;">New Post</h3>
-            
-            <!-- Share बटन -->
             <button class="btn-primary" style="width: auto; padding: 8px 25px; background: var(--primary); border-radius: 20px; font-weight: bold;" onclick="handlePublish()">Share</button>
         </div>
-
-        <!-- 1. मीडिया सिलेक्शन बटन -->
         <button onclick="document.getElementById('post-file-input').click()" class="btn-edit" style="width:100%; margin-bottom:15px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
             <i class="fa-solid fa-folder-plus" style="color: var(--primary);"></i> 
             <span>Click here to select media</span>
         </button>
-
-        <!-- 2. प्रोफेशनल प्रीव्यू कार्ड (Zoom और Drag के लिए तैयार) -->
         <div class="post-preview-card" id="post-preview-area" style="position:relative; overflow:hidden; background: #000; border-radius: 18px; border: 1px solid #333; aspect-ratio: 4/5;">
-            
-            <!-- यहाँ फोटो/वीडियो लोड होगा -->
             <div id="preview-wrapper" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; touch-action: none;">
                 <div id="preview-placeholder" style="text-align: center;">
                     <i class="fa-solid fa-cloud-arrow-up" style="font-size: 3.5rem; color: #444; margin-bottom: 10px;"></i>
                     <p style="color: #666; font-size: 0.9rem;">Photo or Video Preview</p>
                 </div>
             </div>
-
-            <!-- Remove (X) Icon: मीडिया सेलेक्ट होने पर यह दिखेगा -->
             <div id="remove-btn" onclick="resetNewPostUI()" style="display:none; position:absolute; top:12px; right:12px; background:rgba(255, 71, 87, 0.9); color:white; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);">
                 <i class="fa-solid fa-xmark"></i>
             </div>
         </div>
-        
-        <!-- हिडन फाइल इनपुट -->
         <input type="file" id="post-file-input" accept="image/*,video/*" style="display: none;" onchange="updatePostUI(this)">
-
-        <!-- कैप्शन एरिया -->
         <textarea id="post-caption" placeholder="Write a caption..." style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 15px; padding: 15px; color: white; height: 90px; margin-top: 15px; outline: none; font-size: 1rem; resize: none;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#333'"></textarea>
     </div>
 </div>
-<!-- STORY EDITOR MODAL - ULTIMATE INSTAGRAM LOOK (UPDATED) -->
+
+<!-- STORY EDITOR MODAL - ULTIMATE INSTAGRAM LOOK -->
 <div id="story-editor-modal" class="hidden">
-    <!-- Top Bar: Close, Tools, and Done -->
     <div class="editor-top-bar">
-        <!-- Main Close Button -->
         <i class="fa-solid fa-xmark close-icon" id="editor-close-btn" onclick="closeStoryEditor()"></i>
-        
-        <!-- Drawing Mode Header (सिर्फ Drawing के समय दिखेगा) -->
         <div id="draw-tools-header" class="hidden" style="display: flex; width: 100%; justify-content: space-between; align-items: center; padding: 0 5px;">
             <div id="draw-exit-btn" onclick="exitDrawing()" style="color: white; font-weight: 600; cursor: pointer; font-size: 0.9rem;">Cancel</div>
             <div style="display: flex; gap: 20px; align-items: center;">
@@ -645,66 +568,45 @@
             </div>
             <div id="draw-done-btn" onclick="finishDrawing()" style="background: white; color: black; padding: 5px 15px; border-radius: 20px; font-weight: bold; cursor: pointer;">Done</div>
         </div>
-
-        <!-- Standard Tools -->
         <div class="top-tools-group" id="editor-top-tools">
             <div class="tool-btn" onclick="toggleTextTool()"><i class="fa-solid fa-font"></i></div>
             <div class="tool-btn" onclick="toggleDrawTool()"><i class="fa-solid fa-pen"></i></div>
             <div class="tool-btn" onclick="triggerMusicUpload()"><i class="fa-solid fa-music"></i></div>
             <div class="tool-btn" onclick="toggleEffects()"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
         </div>
-
-        <!-- Text DONE Button (सिर्फ टाइपिंग के समय दिखेगा) -->
         <div id="text-done-btn" class="hidden" onclick="finishTextEditing()" style="background: white; color: black; padding: 5px 15px; border-radius: 20px; font-weight: bold; cursor: pointer;">Done</div>
     </div>
     
-    <!-- Canvas & Preview Container -->
     <div id="editor-canvas-container">
         <img id="editor-preview-img" class="hidden">
         <video id="editor-preview-video" class="hidden" autoplay loop playsinline muted></video>
         <canvas id="drawing-canvas"></canvas>
-        
-        <!-- Drag to Delete Trash Bin -->
         <div id="editor-trash-container" class="hidden">
-            <div class="trash-circle">
-                <i class="fa-solid fa-trash-can"></i>
+            <div class="trash-circle"><i class="fa-solid fa-trash-can"></i></div>
+        </div>
+    </div>
+
+    <!-- 🎵 MUSIC TRIMMER SELECTION UI (सुधारा गया एकल संस्करण) -->
+    <div id="music-trimmer-container" class="hidden" style="padding: 15px; background: rgba(0,0,0,0.65); border-radius: 20px; margin: 10px; backdrop-filter: blur(10px);">
+        <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+            <div class="dur-btn active" onclick="changeStoryDuration(15)" id="dur-15">15s</div>
+            <div class="dur-btn" onclick="changeStoryDuration(30)" id="dur-30">30s</div>
+            <div class="dur-btn" onclick="changeStoryDuration(60)" id="dur-60">60s</div>
+        </div>
+        <div id="waveform-wrapper">
+            <div id="selection-window">
+                <div id="selection-badge">15s</div>
+                <div id="selection-progress"></div>
             </div>
+            <input type="range" id="music-scrubber" min="0" value="0" step="0.1">
+        </div>
+        <div id="trimmer-time-display" style="text-align:center; color:#fff; font-size:0.9rem; font-weight:800; margin-bottom: 15px;">0:00</div>
+        <div style="display: flex; justify-content: center; gap: 12px;">
+            <button class="btn-primary" style="background: rgba(255,255,255,0.1); width: auto; padding: 10px 25px; border: 1px solid rgba(255,255,255,0.2);" onclick="removeStoryMusic()">Cancel</button>
+            <button class="btn-primary" style="width: auto; padding: 10px 35px; background: #fff; color: #000; box-shadow: 0 10px 20px rgba(255,255,255,0.2);" onclick="finishMusicTrimming()">Done</button>
         </div>
     </div>
 
-    <!-- NEW: MUSIC TRIMMER SELECTION UI (पिंक स्लाइडर) -->
-<div id="music-trimmer-container" class="hidden">
-    <!-- ड्यूरेशन स्विच बटन्स -->
-    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
-        <div class="dur-btn active" onclick="changeStoryDuration(15)" id="dur-15">15s</div>
-        <div class="dur-btn" onclick="changeStoryDuration(30)" id="dur-30">30s</div>
-        <div class="dur-btn" onclick="changeStoryDuration(60)" id="dur-60">60s</div>
-    </div>
-
-    <!-- वेवफॉर्म और ट्रिमर विंडो -->
-    <div id="waveform-wrapper">
-        <div id="selection-window">
-            <div id="selection-badge">15s</div>
-            <div id="selection-progress"></div>
-        </div>
-        <!-- इनपुट रेंज (म्यूजिक स्क्रबर) -->
-        <input type="range" id="music-scrubber" min="0" value="0" step="0.1">
-    </div>
-    
-    <!-- टाइम डिस्प्ले -->
-    <div id="trimmer-time-display" style="text-align:center; color:#fff; font-size:0.9rem; font-weight:800; margin-bottom: 15px;">0:00</div>
-
-    <!-- एक्शन बटन्स (Done & Cancel) -->
-    <div style="display: flex; justify-content: center; gap: 12px;">
-        <button class="btn-primary" style="background: rgba(255,255,255,0.1); width: auto; padding: 10px 25px; border: 1px solid rgba(255,255,255,0.2);" onclick="removeStoryMusic()">Cancel</button>
-        <button class="btn-primary" style="width: auto; padding: 10px 35px; background: #fff; color: #000; box-shadow: 0 10px 20px rgba(255,255,255,0.2);" onclick="finishMusicTrimming()">Done</button>
-    </div>
-</div>
-        
-
-        
-
-    <!-- Color Picker (Typing या Drawing के समय दिखेगा) -->
     <div id="color-picker-bar" style="display: none;">
         <div class="color-dot" style="background:#fff;" onclick="setDrawColor('#fff')"></div>
         <div class="color-dot" style="background:#ff006e;" onclick="setDrawColor('#ff006e')"></div>
@@ -714,51 +616,30 @@
         <div class="color-dot" style="background:#000;" onclick="setDrawColor('#000')"></div>
     </div>
     
-    <!-- Bottom Bar -->
     <div class="editor-bottom-bar">
-        <div id="music-status-text" style="color: white; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            No music
-        </div>
-        <button class="btn-share-story" onclick="uploadStoryFromEditor()">
-            Your Story <i class="fa-solid fa-chevron-right"></i>
-        </button>
+        <div id="music-status-text" style="color: white; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">No music</div>
+        <button class="btn-share-story" onclick="uploadStoryFromEditor()">Your Story <i class="fa-solid fa-chevron-right"></i></button>
     </div>
 </div>
+
 <!-- Instagram Style Music Search Modal -->
 <div id="music-search-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: flex; flex-direction: column; animation: slideUp 0.3s ease;">
     <div style="padding: 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #222;">
         <i class="fa-solid fa-chevron-left" style="color: white; font-size: 1.5rem;" onclick="closeMusicSearch()"></i>
         <input type="text" id="music-search-bar" placeholder="Search music..." oninput="filterMusicList()" style="flex: 1; background: #1a1a1a; border: none; padding: 12px 20px; border-radius: 10px; color: white; outline: none;">
     </div>
-<!-- Music Trimmer UI (Add this inside story-editor-modal) -->
-<div id="music-trimmer-container" class="hidden" style="padding: 15px; background: rgba(0,0,0,0.6); border-radius: 20px; margin: 10px; backdrop-filter: blur(10px);">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8rem; color: #ff006e; font-weight: bold;">
-        <span>Select Part (15s)</span>
-        <span id="trim-start-time">0:00</span>
-    </div>
-    <!-- Custom Range Slider -->
-    <input type="range" id="music-scrubber" min="0" value="0" step="1" style="width: 100%; cursor: pointer;">
-    <p style="font-size: 0.7rem; color: #888; margin-top: 5px; text-align: center;">Drag to find the best part of the song</p>
-</div>
     <div id="music-list-container" style="flex: 1; overflow-y: auto; padding: 10px;">
-        <!-- गानों की लिस्ट यहाँ दिखेगी -->
+        <!-- गानों की लिस्ट -->
     </div>
 </div>
-        </div>
 
 <!-- EDIT PROFILE MODAL (FULL SCREEN PREMIUM WHITE) -->
 <div id="edit-profile-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 5000; overflow-y: auto;">
-    
-    <!-- मुख्य कंटेनर जो पूरी स्क्रीन कवर करेगा -->
     <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; min-height: 100vh;">
-        
-        <!-- Header -->
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px; padding: 10px 0;">
             <i class="fa-solid fa-arrow-left" style="font-size: 1.5rem; cursor: pointer; color: #000;" onclick="toggleModal('edit-profile-modal', false)"></i>
             <h3 style="margin: 0; font-weight: 900; font-size: 1.5rem; color: #000;">Edit Profile</h3>
         </div>
-        
-        <!-- DP Upload Section -->
         <div style="text-align: center; margin-bottom: 30px;">
             <label for="profile-file-input" style="display:inline-block; width: 120px; height: 120px; border-radius: 50%; overflow: hidden; position: relative; border: 4px solid var(--primary); cursor: pointer; box-shadow: 0 10px 20px rgba(255, 0, 110, 0.2);">
                 <img id="edit-profile-preview" src="" style="width: 100%; height: 100%; object-fit: cover;">
@@ -766,47 +647,37 @@
             </label>
             <input type="file" id="profile-file-input" accept="image/*" style="display: none;" onchange="previewMedia('profile-file-input', null, 'edit-profile-preview')">
         </div>
-        
-        <!-- Inputs Section (Flex 1 ताकि ये ऊपर रहे और बटन नीचे) -->
         <div style="background: #f8fafc; padding: 20px; border-radius: 24px; border: 1px solid #e2e8f0; flex: 1;">
             <p style="font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 5px;">FULL NAME</p>
             <input type="text" class="modal-input" id="edit-name" placeholder="Enter your name" style="background: #ffffff; border: 1px solid #cbd5e1; margin-bottom: 20px; color: #000;">
-            
             <p style="font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 5px;">USERNAME</p>
             <div style="position: relative; margin-bottom: 20px;">
                 <input type="text" class="modal-input" id="edit-username" placeholder="dklive" oninput="checkEditUsernameAvailability()" style="background: #ffffff; border: 1px solid #cbd5e1; text-transform: lowercase; color: #000; padding-right: 40px;">
                 <i id="edit-username-check-icon" class="fa-solid fa-circle-check username-status status-valid" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 1.1rem;"></i>
             </div>
-
             <p style="font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 5px;">BIO</p>
             <textarea class="modal-input" id="edit-bio" placeholder="Something about you..." style="background: #ffffff; border: 1px solid #cbd5e1; height: 100px; resize: none; color: #000;"></textarea>
         </div>
-
-        <!-- SAVE BUTTON (नीचे फिक्स) -->
         <div style="margin-top: 30px; padding-bottom: 20px;">
-            <button class="btn-primary" id="btn-save-profile" onclick="handleSaveProfile()" style="width: 100%; padding: 16px; border-radius: 20px; font-weight: 800; font-size: 1.1rem; cursor: pointer; box-shadow: 0 8px 20px rgba(255, 0, 110, 0.3);">
-                Save Changes
-            </button>
+            <button class="btn-primary" id="btn-save-profile" onclick="handleSaveProfile()" style="width: 100%; padding: 16px; border-radius: 20px; font-weight: 800; font-size: 1.1rem; cursor: pointer; box-shadow: 0 8px 20px rgba(255, 0, 110, 0.3);">Save Changes</button>
         </div>
-        
     </div>
 </div>
 
-
-        <!-- COMMENTS MODAL -->
-        <div id="comments-modal" class="hidden">
-            <div class="modal-content fade-in" style="height: 70vh; display: flex; flex-direction: column; padding: 0;">
-                <div style="padding: 15px; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <h3 style="margin:0;">Comments</h3>
-                    <i class="fa-solid fa-xmark" style="font-size:1.5rem; cursor:pointer;" onclick="toggleModal('comments-modal', false)"></i>
-                </div>
-                <div id="comments-list" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.2); padding: 10px;"></div>
-                <div style="display:flex; gap:10px; padding: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <input type="text" class="modal-input" id="comment-input" placeholder="Add a comment..." style="margin:0;">
-                    <button class="btn-primary" style="width:50px; padding:0; display:flex; align-items:center; justify-content:center;" onclick="handleSendComment()"><i class="fa-solid fa-paper-plane"></i></button>
-                </div>
-            </div>
+<!-- COMMENTS MODAL -->
+<div id="comments-modal" class="hidden">
+    <div class="modal-content fade-in" style="height: 70vh; display: flex; flex-direction: column; padding: 0;">
+        <div style="padding: 15px; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <h3 style="margin:0;">Comments</h3>
+            <i class="fa-solid fa-xmark" style="font-size:1.5rem; cursor:pointer;" onclick="toggleModal('comments-modal', false)"></i>
         </div>
+        <div id="comments-list" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.2); padding: 10px;"></div>
+        <div style="display:flex; gap:10px; padding: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <input type="text" class="modal-input" id="comment-input" placeholder="Add a comment..." style="margin:0;">
+            <button class="btn-primary" style="width:50px; padding:0; display:flex; align-items:center; justify-content:center;" onclick="handleSendComment()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
 
 <!-- USER LIST MODAL -->
 <div id="user-list-modal" class="hidden">
@@ -815,121 +686,74 @@
             <h3 id="user-list-title" style="margin:0;">Users</h3>
             <i class="fa-solid fa-xmark" style="font-size:1.5rem; cursor:pointer;" onclick="toggleModal('user-list-modal', false)"></i>
         </div>
-        
-        <!-- NEW SEARCH BAR FOR FOLLOWERS/FOLLOWING -->
         <div style="padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1);">
             <div style="position: relative;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 0.9rem;"></i>
                 <input type="text" id="user-list-search" placeholder="Search users..." oninput="handleUserListSearch()" style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; outline: none; font-size: 0.95rem; transition: 0.3s;">
             </div>
         </div>
-        
         <div id="user-list-content" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.2); padding: 10px;"></div>
     </div>
 </div>
 
 <!-- SHARE MODAL -->
-<!-- UPDATED SHARE MODAL WITH STORY & SOCIAL ICONS -->
 <div id="share-modal" class="hidden">
     <div class="modal-content fade-in" style="height: 75vh; display: flex; flex-direction: column; padding: 0; position: relative;">
-        <!-- Header -->
         <div style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
             <span style="font-weight:bold; font-size:1.1rem;">Share to...</span>
             <i class="fa-solid fa-xmark" style="font-size:1.5rem; cursor:pointer;" onclick="toggleModal('share-modal', false)"></i>
         </div>
-        
-        <!-- SEARCH BAR FOR SHARE LIST -->
         <div style="padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1);">
             <div style="position: relative;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 0.9rem;"></i>
                 <input type="text" id="share-list-search" placeholder="Search friends..." oninput="handleShareListSearch()" style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; outline: none; font-size: 0.95rem; transition: 0.3s;">
             </div>
         </div>
-        
-        <!-- Friends Scroll Container -->
         <div id="share-options" style="flex:1; overflow-y:auto; padding: 10px; padding-bottom: 10px;"></div>
-        
-        <!-- QUICK ACTIONS FOOTER (Story + External Social Apps) -->
         <div id="share-quick-actions" style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(16, 0, 43, 0.4); display: flex; flex-direction: column; gap: 12px;">
-            
-            <!-- Add to Your Story Button -->
             <button onclick="window.handleShareReelToStory()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #ff006e, #8338ec); border: none; color: white; border-radius: 20px; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 110, 0.2); transition: 0.2s;">
                 <i class="fa-solid fa-circle-plus"></i> Add to Your Story
             </button>
-            
-            <!-- External Share Icons Row -->
             <div style="display: flex; justify-content: space-around; align-items: center; gap: 5px;">
-                <!-- WhatsApp -->
                 <div class="social-share-icon" onclick="window.shareExternalPlatform('whatsapp')" style="text-align: center; cursor: pointer; flex: 1;">
-                    <div style="width: 40px; height: 40px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; margin: 0 auto; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);">
-                        <i class="fa-brands fa-whatsapp"></i>
-                    </div>
+                    <div style="width: 40px; height: 40px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; margin: 0 auto; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);"><i class="fa-brands fa-whatsapp"></i></div>
                     <span style="font-size: 0.7rem; color: #aaa; display: block; margin-top: 4px;">WhatsApp</span>
                 </div>
-
-                <!-- Instagram -->
                 <div class="social-share-icon" onclick="window.shareExternalPlatform('instagram')" style="text-align: center; cursor: pointer; flex: 1;">
-                    <div style="width: 40px; height: 40px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; margin: 0 auto; box-shadow: 0 4px 10px rgba(220, 39, 67, 0.2);">
-                        <i class="fa-brands fa-instagram"></i>
-                    </div>
+                    <div style="width: 40px; height: 40px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; margin: 0 auto; box-shadow: 0 4px 10px rgba(220, 39, 67, 0.2);"><i class="fa-brands fa-instagram"></i></div>
                     <span style="font-size: 0.7rem; color: #aaa; display: block; margin-top: 4px;">Instagram</span>
                 </div>
-
-                <!-- Facebook -->
                 <div class="social-share-icon" onclick="window.shareExternalPlatform('facebook')" style="text-align: center; cursor: pointer; flex: 1;">
-                    <div style="width: 40px; height: 40px; background: #1877F2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; margin: 0 auto; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.2);">
-                        <i class="fa-brands fa-facebook-f"></i>
-                    </div>
+                    <div style="width: 40px; height: 40px; background: #1877F2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; margin: 0 auto; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.2);"><i class="fa-brands fa-facebook-f"></i></div>
                     <span style="font-size: 0.7rem; color: #aaa; display: block; margin-top: 4px;">Facebook</span>
                 </div>
-
-                <!-- Copy Link -->
                 <div class="social-share-icon" onclick="window.copyCurrentItemLink()" style="text-align: center; cursor: pointer; flex: 1;">
-                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; margin: 0 auto;">
-                        <i class="fa-solid fa-link"></i>
-                    </div>
+                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; margin: 0 auto;"><i class="fa-solid fa-link"></i></div>
                     <span style="font-size: 0.7rem; color: #aaa; display: block; margin-top: 4px;">Copy Link</span>
                 </div>
             </div>
         </div>
-        
-        <!-- Multi-select Send Button -->
-        <button id="btn-send-share" onclick="sendBatchShare()" style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: 85%; padding: 14px; border-radius: 25px; background: var(--primary-grad); color: white; font-weight: bold; font-size: 1rem; border: none; box-shadow: 0 5px 20px rgba(255,0,110,0.5); display: none; z-index: 150; cursor: pointer;">
-            Send
-        </button>
+        <button id="btn-send-share" onclick="sendBatchShare()" style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: 85%; padding: 14px; border-radius: 25px; background: var(--primary-grad); color: white; font-weight: bold; font-size: 1rem; border: none; box-shadow: 0 5px 20px rgba(255,0,110,0.5); display: none; z-index: 150; cursor: pointer;">Send</button>
     </div>
 </div>
 
 <!-- OFFLINE NEARBY RADAR MODAL -->
 <div id="offline-radar-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #05050a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-    
-    <div onclick="closeRadar()" style="position: absolute; top: 20px; right: 25px; color: white; font-size: 2rem; cursor: pointer; z-index: 10000;">
-        <i class="fa-solid fa-xmark"></i>
-    </div>
-    
+    <div onclick="closeRadar()" style="position: absolute; top: 20px; right: 25px; color: white; font-size: 2rem; cursor: pointer; z-index: 10000;"><i class="fa-solid fa-xmark"></i></div>
     <h2 style="color: white; margin-bottom: 5px; font-weight: 800; font-size: 2rem;">Nearby Radar</h2>
-    <p id="radar-status-text" style="color: var(--primary); font-size: 0.95rem; margin-bottom: 40px; font-weight: 600; letter-spacing: 1px;">
-        <i class="fa-solid fa-satellite-dish fa-fade"></i> Scanning for devices...
-    </p>
-    
+    <p id="radar-status-text" style="color: var(--primary); font-size: 0.95rem; margin-bottom: 40px; font-weight: 600; letter-spacing: 1px;"><i class="fa-solid fa-satellite-dish fa-fade"></i> Scanning for devices...</p>
     <div class="radar-container">
         <div class="radar-sweep"></div>
-        <div class="radar-center">
-            <i class="fa-solid fa-mobile-screen" style="color: #fff; font-size: 1.2rem;"></i>
-        </div>
+        <div class="radar-center"><i class="fa-solid fa-mobile-screen" style="color: #fff; font-size: 1.2rem;"></i></div>
         <div class="radar-ring ring-1"></div>
         <div class="radar-ring ring-2"></div>
         <div class="radar-ring ring-3"></div>
-        
-        <!-- यहाँ आस-पास के यूजर्स दिखेंगे -->
         <div id="radar-users-container"></div>
     </div>
-
-    <button class="btn-primary" style="margin-top: 50px; width: 200px; border-radius: 30px; box-shadow: 0 10px 30px rgba(131, 56, 236, 0.4);" onclick="scanNearbyUsers()">
-        <i class="fa-solid fa-rotate"></i> Re-Scan
-    </button>
+    <button class="btn-primary" style="margin-top: 50px; width: 200px; border-radius: 30px; box-shadow: 0 10px 30px rgba(131, 56, 236, 0.4);" onclick="scanNearbyUsers()"><i class="fa-solid fa-rotate"></i> Re-Scan</button>
 </div>
-<!-- 1. मुख्य स्टोरी व्यूअर मोडल (Main Story Viewer) -->
+
+<!-- STORY VIEWER MODAL -->
 <div id="story-view-modal" class="hidden">
     <div class="story-top-container">
         <div class="story-progress-wrapper" id="story-segments-container"></div>
@@ -951,36 +775,31 @@
             </div>
         </div>
     </div>
-
     <div class="modal-content fade-in" style="background: transparent; border: none; box-shadow: none; width: 100%; height: 100dvh; max-width: none; padding: 0; margin: 0; overflow: hidden;">
         <div class="story-nav-left" onclick="prevStory()"></div>
         <div class="story-nav-right" onclick="nextStory()"></div>
         <div id="story-media-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; touch-action: none;"></div>
         <button class="story-unmute-btn" id="story-unmute-btn" onclick="unmuteStoryVideo()">Tap to Unmute <i class="fa-solid fa-volume-high"></i></button>
         <div id="story-hearts-container" style="position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 150;"></div>
-
         <div class="story-footer-overlay" id="story-footer-ui">
             <div style="flex: 1; position: relative; display: flex; align-items: center;">
                 <input type="text" class="story-reply-input" id="story-reply-input" placeholder="Send message..." autocomplete="off" oninput="toggleStorySendBtn()" onfocus="pauseStory()" onblur="setTimeout(resumeStory, 200)">
                 <button id="story-msg-send-btn" onclick="handleStorySendAction()" style="position: absolute; right: 15px; background: transparent; border: none; color: var(--primary); font-weight: 700; font-size: 0.95rem; cursor: pointer; display: none; z-index: 200;">Send</button>
             </div>
-            <div id="story-footer-actions" style="display: flex; align-items: center; gap: 20px; padding-left: 10px;">
+            <div id="story-hearts-actions" style="display: flex; align-items: center; gap: 20px; padding-left: 10px;">
                 <i class="fa-regular fa-heart story-action-icon story-like-btn" id="story-like-btn" onclick="toggleStoryLike()"></i>
                 <i class="fa-regular fa-paper-plane story-action-icon" onclick="shareCurrentStory()"></i>
             </div>
         </div>
     </div>
-
     <div id="story-view-count-btn" class="view-count-badge hidden" onclick="showStoryViewers()" style="position: absolute; bottom: 85px; left: 15px; z-index: 250; background: rgba(255,255,255,0.2); padding: 6px 15px; border-radius: 20px; color: white; cursor: pointer; backdrop-filter: blur(10px); display: flex; align-items: center; gap: 6px;">
         <i class="fa-solid fa-eye"></i> <span id="story-view-num">0</span>
     </div>
 </div>
 
-<!-- 2. स्टोरी व्यूअर्स मोडल (Story Activity Modal) -->
+<!-- STORY VIEWERS MODAL -->
 <div id="story-viewers-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; display: flex; justify-content: center; align-items: flex-end;">
     <div class="modal-content fade-in" style="height: 75vh; display: flex; flex-direction: column; padding: 0; border-radius: 25px 25px 0 0; background: #151521; width: 100%; max-width: 500px; border-top: 2px solid var(--primary); position: relative;">
-        
-        <!-- Header with Viewer Count -->
         <div style="padding: 15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.1);">
             <div>
                 <h3 style="margin:0; font-size:1.1rem; font-weight: 700; color: white;">Activity</h3>
@@ -988,55 +807,65 @@
             </div>
             <i class="fa-solid fa-xmark" style="font-size: 1.5rem; cursor: pointer; color: #aaa;" onclick="closeActivitySheet()"></i>
         </div>
-
-        <!-- Sticky Search Bar -->
         <div style="padding: 10px 15px; background: rgba(0,0,0,0.2);">
             <div style="position: relative;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.9rem;"></i>
-                <input type="text" id="viewer-search-input" placeholder="Search viewers..." oninput="filterViewersList()" 
-                       style="width: 100%; padding: 10px 15px 10px 35px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; outline: none; font-size: 0.95rem;">
+                <input type="text" id="viewer-search-input" placeholder="Search viewers..." oninput="filterViewersList()" style="width: 100%; padding: 10px 15px 10px 35px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; outline: none; font-size: 0.95rem;">
             </div>
         </div>
-        
         <div id="story-viewers-list" style="flex: 1; overflow-y: auto; padding: 10px;"></div>
     </div>
 </div>
-<!-- SETTINGS MODAL (FULL SCREEN PREMIUM WHITE) -->
+
+<!-- SETTINGS MODAL -->
 <div id="settings-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 5000; overflow-y: auto;">
     <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px;">
-        
-        <!-- Header -->
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px; padding: 10px 0;">
             <i class="fa-solid fa-arrow-left" style="font-size: 1.5rem; cursor: pointer; color: #000;" onclick="closeSettingsModal()"></i>
             <h3 style="margin: 0; font-weight: 900; font-size: 1.5rem; color: #000;">Settings</h3>
         </div>
-        
-        <!-- Chat Lock Password Section -->
         <div style="background: #f8fafc; padding: 20px; border-radius: 24px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
             <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-lock" style="color: var(--primary);"></i> CHAT LOCK PASSWORD
             </p>
-            
             <div id="old-pwd-container" style="display: none;">
                 <input type="password" class="modal-input" id="setting-old-password" placeholder="Current Password">
             </div>
             <input type="password" class="modal-input" id="setting-new-password" placeholder="New Password">
             <input type="password" class="modal-input" id="setting-confirm-password" placeholder="Confirm New Password">
-            
             <div style="display:flex; gap:10px; margin-top: 15px;">
-
                 <button class="btn-primary" style="flex: 1;" onclick="saveChatPassword()">Save Changes</button>
             </div>
         </div>
-
-        <!-- Share Button -->
+        <div style="margin-bottom: 20px;">
+            <button onclick="window.openVerificationHub()" style="
+                width: 100%; 
+                padding: 16px; 
+                background: linear-gradient(135deg, rgba(0, 149, 246, 0.05), rgba(131, 56, 236, 0.05)); 
+                border: 2px solid transparent; 
+                background-origin: border-box; 
+                background-clip: padding-box, border-box; 
+                background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #0095f6, #8338ec); 
+                color: #0095f6; 
+                border-radius: 20px; 
+                font-weight: 800; 
+                font-size: 1rem; 
+                cursor: pointer; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                gap: 10px; 
+                box-shadow: 0 4px 15px rgba(0, 149, 246, 0.08); 
+                transition: transform 0.15s ease-out;
+            " onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+                <i class="fa-solid fa-certificate" style="color: #0095f6; animation: spin 4s linear infinite;"></i> Verification Hub & Achievements
+            </button>
+        </div>
         <div style="margin-bottom: 20px;">
             <button onclick="shareApp()" style="width: 100%; padding: 16px; background: #f1f5f9; border: 1px solid #e2e8f0; color: #8338ec; border-radius: 20px; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
                 <i class="fa-solid fa-share-nodes"></i> Share DK Love Chats
             </button>
         </div>
-
-        <!-- Logout Section -->
         <div style="border-top: 1px solid #f1f5f9; padding-top: 20px;">
             <button onclick="triggerLogoutFromSettings()" style="width: 100%; padding: 16px; background: #fee2e2; color: #ef4444; border-radius: 20px; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; border: none;">
                 <i class="fa-solid fa-right-from-bracket"></i> Logout Account
@@ -1045,7 +874,7 @@
     </div>
 </div>
 
-<!-- PASSWORD PROMPT MODAL (LOCK CHAT) -->
+<!-- PASSWORD PROMPT MODAL -->
 <div id="password-prompt-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 6000; display: flex; justify-content: center; align-items: center; padding: 20px;">
     <div class="modal-content fade-in" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
         <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
@@ -1057,39 +886,25 @@
         </div>
     </div>
 </div>
-<!-- BOTTOM NAV (UPDATED WITH SEARCH) -->
+
+<!-- BOTTOM NAV -->
 <nav class="bottom-nav">
     <div class="nav-item active" onclick="switchTab('home')"><i class="fa-solid fa-house"></i></div>
-    
-    <!-- NEW: Search Icon -->
     <div class="nav-item" onclick="openGlobalSearch()"><i class="fa-solid fa-magnifying-glass"></i></div>
-    
     <div class="nav-item" onclick="switchTab('reels')"><i class="fa-solid fa-clapperboard"></i></div>
-
     <div class="nav-item" onclick="toggleModal('create-post-modal', true)">
         <i class="fa-solid fa-circle-plus" style="font-size: 2.2rem; color:var(--primary); transform: translateY(-3px);"></i>
     </div>
-    
     <div class="nav-item" onclick="switchTab('chat')" style="position: relative;">
         <i class="fa-solid fa-comment-dots"></i>
         <div id="bottom-msg-badge" class="msg-badge" style="display:none;">0</div>
     </div>
-    
     <div class="nav-item" onclick="switchTab('profile')"><i class="fa-solid fa-user"></i></div>
 </nav>
 
 <!-- 🌟 CSS FIX FOR CHAT ROOM SLIDE ANIMATION -->
 <style>
-/* ==========================================================================
-   CHAT ROOM MODULE (Inside Chat Only)
-   Premium White 3D Theme (Messages, Reactions, Input & Shared Cards)
-   ========================================================================== */
-
-/* ==========================================
-   1. CHAT ROOM HEADER & LAYOUT (BUG FIXED)
-   ========================================== */
-/* 🌟 APK & ANDROID WEBVIEW FIX FOR CHAT ROOM */
-
+/* CHAT ROOM STYLE AND SCRIPTS REMAIN PERSISTED HERE */
 #chat-room { 
     position: fixed; 
     top: 0; 
@@ -1100,25 +915,20 @@
     height: 100%; 
     background: #f8fafc !important; 
     z-index: 999999 !important; 
-    
-    /* 🌟 FIX: display none हटा दिया, अब ये हमेशा flex रहेगा */
     display: flex; 
     flex-direction: column; 
-    
     transform: translate3d(100%, 0, 0); 
     -webkit-transform: translate3d(100%, 0, 0);
-    /* 🌟 FIX: visibility transition ऐड किया */
     transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), visibility 0.35s; 
     will-change: transform; 
     pointer-events: none; 
-    visibility: hidden; /* 🌟 FIX: रेंडरिंग बग रोकने के लिए इसे hidden रखा है */
+    visibility: hidden;
 }
-
 #chat-room.active { 
     transform: translate3d(0, 0, 0) !important; 
     -webkit-transform: translate3d(0, 0, 0) !important;
     pointer-events: all; 
-    visibility: visible; /* 🌟 FIX: ओपन होने पर visible हो जाएगा */
+    visibility: visible;
 }
 .chat-room-header { 
     padding: 15px; 
@@ -1129,10 +939,9 @@
     box-shadow: 0 5px 20px rgba(0,0,0,0.05) !important; 
     z-index: 100; color: #000 !important;
 }
-
 #chat-messages-area {
     flex: 1; 
-    padding: 20px 15px 120px 15px !important; /* Bottom padding increased for safe area */
+    padding: 20px 15px 120px 15px !important; 
     overflow-y: auto; 
     display: flex; 
     flex-direction: column; 
@@ -1141,7 +950,6 @@
     background-image: radial-gradient(#e2e8f0 1px, transparent 1px) !important;
     background-size: 20px 20px !important;
 }
-
 .chat-date-divider {
     align-self: center;
     background: #ffffff !important;
@@ -1156,408 +964,95 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
     border: 1px solid #e2e8f0 !important;
 }
-/* ==========================================
-   2. MESSAGE BUBBLES & TEXT
-   ========================================== */
-.msg-wrapper {
-    display: flex;
-    align-items: center;
-    position: relative;
-    width: 100%;
-    margin-bottom: 8px;
-}
+.msg-wrapper { display: flex; align-items: center; position: relative; width: 100%; margin-bottom: 8px; }
 .msg-wrapper.out { justify-content: flex-end; }
 .msg-wrapper.in { justify-content: flex-start; }
-
-.message-container-unit {
-    display: flex;
-    flex-direction: column;
-    max-width: 85%;
-    position: relative;
-    z-index: 10;
-}
+.message-container-unit { display: flex; flex-direction: column; max-width: 85%; position: relative; z-index: 10; }
 .msg-wrapper.out .message-container-unit { align-items: flex-end; }
 .msg-wrapper.in .message-container-unit { align-items: flex-start; }
-
-/* Message Base */
-.message {
-    background: transparent !important;
-    padding: 0 !important;
-    margin-bottom: 22px !important; /* Space for reactions */
-    position: relative !important;
-    display: flex !important;
-    flex-direction: column !important;
-    transition: transform 0.1s linear; /* Fast swipe reply */
-    z-index: 10;
-}
+.message { background: transparent !important; padding: 0 !important; margin-bottom: 22px !important; position: relative !important; display: flex !important; flex-direction: column !important; transition: transform 0.1s linear; z-index: 10; }
 .message.snap-back { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; }
-
-/* High Quality Text Styling */
-.real-text-msg {
-    font-size: 0.9rem !important;
-    font-weight: 700 !important;
-    line-height: 1.5;
-    padding: 10px 16px !important;
-    border-radius: 20px !important;
-    max-width: 100% !important;
-    word-wrap: break-word;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    -webkit-font-smoothing: antialiased;
-    animation: msgPopFast 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
+.real-text-msg { font-size: 0.9rem !important; font-weight: 700 !important; line-height: 1.5; padding: 10px 16px !important; border-radius: 20px !important; max-width: 100% !important; word-wrap: break-word; box-shadow: 0 4px 15px rgba(0,0,0,0.05); -webkit-font-smoothing: antialiased; animation: msgPopFast 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 @keyframes msgPopFast { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-
-/* INCOMING (White Pearl Look) */
-.msg-in .real-text-msg {
-    background: #ffffff !important;
-    color: #1a1a1a !important;
-    border: 1px solid #e2e8f0 !important;
-    border-left: 5px solid #8338ec !important; /* Purple accent */
-    align-self: flex-start;
-    border-bottom-left-radius: 4px !important;
-}
-
-/* OUTGOING (Vibrant Sky/Pink Look) */
-.msg-out .real-text-msg {
-    background: linear-gradient(135deg, #ff006e, #8338ec) !important;
-    color: #ffffff !important;
-    align-self: flex-end;
-    border: none !important;
-    border-bottom-right-radius: 4px !important;
-    box-shadow: 0 8px 20px rgba(255, 0, 110, 0.2) !important;
-}
-
-/* Delete Message Text - Now Red (Warning Color) */
-.msg-deleted-text { 
-    font-style: italic; 
-    color: #ef4444 !important; 
-    display: flex; 
-    align-items: center; 
-    gap: 5px; 
-    font-weight: 700; 
-    font-size: 0.85rem; 
-}
+.msg-in .real-text-msg { background: #ffffff !important; color: #1a1a1a !important; border: 1px solid #e2e8f0 !important; border-left: 5px solid #8338ec !important; align-self: flex-start; border-bottom-left-radius: 4px !important; }
+.msg-out .real-text-msg { background: linear-gradient(135deg, #ff006e, #8338ec) !important; color: #ffffff !important; align-self: flex-end; border: none !important; border-bottom-right-radius: 4px !important; box-shadow: 0 8px 20px rgba(255, 0, 110, 0.2) !important; }
+.msg-deleted-text { font-style: italic; color: #ef4444 !important; display: flex; align-items: center; gap: 5px; font-weight: 700; font-size: 0.85rem; }
 .msg-deleted-text i { color: #ef4444 !important; }
-/* 🌟 PREMIUM EMOJI & HEART ANIMATION CSS (SMART & FAST) */
-#emoji-animation-container { 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100vw; 
-    height: 100vh; 
-    pointer-events: none; /* ताकि टच ब्लॉक न हो */
-    z-index: 99999999 !important; /* 🌟 Chat Room से भी ऊपर */
-    overflow: hidden;
-}
-
-.super-reaction-emoji { 
-    position: absolute; 
-    pointer-events: none; 
-    opacity: 0; 
-    will-change: transform, opacity; /* 🌟 60FPS Hardware Acceleration */
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));
-}
-
-.msg-double-tap-heart {
-    position: absolute; 
-    top: 50%; 
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    font-size: 5rem !important; /* 🌟 बड़ा और शानदार दिल */
-    color: #ff006e;
-    filter: drop-shadow(0 10px 25px rgba(255,0,110,0.6)); /* 🌟 3D ग्लो इफ़ेक्ट */
-    pointer-events: none; 
-    z-index: 999999 !important;
-    will-change: transform, opacity;
-    animation: premiumDoubleTapPop 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes premiumDoubleTapPop {
-    0% { transform: translate(-50%, -50%) scale(0) rotate(-15deg); opacity: 0; }
-    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.3) rotate(10deg); }
-    40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-    70% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
-    100% { transform: translate(-50%, -120%) scale(0.5); opacity: 0; } /* 🌟 ऊपर उठते हुए गायब होगा */
-}
-/* 🌟 BUG FIX: Message Options Modal Z-Index */
-/* 🌟 BUG FIX: Mobile Long Press & Modal Fix */
-#msg-options-modal {
-    z-index: 9999999 !important; /* चैट रूम से ऊपर लाने के लिए */
-}
-
-/* 🌟 नेटिव टेक्स्ट सिलेक्शन बंद करें ताकि लॉन्ग-प्रेस स्मूथ काम करे */
-.message.standalone-mode {
-    -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    -khtml-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-}
-#msg-options-modal.hidden {
-    display: none !important;
-}
-/* 🌟 PREMIUM COPY BUTTON COLOR (Message Options) */
-#msg-option-copy {
-    background: #eff6ff !important; /* हल्का ब्लू बैकग्राउंड */
-    border-color: #bfdbfe !important; /* ब्लू बॉर्डर */
-}
-
-#msg-option-copy .icon-circle {
-    background: #dbeafe !important; /* गोल आइकॉन का बैकग्राउंड */
-    color: #3b82f6 !important; /* आइकॉन का डार्क ब्लू कलर */
-}
-
-#msg-option-copy span {
-    color: #2563eb !important; /* टेक्स्ट का डार्क ब्लू कलर */
-    font-weight: 800 !important;
-}
-
-#msg-option-copy:active {
-    background: #dbeafe !important; /* टच करने पर इफ़ेक्ट */
-}
-
-/* 🌟 BUG FIX: Long press करने पर टेक्स्ट सेलेक्ट न हो */
-.message {
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -webkit-touch-callout: none !important;
-}
-/* ==========================================
-   3. MESSAGE META (Time & Seen)
-   ========================================== */
-.message-meta-board {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 4px;
-    padding: 3px 10px !important;
-    background: #f1f5f9 !important;
-    border-radius: 10px !important;
-    width: fit-content;
-    border: 1px solid #e2e8f0 !important;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02) !important;
-}
-
+#emoji-animation-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 99999999 !important; overflow: hidden; }
+.super-reaction-emoji { position: absolute; pointer-events: none; opacity: 0; will-change: transform, opacity; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15)); }
+.msg-double-tap-heart { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 5rem !important; color: #ff006e; filter: drop-shadow(0 10px 25px rgba(255,0,110,0.6)); pointer-events: none; z-index: 999999 !important; will-change: transform, opacity; animation: premiumDoubleTapPop 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+@keyframes premiumDoubleTapPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-15deg); opacity: 0; } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.3) rotate(10deg); } 40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); } 70% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(-50%, -120%) scale(0.5); opacity: 0; } }
+#msg-options-modal { z-index: 9999999 !important; }
+.message.standalone-mode { -webkit-touch-callout: none !important; -webkit-user-select: none !important; -khtml-user-select: none !important; -moz-user-select: none !important; -ms-user-select: none !important; user-select: none !important; }
+#msg-options-modal.hidden { display: none !important; }
+#msg-option-copy { background: #eff6ff !important; border-color: #bfdbfe !important; }
+#msg-option-copy .icon-circle { background: #dbeafe !important; color: #3b82f6 !important; }
+#msg-option-copy span { color: #2563eb !important; font-weight: 800 !important; }
+#msg-option-copy:active { background: #dbeafe !important; }
+.message { user-select: none !important; -webkit-user-select: none !important; -webkit-touch-callout: none !important; }
+.message-meta-board { display: flex; align-items: center; gap: 5px; margin-top: 4px; padding: 3px 10px !important; background: #f1f5f9 !important; border-radius: 10px !important; width: fit-content; border: 1px solid #e2e8f0 !important; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02) !important; }
 .msg-wrapper.out .message-meta-board { align-self: flex-end; margin-right: 5px; background: rgba(0,0,0,0.03) !important; border: 1px solid rgba(0,0,0,0.05) !important; }
 .msg-wrapper.in .message-meta-board { align-self: flex-start; margin-left: 5px; }
-
 .meta-time { font-size: 0.65rem !important; font-weight: 800 !important; color: #64748b !important; letter-spacing: 0.5px; }
 .seen-label { font-size: 0.65rem !important; font-weight: 900 !important; color: #0095f6 !important; text-transform: uppercase; }
-
-/* ==========================================
-   4. REACTIONS (Grouped in ONE Single Card)
-   ========================================== */
-.msg-reactions-wrapper {
-    position: absolute;
-    bottom: -16px; 
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 8px; 
-    z-index: 100;
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 20px !important;
-    padding: 4px 10px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
+.msg-reactions-wrapper { position: absolute; bottom: -16px; display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; z-index: 100; background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 20px !important; padding: 4px 10px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important; }
 .msg-wrapper.in .msg-reactions-wrapper { left: 15px !important; right: auto !important; }
 .msg-wrapper.out .msg-reactions-wrapper { right: 15px !important; left: auto !important; }
-
-.reaction-pill {
-    background: transparent !important; border: none !important; border-radius: 0 !important; padding: 0 !important;
-    display: flex; align-items: center; gap: 4px; box-shadow: none !important;
-    animation: popInReaction 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: default;
-}
-
+.reaction-pill { background: transparent !important; border: none !important; border-radius: 0 !important; padding: 0 !important; display: flex; align-items: center; gap: 4px; box-shadow: none !important; animation: popInReaction 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: default; }
 @keyframes popInReaction { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
 .reaction-item-clean { display: flex; align-items: center; gap: 4px; }
 .reaction-emoji-only { font-size: 1.1rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05)); }
 .reaction-count-num { font-size: 0.75rem; font-weight: 800; color: #1a1a1a; margin-left: 2px; }
-
 .reaction-dp-stack { display: flex; align-items: center; padding-right: 2px; }
-.stack-dp-mini {
-    width: 18px; height: 18px; border-radius: 50%; object-fit: cover;
-    border: 1.5px solid #ffffff; margin-left: -8px; 
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1); background: #f1f5f9;
-}
+.stack-dp-mini { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; border: 1.5px solid #ffffff; margin-left: -8px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); background: #f1f5f9; }
 .stack-dp-mini:first-child { margin-left: 0; }
-
-/* ==========================================
-   5. MEDIA: AUDIO, VIDEO, IMAGE & SHARED CARDS
-   ========================================== */
-.message.standalone-mode { margin-bottom: 25px !important; }
-
-/* 🎤 NEW: Audio Player Styling */
-.chat-audio-box {
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-.chat-audio-box audio {
-    width: 220px;
-    height: 40px;
-    outline: none;
-    border-radius: 20px;
-}
-.chat-audio-box audio::-webkit-media-controls-panel {
-    background-color: transparent;
-}
-
-/* External Reply Card */
-.external-reply-card.breakout-mode, .reply-card-board {
-    display: flex; flex-direction: column; background: #ffffff !important;
-    border-radius: 18px 18px 4px 4px !important; margin-bottom: -5px !important;
-    position: relative; width: 200px; overflow: hidden; z-index: 5; cursor: pointer;
-    border: 2.5px solid transparent !important;
-    background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
-    background-origin: border-box !important; background-clip: padding-box, border-box !important;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; transition: 0.2s ease;
-}
+.chat-audio-box { box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.chat-audio-box audio { width: 220px; height: 40px; outline: none; border-radius: 20px; }
+.chat-audio-box audio::-webkit-media-controls-panel { background-color: transparent; }
+.external-reply-card.breakout-mode, .reply-card-board { display: flex; flex-direction: column; background: #ffffff !important; border-radius: 18px 18px 4px 4px !important; margin-bottom: -5px !important; position: relative; width: 200px; overflow: hidden; z-index: 5; cursor: pointer; border: 2.5px solid transparent !important; background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important; background-origin: border-box !important; background-clip: padding-box, border-box !important; box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; transition: 0.2s ease; }
 .msg-wrapper.out .reply-card-board { background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #8338ec, #3a86ff) !important; }
 .reply-card-board:active { transform: scale(0.96); }
-
 .reply-card-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f8fafc; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
 .reply-card-dp { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--primary); object-fit: cover; }
 .reply-card-user { font-weight: 800; color: #1a1a1a; font-size: 0.75rem; }
-
 .reply-card-content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: #000; }
 .reply-card-media-thumb { width: 100%; height: 250px; object-fit: cover; opacity: 0.95; }
-.reply-card-body {
-    position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-    color: #ffffff !important; padding: 15px 12px 10px; font-size: 0.8rem; font-weight: 700; line-height: 1.2;
-    overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-}
+.reply-card-body { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: #ffffff !important; padding: 15px 12px 10px; font-size: 0.8rem; font-weight: 700; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .reply-card-board:not(:has(.reply-card-media-thumb)) { min-height: 60px; }
-
-/* Shared Post/Reel Standalone Card */
-.chat-shared-standalone-card {
-    width: 230px; background: #ffffff !important; border-radius: 24px; overflow: hidden; position: relative; border: 3px solid transparent;
-    background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
-    background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 12px 30px rgba(0,0,0,0.1) !important;
-    cursor: pointer; transition: 0.2s ease;
-}
+.chat-shared-standalone-card { width: 230px; background: #ffffff !important; border-radius: 24px; overflow: hidden; position: relative; border: 3px solid transparent; background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important; background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 12px 30px rgba(0,0,0,0.1) !important; cursor: pointer; transition: 0.2s ease; }
 .chat-shared-standalone-card:active { transform: scale(0.96); }
-
 .shared-card-header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #f8fafc; border-bottom: 1px solid #f1f5f9; }
 .shared-card-dp { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--primary); object-fit: cover; }
 .shared-card-user-info { display: flex; flex-direction: column; }
 .shared-card-name { font-weight: 800; color: #000; font-size: 0.8rem; }
 .shared-card-type { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
-
 .shared-card-body { position: relative; width: 100%; height: 280px; background: #000; }
 .shared-card-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.95; }
-.shared-play-btn {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 50px; height: 50px; background: rgba(255,255,255,0.25); backdrop-filter: blur(8px);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 1.2rem; border: 1.5px solid #fff;
-}
+.shared-play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: rgba(255,255,255,0.25); backdrop-filter: blur(8px); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; border: 1.5px solid #fff; }
 .shared-card-footer { padding: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; color: #1e293b; font-size: 0.85rem; background: #fff; }
 .shared-card-footer i { color: var(--primary); }
-
-/* Simple Image & Video Attachment */
 .chat-media-preview { max-width: 220px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
 .chat-vid-box { position: relative; cursor: pointer; max-width: 220px; }
 .chat-vid-box i { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2.5rem; color: rgba(255,255,255,0.8); text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-
-/* ==========================================
-   6. CHAT INPUT & REPLY PREVIEW
-   ========================================== */
-.chat-input-wrapper {
-    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-    width: 95%; max-width: 580px; z-index: 20;
-    display: flex; flex-direction: column;
-}
-
-.chat-input-area {
-    background: #1e293b !important; /* Dark Premium Bottom Bar */
-    border: 2px solid #334155 !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
-    border-radius: 35px !important;
-    padding: 8px 12px !important;
-    display: flex; gap: 5px; align-items: center;
-    transition: 0.3s;
-}
-
-#msg-input {
-    color: #ffffff !important;
-    background: rgba(255,255,255,0.1) !important;
-    border: none !important;
-    border-radius: 20px !important;
-    padding: 12px 15px !important;
-    font-weight: 600 !important;
-    width: 100%; outline: none; font-size: 0.95rem;
-}
+.chat-input-wrapper { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 580px; z-index: 20; display: flex; flex-direction: column; }
+.chat-input-area { background: #1e293b !important; border: 2px solid #334155 !important; box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important; border-radius: 35px !important; padding: 8px 12px !important; display: flex; gap: 5px; align-items: center; transition: 0.3s; }
+#msg-input { color: #ffffff !important; background: rgba(255,255,255,0.1) !important; border: none !important; border-radius: 20px !important; padding: 12px 15px !important; font-weight: 600 !important; width: 100%; outline: none; font-size: 0.95rem; }
 #msg-input::placeholder { color: #94a3b8 !important; }
 .chat-input-area i { color: #cbd5e1 !important; font-size: 1.2rem; transition: 0.2s ease; cursor: pointer; }
 .chat-input-area i:active { color: var(--primary) !important; transform: scale(0.9); }
 .chat-input-area button i { color: #ffffff !important; }
-
-/* Reply Preview Box */
-.reply-preview-bar {
-    background: #1e293b !important;
-    border: 2px solid #334155 !important;
-    border-bottom: none !important;
-    border-radius: 20px 20px 0 0 !important;
-    padding: 10px 15px !important;
-    display: flex; justify-content: space-between; align-items: center;
-    animation: slideUpReply 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+.reply-preview-bar { background: #1e293b !important; border: 2px solid #334155 !important; border-bottom: none !important; border-radius: 20px 20px 0 0 !important; padding: 10px 15px !important; display: flex; justify-content: space-between; align-items: center; animation: slideUpReply 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes slideUpReply { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
 .reply-content { display: flex; gap: 10px; align-items: center; flex: 1; overflow: hidden; }
 .reply-bar-line { width: 4px; height: 35px; background: var(--primary); border-radius: 5px; }
 .reply-to-name { font-size: 0.85rem; font-weight: 800; color: var(--primary); }
 .reply-to-text { font-size: 0.8rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; font-weight: 600; }
 .close-reply-btn { cursor: pointer; color: #94a3b8; padding: 5px; font-size: 1.1rem; }
-
-.swipe-reply-icon {
-    position: absolute; left: -40px; 
-    color: var(--primary); font-size: 1.2rem;
-    background: #ffffff; width: 30px; height: 30px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity 0.2s; z-index: 5;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-
-/* ==========================================
-   7. ANIMATIONS (Typing, Moods, Double Tap)
-   ========================================== */
-.typing-indicator { 
-    position: absolute; bottom: 85px; left: 20px;
-    font-size: 0.8rem; font-weight: 800; color: #00b894 !important; 
-    background: #ffffff !important; border: 1.5px solid #e2e8f0 !important;
-    padding: 8px 16px; border-radius: 20px;
-    display: none; z-index: 15; 
-    animation: fadeIn 0.2s;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
+.swipe-reply-icon { position: absolute; left: -40px; color: var(--primary); font-size: 1.2rem; background: #ffffff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.typing-indicator { position: absolute; bottom: 85px; left: 20px; font-size: 0.8rem; font-weight: 800; color: #00b894 !important; background: #ffffff !important; border: 1.5px solid #e2e8f0 !important; padding: 8px 16px; border-radius: 20px; display: none; z-index: 15; animation: fadeIn 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 .typing-dot { display: inline-block; width: 6px; height: 6px; background-color: #00b894; border-radius: 50%; margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
 .typing-dot:nth-child(1) { animation-delay: -0.32s; }
 .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
-.msg-double-tap-heart {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    font-size: 4rem; color: #ff006e;
-    filter: drop-shadow(0 0 15px rgba(255,0,110,0.5));
-    pointer-events: none; z-index: 20;
-    animation: doubleTapPop 0.8s ease-out forwards;
-}
-@keyframes doubleTapPop {
-    0% { transform: translate(-50%, -50%) scale(0) rotate(-15deg); opacity: 0; }
-    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(0deg); }
-    40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) scale(0) rotate(15deg); opacity: 0; }
-}
-
-#emoji-animation-container { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999999; }
-.super-reaction-emoji { position: absolute; pointer-events: none; opacity: 0; }
-
-/* Mood Overlays */
 #chat-mood-overlay { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; overflow:hidden; }
 .mood-petal { position:absolute; top:-20px; width:15px; height:15px; background:#ff006e; border-radius:15px 0 15px 15px; transform:rotate(45deg); opacity:0.6; animation:fall linear infinite; }
 .mood-ember { position:absolute; bottom:-20px; width:8px; height:8px; background:#ff4757; border-radius:50%; filter:blur(2px); animation:rise linear infinite; }
@@ -1565,271 +1060,100 @@
 @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
 @keyframes rise { to { transform: translateY(-100vh) scale(2); opacity: 0; } }
 @keyframes fallRain { to { transform: translateY(100vh); } }
-
-/* Scroll to Message Animation */
 .reply-target-flash .message-container-unit { animation: replyHighlightEffect 5.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-@keyframes replyHighlightEffect {
-    0% { transform: scale(1); filter: brightness(1); }
-    15% { transform: scale(1.03); filter: drop-shadow(0 0 15px rgba(131, 56, 236, 0.6)) drop-shadow(0 0 25px rgba(255, 0, 110, 0.4)); }
-    50% { transform: scale(1.01); filter: drop-shadow(0 0 10px rgba(131, 56, 236, 0.3)); }
-    100% { transform: scale(1); filter: brightness(1); }
-}
-
-/* ==========================================
-   8. CHAT MODALS (Message & Inbox Options)
-   ========================================== */
+@keyframes replyHighlightEffect { 0% { transform: scale(1); filter: brightness(1); } 15% { transform: scale(1.03); filter: drop-shadow(0 0 15px rgba(131, 56, 236, 0.6)) drop-shadow(0 0 25px rgba(255, 0, 110, 0.4)); } 50% { transform: scale(1.01); filter: drop-shadow(0 0 10px rgba(131, 56, 236, 0.3)); } 100% { transform: scale(1); filter: brightness(1); } }
 .msg-options-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); animation: fadeInOverlay 0.2s ease-out; }
-.msg-options-popup {
-    position: relative; width: 85%; max-width: 320px; background: #ffffff !important; border-radius: 24px; padding: 20px;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.15); border: 2px solid #f1f5f9;
-    transform: scale(0.8); opacity: 0; animation: popInMenu 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
-}
+.msg-options-popup { position: relative; width: 85%; max-width: 320px; background: #ffffff !important; border-radius: 24px; padding: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.15); border: 2px solid #f1f5f9; transform: scale(0.8); opacity: 0; animation: popInMenu 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 @keyframes popInMenu { to { transform: scale(1); opacity: 1; } }
-
 .popup-header { text-align: center; font-weight: 800; color: #64748b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 20px; }
-
-.msg-option-item {
-    display: flex; align-items: center; gap: 15px; padding: 12px; margin-bottom: 10px;
-    background: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 16px; cursor: pointer; transition: 0.2s;
-}
+.msg-option-item { display: flex; align-items: center; gap: 15px; padding: 12px; margin-bottom: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 16px; cursor: pointer; transition: 0.2s; }
 .msg-option-item:active { transform: scale(0.95); background: #f1f5f9 !important; }
 .msg-option-item span { font-weight: 700; font-size: 1rem; color: #1a1a1a; }
-
 .icon-circle { width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #475569; }
 .delete-item { background: #fef2f2 !important; border-color: #fecaca !important; }
 .delete-circle { background: #fee2e2 !important; color: #ef4444; }
 .delete-item span { color: #ef4444; }
-
-.reaction-bar {
-    display: flex; justify-content: space-around; background: #ffffff !important; padding: 12px 15px; border-radius: 50px; margin-bottom: 20px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1); border: 2px solid #f1f5f9; animation: popInMenu 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+.reaction-bar { display: flex; justify-content: space-around; background: #ffffff !important; padding: 12px 15px; border-radius: 50px; margin-bottom: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border: 2px solid #f1f5f9; animation: popInMenu 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .reaction-emoji { font-size: 1.8rem; cursor: pointer; transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); user-select: none; }
 .reaction-emoji:hover { transform: scale(1.4) translateY(-5px); }
 .reaction-emoji:active { transform: scale(0.9); }
-
-/* ==========================================
-   9. CHAT SKELETON LOADERS
-   ========================================== */
 .chat-sk-wrapper { display: flex; flex-direction: column; gap: 15px; width: 100%; padding: 10px; }
-.sk-msg-bubble {
-    width: 60%; height: 45px; border-radius: 18px; background: #f8fafc !important; position: relative; overflow: hidden; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0 !important;
-}
+.sk-msg-bubble { width: 60%; height: 45px; border-radius: 18px; background: #f8fafc !important; position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0 !important; }
 .sk-msg-in { align-self: flex-start; border-radius: 18px 18px 18px 4px; border-left: 4px solid #cbd5e1 !important; }
 .sk-msg-out { align-self: flex-end; border-radius: 18px 18px 4px 18px; background: #e2e8f0 !important; }
-
-.sk-msg-bubble::after {
-    content: ""; position: absolute; top: 0; left: -150%; width: 150%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-    animation: skChatShimmer 1.5s infinite linear;
-}
+.sk-msg-bubble::after { content: ""; position: absolute; top: 0; left: -150%; width: 150%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent); animation: skChatShimmer 1.5s infinite linear; }
 @keyframes skChatShimmer { to { left: 150%; } }
-/* 🎤 PREMIUM VOICE RECORDING ANIMATION */
-.chat-input-area {
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-}
-
-.chat-input-area.recording-active {
-    border-color: #ff4757 !important;
-    box-shadow: 0 0 25px rgba(255, 71, 87, 0.4) !important;
-    background: rgba(30, 41, 59, 0.95) !important;
-}
-
-/* माइक के पीछे का रेड पल्स इफ़ेक्ट */
-.mic-recording-pulse {
-    position: absolute;
-    right: 55px; /* माइक के ठीक पीछे */
-    top: 50%;
-    transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 71, 87, 0.3);
-    border-radius: 50%;
-    z-index: -1;
-    animation: micRipple 1.2s infinite ease-out;
-    pointer-events: none;
-}
-
-@keyframes micRipple {
-    0% { transform: translateY(-50%) scale(0.8); opacity: 1; }
-    100% { transform: translateY(-50%) scale(2.2); opacity: 0; }
-}
-/* 🌟 PREMIUM RECORDING UI CSS */
-#voice-record-wrapper {
-    margin: 0 5px;
-}
-
-#recording-active-overlay {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    transform-origin: right center;
-}
-
-#recording-active-overlay.show-overlay {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.recording-pulse-dot {
-    width: 10px;
-    height: 10px;
-    background: #ff4757;
-    border-radius: 50%;
-    box-shadow: 0 0 8px rgba(255, 71, 87, 0.8);
-    animation: blinkRed 1s infinite;
-}
-
-@keyframes blinkRed {
-    0% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
-    100% { opacity: 1; transform: scale(1); }
-}
-
-.slide-cancel-hint {
-    color: #94a3b8;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    animation: slideHint 1.5s infinite;
-}
-
-@keyframes slideHint {
-    0% { transform: translateX(5px); opacity: 0; }
-    30% { opacity: 1; }
-    100% { transform: translateX(-10px); opacity: 0; }
-}
-
-/* Mic Active State */
-.mic-active-scale {
-    transform: scale(1.4);
-    background: var(--primary) !important;
-    box-shadow: 0 10px 25px rgba(0, 184, 148, 0.4);
-}
-/* 🌟 PREMIUM MUSIC WAVEFORM AUDIO PLAYER CSS */
-.insta-audio-player {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #ffffff !important;
-    padding: 10px 15px;
-    border-radius: 24px;
-    width: 250px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-    border: 1px solid #f1f5f9;
-}
-
-/* सेंडर और रिसीवर के बैकग्राउंड के हिसाब से लुक */
+.chat-input-area { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
+.chat-input-area.recording-active { border-color: #ff4757 !important; box-shadow: 0 0 25px rgba(255, 71, 87, 0.4) !important; background: rgba(30, 41, 59, 0.95) !important; }
+.mic-recording-pulse { position: absolute; right: 55px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(255, 71, 87, 0.3); border-radius: 50%; z-index: -1; animation: micRipple 1.2s infinite ease-out; pointer-events: none; }
+@keyframes micRipple { 0% { transform: translateY(-50%) scale(0.8); opacity: 1; } 100% { transform: translateY(-50%) scale(2.2); opacity: 0; } }
+#voice-record-wrapper { margin: 0 5px; }
+#recording-active-overlay { opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-origin: right center; }
+#recording-active-overlay.show-overlay { opacity: 1; pointer-events: auto; }
+.recording-pulse-dot { width: 10px; height: 10px; background: #ff4757; border-radius: 50%; box-shadow: 0 0 8px rgba(255, 71, 87, 0.8); animation: blinkRed 1s infinite; }
+@keyframes blinkRed { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+.slide-cancel-hint { color: #94a3b8; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; animation: slideHint 1.5s infinite; }
+@keyframes slideHint { 0% { transform: translateX(5px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateX(-10px); opacity: 0; } }
+.mic-active-scale { transform: scale(1.4); background: var(--primary) !important; box-shadow: 0 10px 25px rgba(0, 184, 148, 0.4); }
+.insta-audio-player { display: flex; align-items: center; gap: 12px; background: #ffffff !important; padding: 10px 15px; border-radius: 24px; width: 250px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; }
 .msg-out .insta-audio-player { background: #ffffff !important; }
 .msg-in .insta-audio-player { background: #f8fafc !important; }
-
-/* Dynamic Web Waveform Progress */
-.audio-waveform-container {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.audio-waveform-progress {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    height: 25px;
-    cursor: pointer;
-    width: 100%;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.wave-bar {
-    flex: 1;
-    background-color: #cbd5e1; /* डिफ़ॉल्ट ग्रे कलर */
-    border-radius: 2px;
-    transition: background-color 0.1s ease;
-}
-
-/* बजते वक़्त कलर बदलने वाला क्लास */
-.wave-bar.active {
-    background-color: #ff006e !important; /* पिंक एक्टिव वेव */
-}
-
-.msg-out .wave-bar.active {
-    background-color: #8338ec !important; /* सेंडर के लिए पर्पल एक्टिव वेव */
-}
-
-/* लाइव सेकंड्स टाइमर */
-.audio-timer-display {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #64748b;
-    margin-top: 3px;
-    margin-left: 2px;
-    font-variant-numeric: tabular-nums;
-}
+.audio-waveform-container { display: flex; flex-direction: column; flex: 1; }
+.audio-waveform-progress { display: flex; align-items: center; gap: 3px; height: 25px; cursor: pointer; width: 100%; user-select: none; -webkit-user-select: none; }
+.wave-bar { flex: 1; background-color: #cbd5e1; border-radius: 2px; transition: background-color 0.1s ease; }
+.wave-bar.active { background-color: #ff006e !important; }
+.msg-out .wave-bar.active { background-color: #8338ec !important; }
+.audio-timer-display { font-size: 0.65rem; font-weight: 800; color: #64748b; margin-top: 3px; margin-left: 2px; font-variant-numeric: tabular-nums; }
 </style>
 
-<!-- CHAT ROOM UI (UPDATED FOR CHAT LOCK, VOICE NOTES & APK BUG FIXES) -->
+<!-- CHAT ROOM UI -->
 <div id="chat-room" style="z-index: 999999;">
-    
-    <!-- Mood Overlay for Chat Animations -->
     <div id="chat-mood-overlay"></div>
-
-<!-- Chat Header (Updated with Call Buttons) -->
-<div class="chat-room-header" style="display:flex; align-items:center; padding:15px; background:#fff; border-bottom:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.02); z-index:100;">
-    <!-- Back Button -->
-    <i class="fa-solid fa-arrow-left" style="font-size: 1.3rem; cursor: pointer; padding: 5px; color:#1e293b; margin-right:10px;" onclick="window.closeChat()"></i>
-    
-    <!-- User Avatar -->
-    <img id="chat-header-img" src="" style="width: 42px; height: 42px; border-radius: 50%; object-fit:cover; border:2px solid var(--primary);">
-    
-    <!-- User Info -->
-    <div style="flex:1; margin-left:12px; min-width: 0;">
-        <div style="font-weight:800; font-size:1.1rem; color:#1e293b; display: flex; align-items: center; gap: 8px;">
-            <span id="chat-room-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Chat</span>
-            <i id="chat-lock-icon" class="fa-solid fa-unlock" style="font-size: 0.8rem; color: #aaa; cursor: pointer;" onclick="window.toggleChatLock()"></i>
+    <div class="chat-room-header" style="display:flex; align-items:center; padding:15px; background:#fff; border-bottom:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.02); z-index:100;">
+        <i class="fa-solid fa-arrow-left" style="font-size: 1.3rem; cursor: pointer; padding: 5px; color:#1e293b; margin-right:10px;" onclick="window.closeChat()"></i>
+        <img id="chat-header-img" src="" style="width: 42px; height: 42px; border-radius: 50%; object-fit:cover; border:2px solid var(--primary);">
+        <div style="flex:1; margin-left:12px; min-width: 0;">
+            <div style="font-weight:800; font-size:1.1rem; color:#1e293b; display: flex; align-items: center; gap: 8px;">
+                <span id="chat-room-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Chat</span>
+                <i id="chat-lock-icon" class="fa-solid fa-unlock" style="font-size: 0.8rem; color: #aaa; cursor: pointer;" onclick="window.toggleChatLock()"></i>
+            </div>
+            <div id="chat-user-status" style="font-size:0.8rem; font-weight:600; color:#64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Loading...</div>
         </div>
-        <div id="chat-user-status" style="font-size:0.8rem; font-weight:600; color:#64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Loading...</div>
+<!-- 🌟 नया कार्डबोर्ड कॉलिंग कोड ब्लॉक (Voice & Video Call drop-down) -->
+        <div style="position: relative; display: flex; align-items: center; margin-left: 10px; padding-right: 5px;">
+            <!-- Call Trigger Icon (Tap to open menu) -->
+            <button id="chat-call-trigger" onclick="window.toggleCallCardboard(event)" style="background: none; border: none; cursor: pointer; color: #1e293b; padding: 8px; font-size: 1.25rem; transition: transform 0.2s; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; outline: none;">
+                <i class="fa-solid fa-phone"></i>
+            </button>
+            
+            <!-- Call Options Cardboard Dropdown Menu -->
+            <div id="chat-call-cardboard" style="position: absolute; top: 50px; right: 5px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #cbd5e1; padding: 6px; display: flex; flex-direction: column; gap: 4px; z-index: 10005; opacity: 0; transform: translateY(-10px) scale(0.95); pointer-events: none; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top right; width: 150px; box-sizing: border-box;">
+                <div class="chat-call-option" onclick="window.startCallFromChat('voice'); window.closeCallCardboard();" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #1e293b; transition: background 0.15s;">
+                    <i class="fa-solid fa-phone" style="color: #00b894; font-size: 1rem;"></i>
+                    <span>Voice Call</span>
+                </div>
+                <div class="chat-call-option" onclick="window.startCallFromChat('video'); window.closeCallCardboard();" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #1e293b; transition: background 0.15s;">
+                    <i class="fa-solid fa-video" style="color: #3b82f6; font-size: 1rem;"></i>
+                    <span>Video Call</span>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- CALL BUTTONS CONTAINER -->
-    <div style="display: flex; gap: 18px; align-items: center; margin-left: 10px; padding-right: 5px;">
-        <!-- Voice Call Button -->
-        <button onclick="window.startCallFromChat('voice')" style="background: none; border: none; cursor: pointer; color: #1e293b; padding: 5px; font-size: 1.25rem; transition: transform 0.2s;" onactive="transform: scale(0.9)">
-            <i class="fa-solid fa-phone"></i>
-        </button>
-        
-        <!-- Video Call Button -->
-        <button onclick="window.startCallFromChat('video')" style="background: none; border: none; cursor: pointer; color: #1e293b; padding: 5px; font-size: 1.25rem; transition: transform 0.2s;" onactive="transform: scale(0.9)">
-            <i class="fa-solid fa-video"></i>
-        </button>
-    </div>
-</div>
 
     <!-- MAIN MESSAGES AREA -->
     <div class="chat-messages" id="chat-messages-area"></div>
     
     <!-- TYPING INDICATOR -->
     <div id="chat-room-typing" class="typing-indicator" style="display: none; padding:5px 15px; font-size:0.8rem; color:var(--primary); font-weight:700;">
-        Typing
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
+        Typing <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
     </div>
     
     <!-- WRAPPER FOR INPUT & REPLY FEATURE -->
     <div class="chat-input-wrapper">
-        
-        <!-- Reply Preview Bar -->
         <div id="reply-preview-bar" class="reply-preview-bar hidden" style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 15px; margin-bottom: 10px;">
             <div class="reply-content" style="display: flex; align-items: center; overflow: hidden; flex: 1;">
                 <div class="reply-bar-line" style="width:4px; height:35px; background:var(--primary); border-radius:5px; margin-right:10px; flex-shrink: 0;"></div>
-                
-                <!-- Reply Image Preview Box -->
                 <img id="reply-preview-img" src="" style="width: 35px; height: 35px; border-radius: 8px; object-fit: cover; display: none; margin-right: 10px; flex-shrink: 0;">
-                
                 <div style="color:#fff; overflow: hidden; flex: 1;">
                     <div id="reply-to-name" class="reply-to-name" style="font-size:0.8rem; font-weight:800; color:var(--primary);">User Name</div>
                     <div id="reply-to-text" class="reply-to-text" style="font-size:0.85rem; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">Message text...</div>
@@ -1840,56 +1164,39 @@
 
         <!-- MAIN INPUT AREA -->
         <div class="chat-input-area" style="display:flex; align-items:center; position: relative;">
-            
-            <!-- Progress bar -->
             <div id="chat-progress-bar" style="position: absolute; top: -12px; left: 0; height: 3px; background: #00b894; width: 0%; transition: width 0.3s; border-radius: 10px;"></div>
-            
-            <!-- Attachment Button -->
             <label for="chat-file-input" style="cursor: pointer; padding: 10px; border-radius: 50%; background: rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; flex-shrink: 0;">
                 <i class="fa-solid fa-paperclip" style="font-size: 1.1rem; color: #fff;"></i>
             </label>
             <input type="file" id="chat-file-input" accept="image/*,video/*" style="display: none;" onchange="window.handleChatFileSelect()">
             
-            <!-- Text Input -->
             <div style="flex:1; display:flex; flex-direction:column; justify-content:center; margin-left:8px; overflow: hidden;">
                 <span id="chat-file-preview-text" style="font-size:0.75rem; color:var(--primary); font-weight:700; margin-left:10px; display:none; margin-bottom:2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Image Attached</span>
                 <input type="text" class="modal-input" style="margin:0; padding:12px 18px; border-radius: 25px; background:rgba(255,255,255,0.1); color:#fff; border:none; box-shadow:none; outline:none; width: 100%;" id="msg-input" placeholder="Message..." oninput="window.handleTyping()">
             </div>
-<!-- 🌟 PREMIUM INSTAGRAM STYLE MIC & RECORDING OVERLAY -->
-<div id="voice-record-wrapper" style="position: relative; display: flex; align-items: center;">
-    
-    <!-- 🎤 Main Mic Button -->
-    <div id="chat-mic-btn" 
-         style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; background: transparent; transition: background 0.2s; user-select: none; -webkit-user-select: none; z-index: 50;"
-         onmousedown="window.startVoiceRecord(event)" 
-         ontouchstart="window.startVoiceRecord(event)">
-        <i class="fa-solid fa-microphone" style="font-size: 1.2rem; color: #fff; pointer-events: none;"></i>
-    </div>
 
-    <!-- 🔴 Recording Active Overlay (Hidden by default) -->
-    <div id="recording-active-overlay" class="hidden" 
-         style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); height: 42px; width: calc(100vw - 80px); max-width: 350px; background: #1e293b; border-radius: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 40; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-        
-        <!-- 🗑️ Cancel Button -->
-        <div onclick="window.cancelVoiceRecordAction()" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; background: rgba(255, 71, 87, 0.1); border-radius: 50%; color: #ff4757; cursor: pointer; z-index: 60;">
-            <i class="fa-solid fa-trash-can"></i>
-        </div>
+            <!-- MIC & RECORDING OVERLAY -->
+            <div id="voice-record-wrapper" style="position: relative; display: flex; align-items: center;">
+                <div id="chat-mic-btn" 
+                     style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; background: transparent; transition: background 0.2s; user-select: none; -webkit-user-select: none; z-index: 50;"
+                     onmousedown="window.startVoiceRecord(event)" 
+                     ontouchstart="window.startVoiceRecord(event)">
+                    <i class="fa-solid fa-microphone" style="font-size: 1.2rem; color: #fff; pointer-events: none;"></i>
+                </div>
+                <div id="recording-active-overlay" class="hidden" 
+                     style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); height: 42px; width: calc(100vw - 80px); max-width: 350px; background: #1e293b; border-radius: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 40; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                    <div onclick="window.cancelVoiceRecordAction()" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; background: rgba(255, 71, 87, 0.1); border-radius: 50%; color: #ff4757; cursor: pointer; z-index: 60;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="recording-pulse-dot"></div>
+                        <span id="recording-live-time" style="color: #fff; font-weight: 800; font-size: 0.95rem; font-variant-numeric: tabular-nums;">0:00</span>
+                    </div>
+                    <div class="slide-cancel-hint"><i class="fa-solid fa-chevron-left"></i> Slide to cancel</div>
+                    <div style="width: 40px;"></div>
+                </div>
+            </div>
 
-        <!-- ⏱️ Live Timer -->
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <div class="recording-pulse-dot"></div>
-            <span id="recording-live-time" style="color: #fff; font-weight: 800; font-size: 0.95rem; font-variant-numeric: tabular-nums;">0:00</span>
-        </div>
-
-        <!-- ⬅️ Slide Hint -->
-        <div class="slide-cancel-hint"><i class="fa-solid fa-chevron-left"></i> Slide to cancel</div>
-        
-        <!-- Spacer for Mic -->
-        <div style="width: 40px;"></div>
-    </div>
-</div>
-
-            <!-- Send Button -->
             <button class="btn-primary" style="width:42px; height: 42px; border-radius: 50%; padding:0; display: flex; align-items: center; justify-content: center; box-shadow:none; flex-shrink: 0; background:var(--primary); border:none; cursor:pointer;" onclick="window.handleSendMsg()">
                 <i class="fa-solid fa-paper-plane" style="font-size: 1rem; color:#fff;"></i>
             </button>
@@ -1897,31 +1204,23 @@
     </div>
 </div>
 
-<!-- FULL SCREEN MEDIA VIEWER (इसे चेक करें कि यह मौजूद है या नहीं) -->
+<!-- FULL SCREEN MEDIA VIEWER -->
 <div id="media-viewer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999;">
     <div class="close-viewer-btn" onclick="closeFullScreenMedia()" style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer; z-index: 10000;">
         <i class="fa-solid fa-xmark"></i>
     </div>
-    
-    <!-- यह वह मुख्य ID है जो गायब होने पर एरर आता है -->
-    <div id="full-media-container" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
-        <!-- यहाँ इमेज या वीडियो लोड होगा -->
-    </div>
+    <div id="full-media-container" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;"></div>
 </div>
-
 
 <!-- 🍞 PREMIUM NOTIFICATION TOAST -->
 <div id="notification-toast" style="position: fixed; top: 20px; left: 50%; transform: translate(-50%, -150%); width: 90%; max-width: 350px; background: #ffffff; border-radius: 18px; padding: 12px 15px; display: flex; align-items: center; gap: 12px; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 2.5px solid transparent; background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b); background-origin: border-box; background-clip: padding-box, border-box; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; opacity: 0; pointer-events: none;">
-    
-    <!-- Toast Image -->
     <img id="notif-img" src="" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
-    
-    <!-- Toast Content -->
     <div style="flex: 1; overflow: hidden;">
         <b id="notif-title" style="display: block; font-size: 0.9rem; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Notification</b>
         <span id="notif-body" style="display: block; font-size: 0.8rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Message description...</span>
     </div>
 </div>
+
 <!-- JAVASCRIPT MODULES SETUP -->
 <script type="module" src="script.js"></script>
 <script type="module" src="Notifications.js"></script>
@@ -1937,93 +1236,66 @@
 
 <!-- CALL SCREEN OVERLAY -->
 <div id="call-screen-overlay" class="call-overlay">
-    <!-- Video Grid for Video Calls -->
     <div id="call-video-grid" class="video-grid">
         <video id="remote-video-preview" class="remote-video" playsinline></video>
         <video id="local-video-preview" class="local-video" muted playsinline></video>
     </div>
-
-    <!-- Caller/Receiver Info -->
     <div class="call-user-details">
         <img id="call-room-avatar" class="call-avatar" src="https://i.pravatar.cc/150" alt="User Avatar">
         <h2 id="call-room-username" class="call-name">User Name</h2>
         <div id="call-room-status" class="call-status">Dialing...</div>
     </div>
-
-    <!-- Call Control Actions -->
     <div class="call-actions-container">
-        <!-- Toggle Microphone -->
         <button id="btn-mute-call" class="call-btn btn-mute" onclick="window.toggleMuteCall()">
             <i class="fa-solid fa-microphone"></i>
         </button>
-
-        <!-- Toggle Camera (Only for video calls) -->
         <button id="btn-video-call-toggle" class="call-btn btn-video-toggle" onclick="window.toggleVideoCall()">
             <i class="fa-solid fa-video"></i>
         </button>
-
-        <!-- Accept Call (Green) - Only visible during incoming calls -->
         <button id="btn-accept-call" class="call-btn btn-accept" style="display: none;">
             <i class="fa-solid fa-phone"></i>
         </button>
-
-        <!-- Decline / Hang Up Call (Red) -->
         <button id="btn-decline-call" class="call-btn btn-decline" onclick="window.hangupActiveCall()">
             <i class="fa-solid fa-phone-slash"></i>
         </button>
     </div>
 </div>
 
-<!-- index.html के सबसे नीचे </body> टैग के ठीक ऊपर जोड़ें -->
-
 <script>
-    // 🌟 ULTIMATE NON-CRASHING PWA GLOBAL BINDING
     var deferredPrompt;
-
-    // 1. जब ब्राउज़र इंस्टॉलेशन के लिए तैयार हो
     window.addEventListener('beforeinstallprompt', function(e) {
         e.preventDefault();
         deferredPrompt = e;
-        console.log("PWA install prompt is ready (Inline Listener).");
-        
+        console.log("PWA install prompt is ready.");
         var installCard = document.getElementById('pwa-install-card');
         if (installCard) {
             installCard.classList.remove('hidden');
         }
     });
 
-    // 2. 100% गारंटीड ग्लोबल फंक्शन (बिना किसी मॉड्यूल निर्भरता के)
     window.triggerAppInstallation = async function() {
-        console.log("Global triggerAppInstallation invoked.");
-        
         if (!deferredPrompt) {
             if (typeof showCustomAlert === 'function') {
                 showCustomAlert("Info", "This app is already installed or your browser doesn't support installation.", "success");
             } else {
-                alert("App is already installed or not supported for installation on this browser.");
+                alert("App is already installed or not supported.");
             }
             return;
         }
-        
         try {
             deferredPrompt.prompt();
             var choice = await deferredPrompt.userChoice;
-            console.log("User choice outcome: " + choice.outcome);
-            
             deferredPrompt = null;
-            
             var installCard = document.getElementById('pwa-install-card');
             if (installCard) {
                 installCard.classList.add('hidden');
             }
         } catch (error) {
-            console.error("Installation prompt execution failed:", error);
+            console.error("Installation prompt failed:", error);
         }
     };
 
-    // 3. इंस्टॉल होने के बाद
     window.addEventListener('appinstalled', function(evt) {
-        console.log('App was successfully installed.');
         var installCard = document.getElementById('pwa-install-card');
         if (installCard) {
             installCard.classList.add('hidden');
