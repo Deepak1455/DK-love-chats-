@@ -38,6 +38,8 @@ isSupported().then((supported) => {
 }).catch((err) => {
     console.error("FCM Compatibility Check Error:", err);
 });
+// 🌟 वेरिफिकेशन इंजन मॉड्यूल को रजिस्टर करें (यह सभी ग्लोबल फ़ंक्शंस को एक्टिव कर देगा)
+import "./DK-love-Verified.js";
 // Smart Back-Navigation Globals
 window.navHistoryStack = []; // खुले हुए मोबाइल्स/चैट रूम्स का ट्रैक रखने के लिए
 let lastBackPressTime = 0;   // डबल-टैप एक्जिट डिटेक्शन के लिए
@@ -461,6 +463,7 @@ window.addEventListener('popstate', (event) => {
     }
 
     // [C] प्राथमिकता 2 (सुरक्षा जाल): सीधे खुले मॉडलों की सूची को स्कैन करना (Legacy Fallback)
+// 🌟 अपडेटेड स्मार्ट बैक-नेविगेशन ऐरे (वैरिफिकेशन हब सपोर्ट के साथ)
     const activeModals = [
         { id: 'chat-profile-modal', class: 'active', isHidden: false, close: () => window.closeChatProfile() },
         { id: 'media-viewer-modal', class: 'active', isHidden: false, close: () => window.closeFullScreenMedia() },
@@ -477,6 +480,7 @@ window.addEventListener('popstate', (event) => {
         { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
         { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
         { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
+        { id: 'verification-hub-modal', class: 'hidden', isHidden: true, close: () => window.closeVerificationHub() }, // 🌟 नया: वेरिफिकेशन हब बैक बटन एक्जिट सपोर्ट
         { id: 'create-post-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('create-post-modal', false) },
         { id: 'password-prompt-modal', class: 'hidden', isHidden: true, close: () => window.cancelUnlockChat() },
         { id: 'story-viewers-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('story-viewers-modal', false) },
@@ -3085,6 +3089,15 @@ onAuthStateChanged(auth, async (user) => {
             }
         });
 
+        // 📅 दैनिक लॉगिन एक्टिविटी ट्रैकर सक्रिय करें (DK-love-Verified Integration)
+        import("./DK-love-Verified.js")
+            .then((module) => {
+                if (typeof module.recordUserActivity === 'function') {
+                    module.recordUserActivity(user.uid, db);
+                }
+            })
+            .catch((err) => console.warn("Verification tracking bypassed:", err));
+
         let lastActiveTime = 0;
         document.body.addEventListener('click', () => {
             const now = Date.now();
@@ -3098,7 +3111,6 @@ onAuthStateChanged(auth, async (user) => {
         if(typeof loadStories === 'function') loadStories(); 
 
         // === 📞 CALL LISTENER INTEGRATION ===
-        // यूजर लॉगिन होते ही कॉलिंग फीचर्स चालू करने के लिए मॉड्यूल लोड करें
         import('./call.js')
             .then((module) => {
                 if (typeof module.setupCallListeners === 'function') {
