@@ -9,21 +9,71 @@ window.forceTopReelId = null;
 window.currentVisibleReelId = null;
 let unsubscribeReels = null;
 
+// रियल-टाइम रील हेडर लिसनर्स को ट्रैक करने के लिए मैप
+window.activeReelHeaderListeners = window.activeReelHeaderListeners || new Map();
+
 // सेशन के दौरान पहले से देखे जा चुके रील्स को ट्रैक करने के लिए सेट (Set)
 if (!window.viewedReelsSession) {
     window.viewedReelsSession = new Set();
 }
 
 /**
- * रील्स को रीफ्रेश करने का फंक्शन
+ * रील्स को रीफ्रेश करने का फंक्शन (सभी रीयल-टाइम लिसनर्स की सफाई के साथ)
  */
 window.refreshReels = () => {
     if (unsubscribeReels) { 
         unsubscribeReels(); 
         unsubscribeReels = null; 
     }
+    
+    // सभी एक्टिव रीयल-टाइम हेडर लिसनर्स को साफ करें
+    if (window.activeReelHeaderListeners) {
+        window.activeReelHeaderListeners.forEach((unsub) => unsub());
+        window.activeReelHeaderListeners.clear();
+    }
+
     window.isFirstReelsLoad = true;
     if (typeof window.loadReels === 'function') window.loadReels();
+};
+
+/**
+ * रील के यूज़र डेटा (Avatar, Username @, Verified Tick) को रियल-टाइम सिंक करने का फ़ंक्शन
+ */
+window.bindRealtimeReelHeader = (reelId, userId) => {
+    if (window.activeReelHeaderListeners.has(reelId)) {
+        window.activeReelHeaderListeners.get(reelId)();
+    }
+
+    const userDocRef = window.doc(window.db, "users", userId);
+    
+    const unsubscribe = window.onSnapshot(userDocRef, (docSnap) => {
+        if (!docSnap.exists()) return;
+        const userData = docSnap.data();
+        const item = document.getElementById(`reel-${reelId}`);
+        if (!item) return;
+
+        // 1. प्रोफाइल फोटो (Avatar) का रियल-टाइम अपडेट
+        const avatarImg = item.querySelector(`.reel-avatar`);
+        if (avatarImg) {
+            const freshPhoto = userData.avatarBase64 || userData.photoURL || 'https://i.pravatar.cc/150';
+            if (avatarImg.src !== freshPhoto) {
+                avatarImg.src = freshPhoto;
+            }
+        }
+
+        // 🌟 2. नाम के बजाय यूज़रनेम (Username @) और रोज़ गोल्ड वेरिफिकेशन बैच का रियल-टाइम अपडेट
+        const nameSpan = item.querySelector(`.reel-user-name`);
+        if (nameSpan) {
+            const freshUsername = userData.username || userData.name || 'user';
+            const badgeHtml = userData.isVerified === true && typeof window.getVerifiedBadgeHTML === 'function'
+                ? window.getVerifiedBadgeHTML(true, 16) // रील्स हेडर के लिए 16px आकार
+                : '';
+            
+            nameSpan.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">@${freshUsername}${badgeHtml}</span>`;
+        }
+    });
+
+    window.activeReelHeaderListeners.set(reelId, unsubscribe);
 };
 
 /**
@@ -55,6 +105,10 @@ window.loadReels = async () => {
         } else {
             reelsArray.sort(() => Math.random() - 0.5);
         }
+
+        // नए लोड से पहले पुराने रीयल-टाइम लिसनर्स साफ़ करें
+        window.activeReelHeaderListeners.forEach((unsub) => unsub());
+        window.activeReelHeaderListeners.clear();
 
         container.innerHTML = ''; 
         reelsArray.forEach(data => { 
@@ -125,6 +179,15 @@ function createReelElement(id, data) {
 
     const posterUrl = data.coverUrl || videoUrl.replace(/\.[^/.]+$/, ".jpg");
 
+    // 🌟 लोकल कैश से प्रारंभिक लोडिंग के लिए डेटा तैयार करें
+    const liveUserData = window.allCachedUsers?.find(u => u.uid === data.userId);
+    const initialUsername = liveUserData?.username || data.username || 'user';
+    const isVerified = liveUserData?.isVerified === true;
+    
+    const initialBadgeHtml = isVerified && typeof window.getVerifiedBadgeHTML === 'function'
+        ? window.getVerifiedBadgeHTML(true, 16)
+        : '';
+
     const div = document.createElement('div'); 
     div.className = 'reel-item'; 
     div.id = `reel-${id}`;
@@ -140,12 +203,12 @@ function createReelElement(id, data) {
             <div class="reel-user">
                 <img src="${data.userPhoto || 'https://i.pravatar.cc/150'}" class="reel-avatar" onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${data.userId}')" loading="lazy">
                 <div class="reel-user-detail">
-                    <span class="reel-user-name">${data.userName}</span>${followBtnHtml}
+                    <!-- 🌟 पूरा नाम हटाकर यूज़रनेम और रोज़ गोल्ड टिक सेट किया गया है -->
+                    <span class="reel-user-name" style="display: inline-flex; align-items: center; gap: 4px;">@${initialUsername}${initialBadgeHtml}</span>${followBtnHtml}
                 </div>
             </div>
             <div class="reel-caption">${data.caption || ""}</div>
         </div>
-        <!-- यहाँ से व्यूज काउंटर हटा दिया गया है ताकि क्लीन लुक मिले -->
         <div class="reel-actions" style="z-index: 10;">
             <div class="reel-action-btn ${isLiked ? 'liked' : ''}" id="reel-like-btn-${id}" onclick="window.handleReelLike('${id}', '${data.userId}', this, '${posterUrl}')">
                 <i class="fa-${isLiked ? 'solid' : 'regular'} fa-heart"></i><span class="reel-action-text">${likeCount}</span>
@@ -158,6 +221,11 @@ function createReelElement(id, data) {
             </div>
         </div>
     `;
+
+    // 🌟 एलिमेंट रेंडर होने के तुरंत बाद रीयल-टाइम अपडेट इंजन बाइंड करें
+    setTimeout(() => {
+        window.bindRealtimeReelHeader(id, data.userId);
+    }, 50);
 
     const video = div.querySelector('.reel-video');
     const statusIcon = div.querySelector('.reel-status-icon');
