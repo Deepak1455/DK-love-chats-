@@ -14,7 +14,7 @@ if (!window.viewedPostsSession) {
 window.activeHeaderListeners = window.activeHeaderListeners || new Map();
 
 /**
- * पोस्ट कार्ड के यूजर डेटा (DP, Name, Online Status) को रियल-टाइम सिंक करना
+ * पोस्ट कार्ड के यूजर डेटा (DP, Username, Online Status, Verified Badge) को रियल-टाइम सिंक करना
  */
 window.bindRealtimeUserHeader = (pid, userId) => {
     // यदि इस पोस्ट के लिए पहले से कोई सक्रिय लिसनर है, तो उसे अनसब्सक्राइब करें
@@ -40,13 +40,23 @@ window.bindRealtimeUserHeader = (pid, userId) => {
             }
         }
 
-        // 2. नाम (Username) का रियल-टाइम अपडेट
+        // 🌟 2. नाम के बजाय यूज़रनेम (Username) और Rose Gold Verified Tick का रियल-टाइम अपडेट
+        const freshUsername = userData.username || userData.name || 'user';
+        
+        // हेडर यूज़रनेम अपडेट
         const nameSpan = card.querySelector(`.post-username-span`);
         if (nameSpan) {
-            const freshName = userData.name || 'User';
-            if (nameSpan.innerText !== freshName) {
-                nameSpan.innerText = freshName;
-            }
+            const badgeHtml = userData.isVerified === true && typeof window.getVerifiedBadgeHTML === 'function'
+                ? window.getVerifiedBadgeHTML(true, 16) // पोस्ट हेडर के लिए 16px का आकार
+                : '';
+            
+            nameSpan.innerHTML = `${freshUsername} ${badgeHtml}`;
+        }
+
+        // कैप्शन के अंदर रेंडर होने वाले यूज़रनेम को रीयल-टाइम में अपडेट करना
+        const captionUsernameEl = card.querySelector(`.post-caption b`);
+        if (captionUsernameEl) {
+            captionUsernameEl.innerText = freshUsername;
         }
 
         // 3. लाइव ऑनलाइन पल्स इंडिकेटर का रियल-टाइम अपडेट
@@ -124,7 +134,6 @@ async function loadFeed(isRefresh = false) {
     if (!feedContainer) return;
     
     if (isRefresh) {
-        // नया लोड करने से पहले पुराने हेडर लिसनर्स को अनसब्सक्राइब करें
         window.activeHeaderListeners.forEach((unsub) => unsub());
         window.activeHeaderListeners.clear();
 
@@ -239,10 +248,19 @@ function createPostElement(pid, p) {
     const isFollowing = window.currentUserData?.following?.includes(p.userId);
     const postMediaUrl = p.mediaUrl || p.imageUrl || '';
 
-    // शुरुआती लोडिंग के लिए कैश डेटा का उपयोग करें
+    // शुरुआती लोडिंग के लिए लोकल यूजर कैश से डेटा प्राप्त करें
     const liveUserData = window.allCachedUsers?.find(u => u.uid === p.userId);
     let currentLivePhoto = p.userPhoto || 'https://i.pravatar.cc/150'; 
     if (liveUserData) currentLivePhoto = liveUserData.avatarBase64 || liveUserData.photoURL || currentLivePhoto;
+
+    // 🌟 [बदलाव]: प्रारंभिक लोड के लिए फुल नाम के बजाय यूज़रनेम सेट करें
+    const initialUsername = liveUserData?.username || p.username || 'user';
+
+    // 🌟 प्रारंभिक रेंडरिंग के समय कैश से रोज़ गोल्ड टिक लोड करना
+    const isVerified = liveUserData?.isVerified === true;
+    const initialBadgeHtml = isVerified && typeof window.getVerifiedBadgeHTML === 'function'
+        ? window.getVerifiedBadgeHTML(true, 16)
+        : '';
 
     let dateObj = new Date();
     if (p.timestamp) {
@@ -263,15 +281,15 @@ function createPostElement(pid, p) {
     let avatarClass = hasStory ? (window.hasUnseenStories(p.userId) ? "user-avatar story-border-unseen" : "user-avatar story-border-seen") : "user-avatar";
     let avatarClick = hasStory ? `viewStoryGroup('${p.userId}')` : `if(typeof window.viewUserProfile==='function') window.viewUserProfile('${p.userId}')`;
 
-    // स्मार्ट कैप्शन कोलाप्स प्रोसेसिंग
+    // स्मार्ट कैप्शन कोलाप्स प्रोसेसिंग (नाम के बजाय यूज़रनेम का उपयोग)
     const rawCaption = p.caption || '';
     const captionLimit = 30; // अक्षरों की सीमा
-    let captionHTML = `<b>${p.userName || 'User'}</b> <span class="caption-text-content">${rawCaption}</span>`;
+    let captionHTML = `<b>${initialUsername}</b> <span class="caption-text-content">${rawCaption}</span>`;
 
     if (rawCaption.length > captionLimit) {
         const truncated = rawCaption.substring(0, captionLimit);
         captionHTML = `
-            <b>${p.userName || 'User'}</b> 
+            <b>${initialUsername}</b> 
             <span class="caption-text-content" id="caption-short-${pid}">${truncated}...</span>
             <span class="caption-text-content" id="caption-full-${pid}" style="display:none;">${rawCaption}</span>
             <span class="read-more-btn" onclick="window.toggleCaptionCollapse('${pid}')">more</span>
@@ -286,11 +304,10 @@ function createPostElement(pid, p) {
             <div class="user-info">
                 <div class="avatar-wrapper" style="position:relative;">
                     <img src="${currentLivePhoto}" class="${avatarClass} feed-story-avatar" data-user-id="${p.userId}" onclick="${avatarClick}" onerror="this.src='https://i.pravatar.cc/150'" loading="lazy" decoding="async">
-                    <!-- ऑनलाइन पल्स इंडिकेटर लाइव लिसनर के माध्यम से यहाँ डायनेमिक रूप से जोड़ा जाएगा -->
                 </div>
                 <div>
                     <div style="display:flex; align-items:center; gap: 8px;">
-                        <span class="post-username-span" style="font-weight:800; font-size:0.95rem; color:#1a1a1a;" onclick="if(typeof window.viewUserProfile==='function') window.viewUserProfile('${p.userId}')">${p.userName || 'User'}</span>
+                        <span class="post-username-span" style="font-weight:800; font-size:0.95rem; color:#1a1a1a; display: flex; align-items: center;" onclick="if(typeof window.viewUserProfile==='function') window.viewUserProfile('${p.userId}')">${initialUsername} ${initialBadgeHtml}</span>
                         ${!isMe ? `<span class="feed-follow-btn follow-btn-${p.userId} ${isFollowing ? 'following' : ''}" onclick="window.handleFollowFromFeed('${p.userId}', event)">${isFollowing ? 'Following' : 'Follow'}</span>` : ''}
                     </div>
                     <span class="post-time">${timeString}</span>
@@ -362,13 +379,12 @@ window.toggleCaptionCollapse = (pid) => {
 };
 
 /**
- * क्विक इन-लाइन इमोजी रिएक्शन सबमिशन (स्मूथ और फ़ास्ट)
+ * क्विक इन-लाइन इमोजी रिएक्शन सबमिशन
  */
 window.sendQuickReaction = async (pid, emoji, ownerId) => {
     if (!window.currentUser) return;
     if (window.navigator.vibrate) window.navigator.vibrate(20);
 
-    // तत्काल UI रिस्पांस (Optimistic UI Update)
     const commentCountSpan = document.getElementById(`post-comment-count-${pid}`);
     if (commentCountSpan) {
         commentCountSpan.innerText = parseInt(commentCountSpan.innerText) + 1;
@@ -410,7 +426,7 @@ window.sendQuickReaction = async (pid, emoji, ownerId) => {
 };
 
 /**
- * शेप-शिफ्टिंग : माइक्रो-कॉन्फेटी प्रभाव
+ * माइक्रो-कॉन्फेटी प्रभाव
  */
 window.triggerMicroConfetti = (element) => {
     const parent = element.parentElement;
@@ -453,7 +469,7 @@ window.handleMediaClick = (element, pid, ownerId, mediaUrl, mediaType, event) =>
     if (!element.clickTimeout) {
         element.clickTimeout = setTimeout(() => {
             element.clickTimeout = null;
-            if(typeof window.viewFullMedia === 'function') window.viewFullMedia(mediaUrl, mediaType);
+            if(typeof window.viewFullScreenMedia === 'function') window.viewFullScreenMedia(mediaUrl, mediaType);
         }, 300); 
     } else {
         clearTimeout(element.clickTimeout);
@@ -471,74 +487,32 @@ window.showHeartAnimation = (container, pid, ownerId, postMediaUrl = "") => {
     window.handleLike(pid, ownerId, btn, postMediaUrl);
 };
 
-// होम पोस्ट लाइक के लिए ग्लोबल लॉक सेट (त्वरित लगातार क्लिक रोकने हेतु)
-window.postLikeLock = window.postLikeLock || new Set();
-
 window.handleLike = async (pid, ownerId, btnElement, postMediaUrl = "") => { 
-    // 🛡️ 1. स्पैम प्रोटेक्शन: एक बार में केवल एक ही लाइक रिक्वेस्ट प्रोसेस होगी
-    if (window.postLikeLock.has(pid)) return;
-    window.postLikeLock.add(pid);
-
     const isCurrentlyLiked = btnElement.classList.contains('liked');
     const likeCountSpan = document.getElementById(`like-count-${pid}`);
     
-    // मूल गणना सहेजें (त्रुटि होने पर वापस अपनी स्थिति में आने के लिए)
-    const originalCount = likeCountSpan ? (parseInt(likeCountSpan.innerText) || 0) : 0;
-
-    // 📱 2. हैप्टिक वाइब्रेशन फ़ीडबैक
-    if (navigator.vibrate) navigator.vibrate(25);
-
-    // ⚡ 3. Optimistic UI Update (तत्काल फ़ीडबैक)
-    if (isCurrentlyLiked) {
-        btnElement.classList.remove('liked'); 
-        btnElement.classList.replace('fa-solid', 'fa-regular');
-        if (likeCountSpan) likeCountSpan.innerText = Math.max(0, originalCount - 1);
+    if(isCurrentlyLiked) {
+        btnElement.classList.remove('liked'); btnElement.classList.replace('fa-solid', 'fa-regular');
+        if(likeCountSpan) likeCountSpan.innerText = Math.max(0, parseInt(likeCountSpan.innerText) - 1);
     } else {
-        btnElement.classList.add('liked'); 
-        btnElement.classList.replace('fa-regular', 'fa-solid');
-        if (likeCountSpan) likeCountSpan.innerText = originalCount + 1;
+        btnElement.classList.add('liked'); btnElement.classList.replace('fa-regular', 'fa-solid');
+        if(likeCountSpan) likeCountSpan.innerText = parseInt(likeCountSpan.innerText) + 1;
         
-        // विज़ुअल कॉन्फेटी प्रभाव
-        if (typeof window.triggerMicroConfetti === 'function') {
-            window.triggerMicroConfetti(btnElement);
-        }
+        window.triggerMicroConfetti(btnElement);
     }
 
     const postRef = window.doc(window.db, "posts", pid);
-    
     try {
-        if (isCurrentlyLiked) {
-            await window.updateDoc(postRef, { likes: window.arrayRemove(window.currentUser.uid) });
-        } else {
+        if(isCurrentlyLiked) await window.updateDoc(postRef, { likes: window.arrayRemove(window.currentUser.uid) });
+        else {
             await window.updateDoc(postRef, { likes: window.arrayUnion(window.currentUser.uid) });
-            
-            // 🌟 4. सुरक्षित पुश नोटिफिकेशन डेटाबेस ट्रिगर (receiverId सहित)
-            if (ownerId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
+            if(ownerId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
                 await window.sendNotification(ownerId, 'like', 'liked your post', pid, postMediaUrl);
             }
         }
-    } catch(e) {
-        console.error("Post Like Error, rolling back UI changes:", e);
-        
-        // 🔄 5. रोलबैक मैकेनिज्म (नेटवर्क फेलियर पर UI रिस्टोर करें)
-        if (isCurrentlyLiked) {
-            btnElement.classList.add('liked');
-            btnElement.classList.replace('fa-regular', 'fa-solid');
-            if (likeCountSpan) likeCountSpan.innerText = originalCount;
-        } else {
-            btnElement.classList.remove('liked');
-            btnElement.classList.replace('fa-solid', 'fa-regular');
-            if (likeCountSpan) likeCountSpan.innerText = originalCount;
-        }
-        
-        if (typeof window.showToast === 'function') {
-            window.showToast("Connection Error", "Could not save like. Please try again.", "", "error");
-        }
-    } finally {
-        // प्रोसेस खत्म होने पर लॉक को साफ़ करें
-        window.postLikeLock.delete(pid);
-    }
+    } catch(e) {}
 };
+
 window.deletePost = (postId) => {
     if(typeof window.showDynamicConfirm === 'function') {
         window.showDynamicConfirm("Delete Post", "Are you sure you want to delete this post?", "fa-solid fa-trash", async () => {
@@ -609,13 +583,11 @@ function setupPullToRefresh() {
 // ==========================================
 if (window.activeCheckInterval) clearInterval(window.activeCheckInterval);
 window.activeCheckInterval = setInterval(() => {
-    // 1. यदि यूजर एक्टिव है और स्क्रीन पर है, तो Firestore में अपनी उपस्थिति को अपडेट करें (Keep-Alive)
     if (window.currentUser && document.visibilityState === 'visible') {
         const myRef = window.doc(window.db, "users", window.currentUser.uid);
         window.updateDoc(myRef, { lastActive: Date.now() }).catch(() => {});
     }
 
-    // 2. स्क्रीन पर मौजूद पोस्ट्स के ऑनलाइन पल्स का 10-सेकंड री-इवैल्यूएशन (स्मूथ रिमूवल के लिए)
     document.querySelectorAll('.post-card').forEach(card => {
         const avatarWrapper = card.querySelector('.avatar-wrapper');
         const avatarImg = card.querySelector('.feed-story-avatar');
@@ -625,7 +597,7 @@ window.activeCheckInterval = setInterval(() => {
         const liveUserData = window.allCachedUsers?.find(u => u.uid === postUserId);
         
         if (liveUserData && liveUserData.lastActive) {
-            const isOnline = (Date.now() - liveUserData.lastActive < 120000); // 2 मिनट (120 सेकंड) एक्टिविटी विंडो
+            const isOnline = (Date.now() - liveUserData.lastActive < 120000); 
             let pulseDot = avatarWrapper.querySelector('.online-indicator-pulse');
 
             if (isOnline) {
@@ -643,4 +615,4 @@ window.activeCheckInterval = setInterval(() => {
             }
         }
     });
-}, 10000); // हर 10 सेकंड में सक्रियता जांच
+}, 10000);
