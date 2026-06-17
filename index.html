@@ -32,42 +32,46 @@
 </head>
 <body>
 
-<!-- 🌟 FULL SCREEN VERIFICATION HUB MODAL (PREMIUM ULTRA CLEAN INTERFACE) -->
+<!-- 🌟 FULL SCREEN VERIFICATION HUB MODAL (PREMIUM ULTRA CLEAN INTERFACE - SYNCHRONIZED) -->
 <div id="verification-hub-modal" class="hidden" style="
     position: fixed; 
     top: 0; 
     left: 0; 
     width: 100%; 
     height: 100%; 
-    background: #ffffff; 
+    background: #10002b; 
     z-index: 5500; 
     overflow-y: auto; 
-    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.15), visibility 0.35s; 
+    -webkit-overflow-scrolling: touch;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s; 
     transform: translate3d(0, 100%, 0);
     will-change: transform;
 ">
     <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; min-height: 100vh; box-sizing: border-box;">
         
-        <!-- Header with Back Button -->
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding: 10px 0;">
-            <i class="fa-solid fa-arrow-left" style="font-size: 1.5rem; cursor: pointer; color: #000; padding: 5px;" onclick="window.closeVerificationHub()"></i>
-            <h3 style="margin: 0; font-weight: 900; font-size: 1.5rem; color: #000;">Verification Hub</h3>
+        <!-- Header with Back Button (Dark Mode Optimized) -->
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <i class="fa-solid fa-arrow-left" style="font-size: 1.4rem; cursor: pointer; color: #ffffff; padding: 5px; transition: transform 0.2s;" 
+               onclick="window.closeVerificationHub()" 
+               onmousedown="this.style.transform='scale(0.9)'" 
+               onmouseup="this.style.transform='scale(1)'"></i>
+            <h3 style="margin: 0; font-weight: 900; font-size: 1.4rem; color: #ffffff; letter-spacing: -0.5px;">Verification Hub</h3>
         </div>
 
-        <!-- Card Achievements Content Area -->
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; width: 100%;">
-            <div id="hub-verified-card-placeholder" style="width: 100%;">
-                <!-- Dynamic Details will be rendered here -->
+        <!-- Card Achievements Content Area (Fixed Flex Direction for Scrolling) -->
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; gap: 20px; width: 100%; box-sizing: border-box;">
+            <div id="hub-verified-card-placeholder" style="width: 100%; box-sizing: border-box;">
+                <!-- JavaScript द्वारा गतिशील रूप से सामग्री यहाँ लोड की जाएगी -->
             </div>
         </div>
 
         <!-- Footer Safety Disclaimer -->
-        <div style="text-align: center; font-size: 0.75rem; color: #64748b; margin-top: 30px; line-height: 1.4; padding-bottom: 15px;">
-            <i class="fa-solid fa-shield-halved"></i> DK Love Chats Secure System. Once criteria is fully accomplished, the verified badge automatically updates globally.
+        <div style="text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: 40px; line-height: 1.5; padding: 15px 0; border-top: 1px solid rgba(255, 255, 255, 0.05); box-sizing: border-box;">
+            <i class="fa-solid fa-shield-halved" style="color: #0095f6; margin-right: 4px;"></i> 
+            DK Love Chats Secure System. Once criteria is fully accomplished, the verified badge automatically updates globally.
         </div>
     </div>
 </div>
-
 <!-- SINGLE POST VIEW MODAL -->
 <div id="single-post-view-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5500; display: flex; flex-direction: column; animation: fadeIn 0.3s;">
     <div style="padding: 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); background: #10002b;">
@@ -817,13 +821,14 @@
     </div>
 </div>
 
-<!-- SETTINGS MODAL -->
+<!-- SETTINGS MODAL (UPDATED BUTTON SECTION) -->
 <div id="settings-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 5000; overflow-y: auto;">
     <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px; padding: 10px 0;">
             <i class="fa-solid fa-arrow-left" style="font-size: 1.5rem; cursor: pointer; color: #000;" onclick="closeSettingsModal()"></i>
             <h3 style="margin: 0; font-weight: 900; font-size: 1.5rem; color: #000;">Settings</h3>
         </div>
+        
         <div style="background: #f8fafc; padding: 20px; border-radius: 24px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
             <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-lock" style="color: var(--primary);"></i> CHAT LOCK PASSWORD
@@ -837,6 +842,8 @@
                 <button class="btn-primary" style="flex: 1;" onclick="saveChatPassword()">Save Changes</button>
             </div>
         </div>
+
+        <!-- 🎖️ VERIFICATION HUB BUTTON WITH PREMIUM ROSE GOLD TICK SVG -->
         <div style="margin-bottom: 20px;">
             <button onclick="window.openVerificationHub()" style="
                 width: 100%; 
@@ -858,9 +865,49 @@
                 box-shadow: 0 4px 15px rgba(0, 149, 246, 0.08); 
                 transition: transform 0.15s ease-out;
             " onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
-                <i class="fa-solid fa-certificate" style="color: #0095f6; animation: spin 4s linear infinite;"></i> Verification Hub & Achievements
+                
+                <!-- Inline Rose Gold Verified Tick SVG (Size Matches Text) -->
+                <svg width="22" height="22" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; display: inline-block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));">
+                  <defs>
+                    <linearGradient id="settingsPremiumGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#FFE5B4"/>
+                      <stop offset="50%" stop-color="#FF9F1C"/>
+                      <stop offset="100%" stop-color="#FF5400"/>
+                    </linearGradient>
+                    <filter id="settingsPremiumGlow">
+                      <feGaussianBlur stdDeviation="3" result="blur"/>
+                      <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <path
+                    d="M64 10L79 22L98 20L96 39L110 54L96 69L98 88L79 86L64 100L49 86L30 88L32 69L18 54L32 39L30 20L49 22Z"
+                    fill="url(#settingsPremiumGradient)"
+                    filter="url(#settingsPremiumGlow)"
+                  />
+                  <circle
+                    cx="64"
+                    cy="54"
+                    r="30"
+                    fill="#FFFFFF"
+                    opacity="0.12"
+                  />
+                  <path
+                    d="M47 55L59 67L82 44"
+                    fill="none"
+                    stroke="#FFFFFF"
+                    stroke-width="8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                
+                <span>Verification Hub & Achievements</span>
             </button>
         </div>
+
         <div style="margin-bottom: 20px;">
             <button onclick="shareApp()" style="width: 100%; padding: 16px; background: #f1f5f9; border: 1px solid #e2e8f0; color: #8338ec; border-radius: 20px; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
                 <i class="fa-solid fa-share-nodes"></i> Share DK Love Chats
@@ -873,7 +920,6 @@
         </div>
     </div>
 </div>
-
 <!-- PASSWORD PROMPT MODAL -->
 <div id="password-prompt-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 6000; display: flex; justify-content: center; align-items: center; padding: 20px;">
     <div class="modal-content fade-in" style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
