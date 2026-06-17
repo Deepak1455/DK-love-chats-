@@ -1,8 +1,8 @@
-// ==========================================
-// --- PROFILE & REELS STOP LOGIC ---
-// ==========================================
+// =========================================================
+// --- DK LOVE CHATS - PROFILE & USER LIST SYSTEM ENGINE ---
+// =========================================================
 
-// संख्या को शॉर्ट फॉर्मेट में बदलने के लिए हेल्पर (जैसे: 1500 -> 1.5K)
+// 1. संख्या को शॉर्ट फॉर्मेट में बदलने के लिए हेल्पर (जैसे: 1500 -> 1.5K)
 window.formatCount = (num) => {
     if (!num || isNaN(num)) return '0';
     if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -10,6 +10,7 @@ window.formatCount = (num) => {
     return num.toString();
 };
 
+// 2. प्रोफ़ाइल टैब स्विचिंग (Posts / Reels)
 window.switchProfileTab = (tab) => {
     const targetBtn = document.getElementById(`tab-${tab}`);
     const targetGrid = document.getElementById(`profile-${tab}-grid`);
@@ -33,6 +34,7 @@ window.switchProfileTab = (tab) => {
     });
 };
 
+// 3. रेफरल कोड कॉपी करने का फ़ंक्शन
 window.copyReferCode = () => {
     const codeElement = document.getElementById('profile-refer-code');
     if (!codeElement) return;
@@ -59,6 +61,7 @@ window.copyReferCode = () => {
     }
 };
 
+// 4. रील्स और अन्य बैकग्राउंड मीडिया को रोकने का लॉजिक
 window.forceStopAllReels = () => {
     if (window.reelObserver) { 
         window.reelObserver.disconnect(); 
@@ -81,7 +84,7 @@ window.forceStopAllReels = () => {
 };
 
 // ==========================================
-// --- PROFILE VIEWING LOGIC (REAL-TIME ENABLED) ---
+// --- PROFILE VIEWING LOGIC (REAL-TIME) ---
 // ==========================================
 window.viewUserProfile = async (targetUid) => {
     if (typeof window.forceStopAllReels === 'function') window.forceStopAllReels();
@@ -106,8 +109,21 @@ window.viewUserProfile = async (targetUid) => {
 
         const d = uDoc.data(), targetId = d.uid || uDoc.id; 
         
-        document.getElementById('profile-name').innerText = d.name || "User";
-        document.getElementById('profile-username').innerText = "@" + (d.username || "user");
+        // 🌟 फुल नेम: साधारण टेक्स्ट (कोई बैच नहीं)
+        const nameEl = document.getElementById('profile-name');
+        if (nameEl) {
+            nameEl.innerText = d.name || "User";
+        }
+
+        // 🌟 यूज़रनेम: यूज़रनेम के ठीक बगल में रोज़ गोल्ड बैच
+        const usernameEl = document.getElementById('profile-username');
+        if (usernameEl) {
+            const badgeHtml = (d.isVerified && typeof window.getVerifiedBadgeHTML === 'function') 
+                ? window.getVerifiedBadgeHTML(true, 18) 
+                : "";
+            usernameEl.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">@${d.username || "user"}${badgeHtml}</span>`;
+        }
+
         document.getElementById('profile-bio').innerText = d.bio || "No bio yet.";
         document.getElementById('profile-img').src = d.avatarBase64 || d.photoURL || "https://i.pravatar.cc/150";
         
@@ -160,9 +176,11 @@ window.viewUserProfile = async (targetUid) => {
 
         window.loadUserPosts(targetId);
 
-        // ==========================================
-        // REAL-TIME FOLLOWERS/FOLLOWING LISTENER
-        // ==========================================
+        if (typeof window.updateProfileVerificationUI === 'function') {
+            window.updateProfileVerificationUI(targetId, d.isVerified);
+        }
+
+        // Real-Time Followers/Following Listener
         if (window.unsubscribeProfileUser) {
             window.unsubscribeProfileUser();
         }
@@ -176,6 +194,23 @@ window.viewUserProfile = async (targetUid) => {
                 
                 if(followersEl) followersEl.innerText = liveData.followers ? liveData.followers.length : 0;
                 if(followingEl) followingEl.innerText = liveData.following ? liveData.following.length : 0;
+
+                const liveNameEl = document.getElementById('profile-name');
+                if (liveNameEl) {
+                    liveNameEl.innerText = liveData.name || "User";
+                }
+
+                const liveUsernameEl = document.getElementById('profile-username');
+                if (liveUsernameEl) {
+                    const liveBadgeHtml = (liveData.isVerified && typeof window.getVerifiedBadgeHTML === 'function') 
+                        ? window.getVerifiedBadgeHTML(true, 18) 
+                        : "";
+                    liveUsernameEl.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">@${liveData.username || "user"}${liveBadgeHtml}</span>`;
+                }
+
+                if (typeof window.updateProfileVerificationUI === 'function') {
+                    window.updateProfileVerificationUI(targetId, liveData.isVerified);
+                }
 
                 if (window.currentUser && targetId !== window.currentUser.uid) {
                     const profileBtn = document.getElementById('profile-follow-btn');
@@ -197,6 +232,7 @@ window.viewUserProfile = async (targetUid) => {
     window.switchProfileTab('posts');
 };
 
+// 5. यूज़र पोस्ट्स और रील्स को लोड करना
 window.loadUserPosts = async (uid) => {
     if (window.unsubscribeProfilePosts) {
         window.unsubscribeProfilePosts();
@@ -252,8 +288,6 @@ window.loadUserPosts = async (uid) => {
 
             if (p.mediaType === 'video') {
                 let thumb = p.mediaUrl ? p.mediaUrl.replace(/\.[^/.]+$/, ".jpg") : ""; 
-                
-                // Reels के लिए Play (▶) आइकॉन व्यूज इंडिकेटर (हमेशा दिखने वाला)
                 const reelViewsIndicator = `
                     <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0, 0, 0, 0.55); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 4px; z-index: 4; backdrop-filter: blur(2px);">
                         <i class="fa-solid fa-play" style="font-size: 0.65rem;"></i> ${formattedViews}
@@ -266,7 +300,6 @@ window.loadUserPosts = async (uid) => {
                     ${overlayHtml}
                 `;
             } else {
-                // ⚡ इमेज पोस्ट्स के लिए Eye (👁) आइकॉन व्यूज इंडिकेटर (हमेशा दिखने वाला)
                 const postViewsIndicator = `
                     <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0, 0, 0, 0.55); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 4px; z-index: 4; backdrop-filter: blur(2px);">
                         <i class="fa-solid fa-eye" style="font-size: 0.65rem;"></i> ${formattedViews}
@@ -292,7 +325,7 @@ window.loadUserPosts = async (uid) => {
 };
 
 // ==========================================
-// --- EDIT PROFILE SYSTEM ---
+// --- EDIT PROFILE MODULE (RE-DESIGNED) ---
 // ==========================================
 let editUsernameTimer = null;
 let isEditUsernameAvailable = true;
@@ -300,9 +333,15 @@ let isEditUsernameAvailable = true;
 window.openEditProfile = () => { 
     if (!window.currentUser) return;
     window.toggleModal('edit-profile-modal', true); 
-    document.getElementById('edit-name').value = window.currentUser.displayName || ""; 
-    document.getElementById('edit-bio').value = window.currentUserData?.bio || "";
-    document.getElementById('edit-username').value = window.currentUserData?.username || "";
+    
+    const nameInput = document.getElementById('edit-name');
+    const bioInput = document.getElementById('edit-bio');
+    const usernameInput = document.getElementById('edit-username');
+
+    // 🌟 रीयल-टाइम डेटा पॉपुलेशन फिक्स (window.currentUserData से डायरेक्ट रीड)
+    nameInput.value = window.currentUserData?.name || window.currentUser.displayName || ""; 
+    bioInput.value = window.currentUserData?.bio || "";
+    usernameInput.value = window.currentUserData?.username || "";
     
     const profileImg = document.getElementById('profile-img');
     if (profileImg) {
@@ -311,6 +350,30 @@ window.openEditProfile = () => {
     
     document.getElementById('edit-username-check-icon').className = 'fa-solid fa-circle-check username-status status-valid';
     isEditUsernameAvailable = true; 
+
+    // 🛡️ रीयल-टाइम इमोजी और कैरेक्टर लिमिट फ़िल्टर
+    const sanitizeAndClean = (e, limit = null) => {
+        let val = e.target.value;
+        const emojiPattern = /[\uD800-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
+        val = val.replace(emojiPattern, '');
+        
+        if (limit && val.length > limit) {
+            val = val.substring(0, limit);
+        }
+        
+        if (e.target.value !== val) {
+            e.target.value = val;
+        }
+    };
+
+    nameInput.oninput = (e) => {
+        sanitizeAndClean(e, 15); // अधिकतम 15 अक्षर, कोई इमोजी नहीं
+    };
+
+    usernameInput.oninput = (e) => {
+        sanitizeAndClean(e); // कोई इमोजी नहीं
+        window.checkEditUsernameAvailability();
+    };
 };
 
 window.checkEditUsernameAvailability = () => {
@@ -358,33 +421,37 @@ window.checkEditUsernameAvailability = () => {
     }, 600); 
 };
 
-// SAFE UPDATE PROFILE FALLBACK WRAPPER
-const safeAuthProfileUpdate = async (user, profileData) => {
-    if (typeof window.updateProfile === 'function') {
-        await window.updateProfile(user, profileData);
-    } else if (user && typeof user.updateProfile === 'function') {
-        await user.updateProfile(profileData);
-    } else {
-        console.warn("Auth updateProfile function missing. Proceeding to update Firestore Database.");
-    }
-};
-
+// प्रोफ़ाइल सेविंग क्रियान्वयक (डेटाबेस राइट सुरक्षा के साथ)
+// 🌟 सेविंग प्रोसेसर (स्मार्ट, फास्ट और बिना क्रैश के चलने वाला अपडेटेड वर्जन)
 window.handleSaveProfile = async () => { 
-    const n = document.getElementById('edit-name').value.trim(); 
-    const b = document.getElementById('edit-bio').value.trim(); 
+    let n = document.getElementById('edit-name').value.trim(); 
+    let b = document.getElementById('edit-bio').value.trim(); 
     let u = document.getElementById('edit-username').value.trim().toLowerCase();
     
     if(u.startsWith('@')) u = u.substring(1); 
+
+    // 🛡️ सुरक्षा परत: इमोजी छानना और अक्षरों की अधिकतम सीमा (15) लागू करना
+    const emojiPattern = /[\uD800-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
+    n = n.replace(emojiPattern, '').substring(0, 15);
+    u = u.replace(emojiPattern, '');
 
     if(!n) return typeof showCustomAlert === 'function' ? showCustomAlert("Required", "Name is required", "warning") : alert("Name required");
     if(!u) return typeof showCustomAlert === 'function' ? showCustomAlert("Required", "Username is required", "warning") : alert("Username required");
     if(!isEditUsernameAvailable) return typeof showCustomAlert === 'function' ? showCustomAlert("Invalid", "Please choose a valid username.", "error") : alert("Invalid username");
     
     const btn = document.getElementById('btn-save-profile');
-    if(btn) { btn.innerText = "Saving..."; btn.disabled = true; }
+    const originalContent = btn ? btn.innerHTML : "Save Changes";
+    
+    // स्मूथ विज़ुअल फीडबैक: बटन को लोडर स्टेट में डालें
+    if(btn) { 
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...`; 
+        btn.disabled = true; 
+    }
 
     try {
         let url = null;
+        
+        // यदि यूज़र ने नई प्रोफ़ाइल इमेज चुनी है तो उसे अपलोड करें
         if(window.profileRawFile) {
             let blobToUpload = window.profileRawFile;
             if(window.selectedMediaType === 'image' && window.selectedMediaBase64) {
@@ -395,15 +462,21 @@ window.handleSaveProfile = async () => {
             url = uploadData.url;
         }
         
-        const authUpdate = { displayName: n };
-        if(url) authUpdate.photoURL = url;
-        await safeAuthProfileUpdate(window.currentUser, authUpdate); 
+        // 🌟 फ़ायरबेस ऑथ प्रोफाइल अपडेट (अब बिना किसी रुकावट के सीधे काम करेगा)
+        if (typeof window.updateProfile === 'function' && window.currentUser) {
+            await window.updateProfile(window.currentUser, { 
+                displayName: n, 
+                photoURL: url || window.currentUser.photoURL 
+            });
+        }
         
         const updateData = { name: n, bio: b, username: u }; 
         if(url) { updateData.avatarBase64 = url; updateData.photoURL = url; }
         
+        // फ़ायरस्टोर डेटाबेस डॉक्यूमेंट अपडेट करें
         await window.updateDoc(window.doc(window.db, "users", window.currentUser.uid), updateData); 
 
+        // रीयल-टाइम लोकल स्टेट कैश सिंक करें ताकि बदलाव तुरंत दिखाई दें
         if (window.currentUserData) {
             window.currentUserData.name = n;
             window.currentUserData.bio = b;
@@ -411,25 +484,41 @@ window.handleSaveProfile = async () => {
             if(url) { window.currentUserData.avatarBase64 = url; window.currentUserData.photoURL = url; }
         }
 
+        // प्रोफ़ाइल फाइल कैश साफ़ करें
+        window.profileRawFile = null;
+        window.selectedMediaBase64 = null;
+
         if(url) {
            const myStoryImg = document.getElementById('my-story-ring-img');
            if(myStoryImg) myStoryImg.src = url;
         }
         
+        // एडिट मोडल को तुरंत और स्मूथली बंद करें
         window.toggleModal('edit-profile-modal', false); 
-        if(typeof window.viewUserProfile === 'function') window.viewUserProfile(window.currentUser.uid);
         
-        if(typeof showCustomAlert === 'function') showCustomAlert("Success", "Your profile has been saved successfully!", "success");
+        // बिना यूज़र अनुभव को प्रभावित किए प्रोफ़ाइल स्क्रीन रेंडर करें
+        if(typeof window.viewUserProfile === 'function') {
+            await window.viewUserProfile(window.currentUser.uid);
+        }
+        
+        if(typeof showCustomAlert === 'function') {
+            showCustomAlert("Success", "Your profile has been saved successfully!", "success");
+        }
     } catch(e) { 
         console.error("Save profile error:", e);
-        if(typeof showCustomAlert === 'function') showCustomAlert("Error", e.message, "error"); 
+        if(typeof showCustomAlert === 'function') {
+            showCustomAlert("Error", e.message || "Something went wrong.", "error"); 
+        }
     } finally { 
-        if(btn) { btn.innerText = "Save Changes"; btn.disabled = false; }
+        // बटन को वापस पुरानी सामान्य स्थिति में लाएं
+        if(btn) { 
+            btn.innerHTML = originalContent; 
+            btn.disabled = false; 
+        }
     }
 };
-
 // ==========================================
-// --- FOLLOWERS / FOLLOWING LIST UI ---
+// --- FOLLOWERS / FOLLOWING LIST MODULE ---
 // ==========================================
 let currentListUids = [], filteredListUids = [], currentListIndex = 0, isFetchingList = false;
 
@@ -460,11 +549,11 @@ window.openUserList = async (type, uid) => {
         
         if(content) {
             content.innerHTML = "";
-            if(typeof window.loadMoreUsersList === 'function') await window.loadMoreUsersList();
+            await window.loadMoreUsersList();
             
             content.onscroll = () => { 
                 if (content.scrollTop + content.clientHeight >= content.scrollHeight - 50) { 
-                    if(typeof window.loadMoreUsersList === 'function') window.loadMoreUsersList(); 
+                    window.loadMoreUsersList(); 
                 } 
             };
         }
@@ -499,7 +588,7 @@ window.handleUserListSearch = () => {
         if(content) content.innerHTML = `<div style="text-align:center; padding:40px; color:#aaa;"><i class="fa-solid fa-magnifying-glass" style="font-size:2rem; margin-bottom:10px; opacity:0.5;"></i><br>No users found.</div>`;
         return;
     }
-    if(typeof window.loadMoreUsersList === 'function') window.loadMoreUsersList();
+    window.loadMoreUsersList();
 };
 
 window.loadMoreUsersList = async () => {
