@@ -1,3 +1,4 @@
+
 // ==========================================
 // --- FIREBASE IMPORTS FOR CHAT ---
 // ==========================================
@@ -31,6 +32,7 @@ window.unsubscribeUnread = null;
 let unsubscribeUserStatus = null;
 let unsubscribeTyping = null;
 window.unsubscribeChat = null;
+window.unsubscribeCpProfile = null; // 🌟 चैट डिटेल्स रियल-टाइम लिसनर
 
 let selectedMsgId = null;
 let selectedMsgText = null;
@@ -105,17 +107,14 @@ window.updateBottomBadgeLocal = () => {
         else bottomBadge.style.display = 'none';
     }
 };
+
 // ==========================================
 // --- SMART DEBOUNCED SEARCH ---
 // ==========================================
-
-// यह फ़ंक्शन सर्च बार को डिटेक्ट करके उस पर डिबाउंस इवेंट बाइंड करता है
 window.setupSearchDebounce = () => {
     const searchInput = document.getElementById('chat-list-search');
     if (searchInput && !searchInput.dataset.debouncedBound) {
         searchInput.dataset.debouncedBound = "true";
-        
-        // यदि HTML में पहले से ऑन-इनपुट एट्रिब्यूट लगा है तो उसे हटा दें ताकि डबल-फिल्टर न हो
         searchInput.removeAttribute('oninput');
         
         let debounceTimer;
@@ -123,12 +122,11 @@ window.setupSearchDebounce = () => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 window.filterChatList();
-            }, 180); // 150ms से 200ms के बीच का सबसे रिस्पॉन्सिव समय
+            }, 180); 
         });
     }
 };
 
-// एचटीएमएल से सीधे मैन्युअल कॉल करने के लिए बैकअप ग्लोबल फ़ंक्शन
 let searchDebounceTimeout = null;
 window.handleSearchInput = () => {
     if (searchDebounceTimeout) clearTimeout(searchDebounceTimeout);
@@ -136,9 +134,7 @@ window.handleSearchInput = () => {
         window.filterChatList();
     }, 180);
 };
-// ==========================================
-// --- INBOX PAGINATION & RENDER LOGIC ---
-// ==========================================
+
 // ==========================================
 // --- INBOX PAGINATION & RENDER LOGIC ---
 // ==========================================
@@ -148,7 +144,6 @@ window.loadUserList = async () => {
     const listContainer = document.getElementById('chat-list-container');
     if(!listContainer || !currentUser || !db) return;
     
-    // 🌟 स्मार्ट अपडेट: सर्च इनपुट पर डिबाउंस लागू करें
     window.setupSearchDebounce();
 
     if(window.unsubscribeChatList) window.unsubscribeChatList();
@@ -185,10 +180,10 @@ window.loadUserList = async () => {
         window.filterChatList();
     });
 };
+
 // ==========================================
 // --- INBOX RECONCILIATION HELPER ---
 // ==========================================
-// यह फ़ंक्शन प्रत्येक कार्ड का HTML डेटा और लाइव स्टेटस तैयार करता है
 window.getInboxUserHTML = (user, currentUser, currentUserData, lockedChats) => {
     const userId = user.uid;
     const img = user.avatarBase64 || user.photoURL || "https://i.pravatar.cc/150";
@@ -231,6 +226,12 @@ window.getInboxUserHTML = (user, currentUser, currentUserData, lockedChats) => {
     const safeName = user.name ? user.name.replace(/'/g, "\\'") : "User";
     const isOnlineDot = (Date.now() - user.lastActive) < 120000;
 
+    // 🌟 रीयल-टाइम अपडेट: मैसेज लिस्ट कार्ड्स के लिए 16px रोज़ गोल्ड टिक
+    const isVerified = user.isVerified === true;
+    const userBadgeHtml = isVerified && typeof window.getVerifiedBadgeHTML === 'function'
+        ? window.getVerifiedBadgeHTML(true, 16)
+        : '';
+
     return {
         img,
         avatarClass,
@@ -242,11 +243,11 @@ window.getInboxUserHTML = (user, currentUser, currentUserData, lockedChats) => {
         statusHtml,
         badgeHtml,
         count,
+        userBadgeHtml, // 🌟 सिंक की गई नई प्रॉपर्टी
         safeName
     };
 };
 
-// बिना पूरा DOM रीसेट किए कार्ड को इन-प्लेस अपडेट करने या री-ऑर्डर करने वाला स्मार्ट फ़ंक्शन
 window.createOrUpdateInboxCard = (user, index, listContainer) => {
     const currentUser = window.currentUser;
     const currentUserData = window.currentUserData || {};
@@ -257,7 +258,6 @@ window.createOrUpdateInboxCard = (user, index, listContainer) => {
     let card = document.getElementById(`inbox-user-${userId}`);
 
     if (!card) {
-        // नया कार्ड बनाएँ (लेआउट शिफ्ट रोकने के लिए विज़िबिलिटी और हाइट फिक्स की गई है)
         card = document.createElement('div');
         card.id = `inbox-user-${userId}`;
         card.className = "chat-item";
@@ -278,7 +278,8 @@ window.createOrUpdateInboxCard = (user, index, listContainer) => {
                 <div class="online-dot-target" style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#00b894; border-radius:50%; border:2.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:${info.isOnlineDot ? 'block' : 'none'};"></div>
             </div>
             <div style="flex:1; margin-left:15px; display:flex; flex-direction:column; justify-content:center; overflow:hidden;">
-                <div class="name-target" style="font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${info.nameStyle}">${user.name}</div>
+                <!-- 🌟 इनबॉक्स लिस्ट में नाम के बगल में रोज़ गोल्ड बैच -->
+                <div class="name-target" style="font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display: inline-flex; align-items: center; gap: 4px; ${info.nameStyle}">${user.name}${info.userBadgeHtml}</div>
                 <div class="status-target" style="font-size:0.85rem; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${info.previewStyle}">${info.statusHtml}</div>
             </div>
             <div class="meta-target chat-item-meta" style="min-width: 30px; display: flex; justify-content: flex-end; align-items: center; flex-shrink: 0;">
@@ -287,7 +288,6 @@ window.createOrUpdateInboxCard = (user, index, listContainer) => {
             </div>
         `;
     } else {
-        // यदि कार्ड पहले से मौजूद है, तो केवल लाइव डेटा को बदलें (Recomputation को रोकने के लिए)
         const imgEl = card.querySelector('.avatar-target');
         if (imgEl) {
             if (imgEl.src !== info.img) imgEl.src = info.img;
@@ -301,10 +301,12 @@ window.createOrUpdateInboxCard = (user, index, listContainer) => {
         const dotEl = card.querySelector('.online-dot-target');
         if (dotEl) dotEl.style.display = info.isOnlineDot ? 'block' : 'none';
 
+        // 🌟 रियल-टाइम इनबॉक्स कार्ड वेरिफिकेशन टिक सिंक्रोनाइजेशन
         const nameEl = card.querySelector('.name-target');
         if (nameEl) {
-            if (nameEl.innerText !== user.name) nameEl.innerText = user.name;
-            nameEl.style.cssText = `font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${info.nameStyle}`;
+            const targetNameHTML = `${user.name}${info.userBadgeHtml}`;
+            if (nameEl.innerHTML !== targetNameHTML) nameEl.innerHTML = targetNameHTML;
+            nameEl.style.cssText = `font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display: inline-flex; align-items: center; gap: 4px; ${info.nameStyle}`;
         }
 
         const statusEl = card.querySelector('.status-target');
@@ -318,7 +320,6 @@ window.createOrUpdateInboxCard = (user, index, listContainer) => {
         if (metaEl && metaEl.innerHTML !== targetMetaHTML) metaEl.innerHTML = targetMetaHTML;
     }
 
-    // कार्ड को अपनी सही इंडेक्स पोजीशन पर भेजें (स्मूथ री-ऑर्डरिंग)
     if (listContainer.children[index] !== card) {
         listContainer.insertBefore(card, listContainer.children[index] || null);
     }
@@ -344,7 +345,6 @@ window.filterChatList = () => {
         nextDisplayUsers = [...fullInboxUsers]; 
     }
 
-    // सर्च या फ़िल्टर बदलते समय पुराने अप्रसांगिक कार्ड्स को हटा दें
     const nextUids = new Set(nextDisplayUsers.slice(0, 20).map(u => u.uid));
     Array.from(listContainer.children).forEach(child => {
         const id = child.id?.replace("inbox-user-", "");
@@ -365,7 +365,6 @@ window.filterChatList = () => {
         return;
     }
 
-    // खाली स्थान या प्लेसहोल्डर टेक्स्ट साफ़ करें
     if (listContainer.querySelector('.fa-comments') || listContainer.innerText.includes("No users found")) {
         listContainer.innerHTML = "";
     }
@@ -378,8 +377,6 @@ window.loadMoreInboxUsers = () => {
     if (!listContainer || isFetchingInbox || currentInboxIndex >= displayInboxUsers.length) return;
     
     isFetchingInbox = true; 
-    
-    // लोकल ऐरे से 20 यूज़र का सेगमेंट लें
     const chunk = displayInboxUsers.slice(currentInboxIndex, currentInboxIndex + 20);
     
     chunk.forEach((user, idx) => {
@@ -390,6 +387,7 @@ window.loadMoreInboxUsers = () => {
     currentInboxIndex += chunk.length; 
     isFetchingInbox = false;
 };
+
 // ==========================================
 // --- SETTINGS & CHAT LOCK SYSTEM ---
 // ==========================================
@@ -662,18 +660,109 @@ window.getSeenTimeAgo = (timestamp) => {
     if (diffHours < 24) return `Seen ${diffHours} hr`;
     return `Seen ${Math.floor(diffHours / 24)} d`;
 };
+// 🌟 [Calling Bridge]: chats.js में कॉलिंग सिस्टम को सक्रिय रूप से जोड़ने के लिए
+window.startCallFromChat = async (type) => {
+    const targetUid = window.currentChatId?.targetUid;
+    if (!targetUid) {
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert("Error", "No active chat found to call.", "error");
+        }
+        return;
+    }
+    
+    if (navigator.vibrate) navigator.vibrate(30);
+
+    try {
+        // call.js को गतिशील रूप से इंपोर्ट करें और संबंधित कॉल आरंभ करें
+        const module = await import('./call.js');
+        if (type === 'voice') {
+            if (typeof module.startAudioCall === 'function') {
+                module.startAudioCall(targetUid);
+            } else if (typeof window.startAudioCall === 'function') {
+                window.startAudioCall(targetUid);
+            } else {
+                window.startCall?.(targetUid, 'audio');
+            }
+        } else if (type === 'video') {
+            if (typeof module.startVideoCall === 'function') {
+                module.startVideoCall(targetUid);
+            } else if (typeof window.startVideoCall === 'function') {
+                window.startVideoCall(targetUid);
+            } else {
+                window.startCall?.(targetUid, 'video');
+            }
+        }
+    } catch (err) {
+        console.warn("Calling module dynamic fetch failed, executing fallback:", err.message);
+        // फ़ॉलबैक डायरेक्ट विंडो ट्रिगर्स
+        if (type === 'voice' && typeof window.startAudioCall === 'function') {
+            window.startAudioCall(targetUid);
+        } else if (type === 'video' && typeof window.startVideoCall === 'function') {
+            window.startVideoCall(targetUid);
+        } else {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert("Calling", `${type === 'voice' ? 'Audio' : 'Video'} Call connecting...`, "success");
+            }
+        }
+    }
+};
+
+
+    // 🌟 सीधे इनलाइन स्टाइल बदलने वाला 100% विश्वसनीय टॉगल इंजन
+    window.toggleCallCardboard = function(event) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        var board = document.getElementById('chat-call-cardboard');
+        if (board) {
+            // यदि कार्डबोर्ड पहले से खुला है (opacity = 1) तो उसे छिपाएं, अन्यथा दिखाएं
+            if (board.style.opacity === '1') {
+                board.style.opacity = '0';
+                board.style.transform = 'translateY(-10px) scale(0.95)';
+                board.style.pointerEvents = 'none';
+            } else {
+                board.style.opacity = '1';
+                board.style.transform = 'translateY(0) scale(1)';
+                board.style.pointerEvents = 'auto';
+            }
+        }
+        if (navigator.vibrate) {
+            navigator.vibrate(15);
+        }
+    };
+    
+    window.closeCallCardboard = function() {
+        var board = document.getElementById('chat-call-cardboard');
+        if (board) {
+            board.style.opacity = '0';
+            board.style.transform = 'translateY(-10px) scale(0.95)';
+            board.style.pointerEvents = 'none';
+        }
+    };
+
+    // 🌟 कहीं भी बाहर क्लिक करने पर ड्रॉपडाउन तुरंत बंद होना
+    document.addEventListener('click', function(e) {
+        var board = document.getElementById('chat-call-cardboard');
+        var trigger = document.getElementById('chat-call-trigger');
+        if (board && trigger) {
+            if (!board.contains(e.target) && !trigger.contains(e.target)) {
+                board.style.opacity = '0';
+                board.style.transform = 'translateY(-10px) scale(0.95)';
+                board.style.pointerEvents = 'none';
+            }
+        }
+    });
 
 // ==========================================
 // --- CHAT ROOM INITIALIZATION & RENDER ---
 // ==========================================
-window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
+ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
     try {
-        // 🌟 स्मार्ट अपडेट: चैट रूम खुलते ही बैकग्राउंड में सर्च बार साफ़ करें
         if (typeof window.resetInboxSearch === 'function') {
             window.resetInboxSearch();
         }
 
-        // 🌟 सुरक्षा अपडेट: नई चैट खोलते ही पुराना खुला हुआ प्रोफाइल बंद कर दें
         if (typeof window.closeChatProfile === 'function') {
             window.closeChatProfile();
         }
@@ -681,7 +770,6 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
         const chatRoom = document.getElementById('chat-room');
         if(chatRoom) chatRoom.classList.add('active'); 
 
-        // 🌟 स्मार्ट नेविगेशन: हिस्ट्री में स्टेप दर्ज करें ताकि बैक बटन से चैट बंद हो
         if (!history.state || history.state.view !== 'chat-room') {
             history.pushState({ view: 'chat-room' }, "");
         }
@@ -783,6 +871,13 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
             if(imgEl) imgEl.src = u.exists() ? (u.data().avatarBase64 || u.data().photoURL) : placeholder;
         } catch(e) { if(imgEl) imgEl.src = placeholder; }
 
+        // 🌟 रूम हेडर लोड होते समय लोकल कैश से वेरिफिकेशन टिक लोड करें
+        const liveUserData = window.allCachedUsers?.find(u => u.uid === targetUid);
+        const cachedBadgeHtml = (liveUserData?.isVerified === true && typeof window.getVerifiedBadgeHTML === 'function')
+            ? window.getVerifiedBadgeHTML(true, 18)
+            : '';
+        if (titleEl) titleEl.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">${targetName}${cachedBadgeHtml}</span>`;
+
         if(window.unsubscribeUserStatus) window.unsubscribeUserStatus();
         window.unsubscribeUserStatus = onSnapshot(doc(db, "users", targetUid), (docSnap) => {
             if(!window.currentChatId || window.currentChatId.targetUid !== targetUid) return;
@@ -790,6 +885,15 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
                 const data = docSnap.data();
                 const isOnline = (Date.now() - data.lastActive) < 120000;
                 statusEl.innerHTML = isOnline ? '<span style="color:#00b894; font-weight:800;">Online</span>' : `<span style="color:#64748b;">${typeof window.timeAgo === 'function' ? window.timeAgo(data.lastActive) : 'Offline'}</span>`;
+                
+                // 🌟 रियल-टाइम अपडेट: चैट रूम हेडर में नाम के ठीक बगल में रोज़ गोल्ड टिक
+                if (titleEl) {
+                    const freshName = data.name || targetName;
+                    const badgeHtml = data.isVerified === true && typeof window.getVerifiedBadgeHTML === 'function'
+                        ? window.getVerifiedBadgeHTML(true, 18) // हेडर के अनुकूल 18px
+                        : '';
+                    titleEl.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">${freshName}${badgeHtml}</span>`;
+                }
             }
         });
 
@@ -1105,8 +1209,6 @@ window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
         };
         loadMessagesWithLimit();
 
-        
-
         if (area) {
             area.onscroll = () => {
                 if (area.scrollTop <= 5 && !window.isFetchingHistory) {
@@ -1143,18 +1245,18 @@ setInterval(() => {
         }
     });
 }, 10000);
+
 // ==========================================
 // --- SMART SEARCH BAR RESET ---
 // ==========================================
 window.resetInboxSearch = () => {
     const searchInput = document.getElementById('chat-list-search');
     if (searchInput && searchInput.value !== "") {
-        searchInput.value = ""; // सर्च इनपुट खाली करें
-        
-        // सीधे फ़िल्टर को रन करें ताकि इनबॉक्स लिस्ट डिफ़ॉल्ट रूप में रीस्टोर हो जाए
+        searchInput.value = ""; 
         window.filterChatList(); 
     }
 };
+
 // ==========================================
 // --- SENDING TEXT / IMAGES (SMART COUNTER IDs) ---
 // ==========================================
@@ -1166,11 +1268,10 @@ window.handleSendMsg = () => {
     const input = document.getElementById('msg-input'); 
     const text = input.value.trim();
     
-    // सुरक्षा लॉक: यदि संदेश भेजने की प्रक्रिया पहले से चल रही है, तो रोकें।
     if (window.isMessageSending) return;
     if(!window.currentChatId || (!text && !window.chatRawFile)) return;
     
-    window.isMessageSending = true; // लॉक सक्रिय करें
+    window.isMessageSending = true; 
 
     const targetRoomId = window.currentChatId.roomId;
     const targetUserId = window.currentChatId.targetUid;
@@ -1223,7 +1324,6 @@ window.handleSendMsg = () => {
                 if(progressBar) progressBar.style.width = '0%';
             }
 
-            // 🌟 1. चैट रूम का डेटा प्राप्त करके करंट काउंटर्स पढ़ें (Sequential IDs)
             const roomRef = doc(db, "chats", targetRoomId);
             const roomSnap = await getDoc(roomRef);
             const roomData = roomSnap.exists() ? roomSnap.data() : {};
@@ -1235,7 +1335,6 @@ window.handleSendMsg = () => {
                 timestamp: serverTimestamp()
             };
 
-            // 🌟 2. संदेश के प्रकार (Type) के अनुसार इंक्रीमेंटिंग आईडी तय करें
             if (type === 'video') {
                 const currentCount = (roomData.videoCount || 0) + 1;
                 customId = `video${currentCount}`;
@@ -1244,13 +1343,12 @@ window.handleSendMsg = () => {
                 const currentCount = (roomData.photoCount || 0) + 1;
                 customId = `photo${currentCount}`;
                 updateFields.photoCount = currentCount;
-            } else { // Standard text messages / audio
+            } else { 
                 const currentCount = (roomData.messageCount || 0) + 1;
                 customId = `message${currentCount}`;
                 updateFields.messageCount = currentCount;
             }
 
-            // 🌟 3. सेट-डॉक (setDoc) के ज़रिए कस्टम क्रमबद्ध आईडी पर मैसेज लिखें
             const msgRef = doc(db, "chats", targetRoomId, "messages", customId);
             await setDoc(msgRef, {
                 text, 
@@ -1264,7 +1362,6 @@ window.handleSendMsg = () => {
                 ...replyPayload 
             });
 
-            // 🌟 4. रूम के काउंटर और लास्ट मैसेज को अपडेट करें
             await setDoc(roomRef, updateFields, { merge: true });
 
             updateDoc(doc(db, "users", currentUser.uid), { typingTo: null });
@@ -1278,10 +1375,10 @@ window.handleSendMsg = () => {
             const progressBar = document.getElementById('chat-progress-bar');
             if(progressBar) progressBar.style.width = '0%'; 
             console.error("Message Error:", e);
-            input.value = text; // विफलता पर पाठ पुनर्स्थापित करें (Text Restore)
+            input.value = text; 
             if(typeof window.showToast === 'function') window.showToast("Error", "Message failed to send.", currentUser?.photoURL);
         } finally {
-            window.isMessageSending = false; // लॉक हटा दें
+            window.isMessageSending = false; 
         }
     })(); 
 };
@@ -1301,7 +1398,6 @@ window.openMsgOptions = (msgId, isMe, text) => {
 };
 
 window.closeChat = () => { 
-    // 🌟 सुरक्षा अपडेट: चैट बंद करते समय प्रोफाइल modal भी बंद हो जाए
     if (typeof window.closeChatProfile === 'function') {
         window.closeChatProfile();
     }
@@ -1499,6 +1595,7 @@ window.activateReplyMode = (msgId, userName, text, mediaUrl = null, ownerName = 
     if(navigator.vibrate) navigator.vibrate(40);
 };
 
+window.swipeReplyThreshold = 80;
 window.attachSwipeReplyListener = (messageEl, wrapperEl, msgId, userName, text, currentMsgMedia) => {
     let startX = 0, currentX = 0, isSwiping = false;
     let replyIcon = wrapperEl.querySelector('.swipe-reply-icon');
@@ -1528,7 +1625,7 @@ window.attachSwipeReplyListener = (messageEl, wrapperEl, msgId, userName, text, 
         
         if (replyIcon) { replyIcon.style.opacity = 0; replyIcon.style.left = '-40px'; }
 
-        if (isSwiping && diff > 80) {
+        if (isSwiping && diff > window.swipeReplyThreshold) {
             const imgEl = messageEl.querySelector('.shared-card-img') || messageEl.querySelector('.chat-media-preview') || messageEl.querySelector('.card-thumb') || messageEl.querySelector('.chat-vid-box img');
             const ownerNameEl = messageEl.querySelector('.shared-card-name');
             const ownerDpEl = messageEl.querySelector('.shared-card-dp');
@@ -1571,7 +1668,7 @@ window.applyChatMood = (mood) => {
     overlay.innerHTML = ''; overlay.className = `mood-${mood}`; 
 
     if(mood === 'romantic') {
-        for(let i=0; i<25; i++) { let p = document.createElement('div'); p.className = 'mood-petal'; p.style.left = Math.offSetWidth || Math.random() * 100 + 'vw'; p.style.animationDuration = (Math.random() * 3 + 3) + 's'; p.style.animationDelay = Math.random() * 2 + 's'; overlay.appendChild(p); }
+        for(let i=0; i<25; i++) { let p = document.createElement('div'); p.className = 'mood-petal'; p.style.left = Math.random() * 100 + 'vw'; p.style.animationDuration = (Math.random() * 3 + 3) + 's'; p.style.animationDelay = Math.random() * 2 + 's'; overlay.appendChild(p); }
     } else if(mood === 'angry') {
         for(let i=0; i<35; i++) { let e = document.createElement('div'); e.className = 'mood-ember'; e.style.left = Math.random() * 100 + 'vw'; e.style.animationDuration = (Math.random() * 2 + 1) + 's'; e.style.animationDelay = Math.random() * 1 + 's'; overlay.appendChild(e); }
     } else if(mood === 'sad') {
@@ -1762,7 +1859,19 @@ window.openChatProfile = async () => {
     document.getElementById('cp-mute-icon').className = isMuted ? "fa-solid fa-bell" : "fa-solid fa-bell-slash";
     document.getElementById('cp-mute-icon').style.color = isMuted ? "#00b894" : "#475569";
 
-    nameEl.innerText = document.getElementById('chat-room-title').innerText || "User";
+    // 🌟 रीयल-टाइम अपडेट: डिटेल्स स्क्रीन के लिए यूज़र के नाम के पास 22px का बड़ा टिक
+    if (window.unsubscribeCpProfile) window.unsubscribeCpProfile();
+    window.unsubscribeCpProfile = onSnapshot(doc(window.db, "users", targetUid), (docSnap) => {
+        if (docSnap.exists() && modal.classList.contains('active')) {
+            const liveData = docSnap.data();
+            const cpBadgeHtml = (liveData.isVerified === true && typeof window.getVerifiedBadgeHTML === 'function')
+                ? window.getVerifiedBadgeHTML(true, 22) 
+                : '';
+            nameEl.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 6px; justify-content: center; width: 100%;">${liveData.name || "User"}${cpBadgeHtml}</span>`;
+            imgEl.src = liveData.avatarBase64 || liveData.photoURL || "https://i.pravatar.cc/150";
+        }
+    });
+
     imgEl.src = document.getElementById('chat-header-img').src || "https://i.pravatar.cc/150";
     statusEl.innerHTML = document.getElementById('chat-user-status').innerHTML || "Offline";
     window.switchCpTab('photos'); 
@@ -1773,7 +1882,6 @@ window.openChatProfile = async () => {
     if(navigator.vibrate) navigator.vibrate(40);
     modal.classList.add('active');
 
-    // 🌟 स्मार्ट नेविगेशन: हिस्ट्री में स्टेप दर्ज करें ताकि बैक बटन से प्रोफाइल बंद हो
     if (!history.state || history.state.view !== 'chat-profile') {
         history.pushState({ view: 'chat-profile' }, "");
     }
@@ -1831,6 +1939,11 @@ window.switchCpTab = (tab) => {
 window.closeChatProfile = () => {
     const modal = document.getElementById('chat-profile-modal');
     if (modal) { modal.classList.remove('active'); if(navigator.vibrate) navigator.vibrate(30); }
+    // 🌟 मेमोरी सफ़ाई: लिसनर को निष्क्रिय करें
+    if (window.unsubscribeCpProfile) {
+        window.unsubscribeCpProfile();
+        window.unsubscribeCpProfile = null;
+    }
 };
 
 // ==========================================
@@ -1891,16 +2004,12 @@ window.handleDeleteChat = async () => {
     } catch(e) {}
 };
 
-
-
 // ==========================================
 // --- SMART EXIT HARDWARE BACK LISTENER ---
 // ==========================================
-// यह फंक्शन बैक बटन या एस्केप दबाने पर खुली हुई स्क्रीन को सुचारू रूप से बंद करता है
 window.handleSmartExitNavigation = () => {
     let modalClosed = false;
 
-    // 1. यदि प्रोफाइल डिटेल्स मोडल खुला है, तो उसे बंद करें
     const profileModal = document.getElementById('chat-profile-modal');
     if (profileModal && profileModal.classList.contains('active')) {
         if (typeof window.closeChatProfile === 'function') {
@@ -1909,7 +2018,6 @@ window.handleSmartExitNavigation = () => {
         }
     }
 
-    // 2. यदि मैसेज ऑप्शंस मोडल (Delete/Copy) खुला है, तो उसे बंद करें
     if (!modalClosed) {
         const msgOptionsModal = document.getElementById('msg-options-modal');
         if (msgOptionsModal && !msgOptionsModal.classList.contains('hidden')) {
@@ -1920,7 +2028,6 @@ window.handleSmartExitNavigation = () => {
         }
     }
 
-    // 3. यदि इनबॉक्स ऑप्शंस मोडल (Delete Chat) खुला है, तो उसे बंद करें
     if (!modalClosed) {
         const inboxOptionsModal = document.getElementById('inbox-options-modal');
         if (inboxOptionsModal && !inboxOptionsModal.classList.contains('hidden')) {
@@ -1931,7 +2038,6 @@ window.handleSmartExitNavigation = () => {
         }
     }
 
-    // 4. यदि चैट पासवर्ड अनलॉक प्रॉम्ट खुला है, तो उसे बंद करें
     if (!modalClosed) {
         const passwordModal = document.getElementById('password-prompt-modal');
         if (passwordModal && !passwordModal.classList.contains('hidden')) {
@@ -1942,7 +2048,6 @@ window.handleSmartExitNavigation = () => {
         }
     }
 
-    // 5. यदि मुख्य चैट रूम खुला है, तो उसे बंद करें
     if (!modalClosed) {
         const chatRoom = document.getElementById('chat-room');
         if (chatRoom && chatRoom.classList.contains('active')) {
@@ -1953,15 +2058,12 @@ window.handleSmartExitNavigation = () => {
         }
     }
 
-    // 6. यदि कोई भी मोडल या स्क्रीन खुली नहीं है, और यूजर केवल चैट लिस्ट स्क्रीन पर है:
     if (!modalClosed) {
         const chatListEl = document.getElementById('chat-list-container');
-        // जांचें कि चैट लिस्ट स्क्रीन यूजर के सामने वर्तमान में एक्टिव है या नहीं
         if (chatListEl && chatListEl.offsetParent !== null) {
             if (typeof window.switchTab === 'function') {
-                window.switchTab('home'); // सुचारू रूप से होम फ़ीड पर रीडायरेक्ट करें
+                window.switchTab('home'); 
             }
         }
     }
 };
-
