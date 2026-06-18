@@ -109,13 +109,13 @@ window.viewUserProfile = async (targetUid) => {
 
         const d = uDoc.data(), targetId = d.uid || uDoc.id; 
         
-        // 🌟 फुल नेम: साधारण टेक्स्ट (कोई बैच नहीं)
+        // फुल नेम
         const nameEl = document.getElementById('profile-name');
         if (nameEl) {
             nameEl.innerText = d.name || "User";
         }
 
-        // 🌟 यूज़रनेम: यूज़रनेम के ठीक बगल में रोज़ गोल्ड बैच
+        // यूज़रनेम
         const usernameEl = document.getElementById('profile-username');
         if (usernameEl) {
             const badgeHtml = (d.isVerified && typeof window.getVerifiedBadgeHTML === 'function') 
@@ -125,7 +125,12 @@ window.viewUserProfile = async (targetUid) => {
         }
 
         document.getElementById('profile-bio').innerText = d.bio || "No bio yet.";
-        document.getElementById('profile-img').src = d.avatarBase64 || d.photoURL || "https://i.pravatar.cc/150";
+        
+        // मुख्य प्रोफ़ाइल इमेज
+        const profileImgEl = document.getElementById('profile-img');
+        if (profileImgEl) {
+            profileImgEl.src = d.avatarBase64 || d.photoURL || "https://i.pravatar.cc/150";
+        }
         
         document.getElementById('profile-followers-count').innerText = d.followers ? d.followers.length : 0;
         document.getElementById('profile-following-count').innerText = d.following ? d.following.length : 0;
@@ -180,7 +185,7 @@ window.viewUserProfile = async (targetUid) => {
             window.updateProfileVerificationUI(targetId, d.isVerified);
         }
 
-        // Real-Time Followers/Following Listener
+        // Real-Time Sync Listener
         if (window.unsubscribeProfileUser) {
             window.unsubscribeProfileUser();
         }
@@ -198,6 +203,30 @@ window.viewUserProfile = async (targetUid) => {
                 const liveNameEl = document.getElementById('profile-name');
                 if (liveNameEl) {
                     liveNameEl.innerText = liveData.name || "User";
+                }
+
+                // 🌟 सुरक्षित रियल-टाइम इमेज चेकर (Flickering से बचने के लिए)
+                const liveImgEl = document.getElementById('profile-img');
+                if (liveImgEl) {
+                    const nextImgSrc = liveData.avatarBase64 || liveData.photoURL || "https://i.pravatar.cc/150";
+                    // अपलोड के दौरान ओवरराइट होने से रोकें
+                    const isMe = window.currentUser && targetId === window.currentUser.uid;
+                    if (!(isMe && (window.profileRawFile || window.selectedMediaBase64))) {
+                        if (!liveImgEl.src.includes(nextImgSrc)) {
+                            liveImgEl.src = nextImgSrc;
+                        }
+                    }
+                }
+
+                if (window.currentUser && targetId === window.currentUser.uid) {
+                    window.currentUserData = liveData; 
+                    const myStoryImg = document.getElementById('my-story-ring-img');
+                    if (myStoryImg) {
+                        const nextImgSrc = liveData.avatarBase64 || liveData.photoURL || "https://i.pravatar.cc/150";
+                        if (!myStoryImg.src.includes(nextImgSrc)) {
+                            myStoryImg.src = nextImgSrc;
+                        }
+                    }
                 }
 
                 const liveUsernameEl = document.getElementById('profile-username');
@@ -330,6 +359,39 @@ window.loadUserPosts = async (uid) => {
 let editUsernameTimer = null;
 let isEditUsernameAvailable = true;
 
+// नई डीपी चुनने पर प्रिव्यू लोड करने की क्रिया
+window.handleProfileFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    window.profileRawFile = file;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const previewEl = document.getElementById('edit-profile-preview');
+        if (previewEl) {
+            previewEl.src = e.target.result;
+        }
+        window.selectedMediaBase64 = e.target.result;
+        window.selectedMediaType = 'image';
+    };
+    reader.readAsDataURL(file);
+};
+
+// 🌟 प्रिव्यू इमेज पर क्लिक करके सीधे फाइल पिकर ट्रिगर करने और बाइंड करने का फ़ंक्शन
+window.initProfileImagePicker = () => {
+    const previewEl = document.getElementById('edit-profile-preview');
+    const fileInput = document.getElementById('edit-profile-input') || document.getElementById('edit-avatar-input');
+    
+    if (previewEl && fileInput) {
+        previewEl.style.cursor = 'pointer';
+        previewEl.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => {
+            window.handleProfileFileSelect(e);
+        };
+    }
+};
+
 window.openEditProfile = () => { 
     if (!window.currentUser) return;
     window.toggleModal('edit-profile-modal', true); 
@@ -338,20 +400,24 @@ window.openEditProfile = () => {
     const bioInput = document.getElementById('edit-bio');
     const usernameInput = document.getElementById('edit-username');
 
-    // 🌟 रीयल-टाइम डेटा पॉपुलेशन फिक्स (window.currentUserData से डायरेक्ट रीड)
+    // रीयल-टाइम डेटा पॉपुलेशन
     nameInput.value = window.currentUserData?.name || window.currentUser.displayName || ""; 
     bioInput.value = window.currentUserData?.bio || "";
     usernameInput.value = window.currentUserData?.username || "";
     
     const profileImg = document.getElementById('profile-img');
-    if (profileImg) {
-        document.getElementById('edit-profile-preview').src = profileImg.src;
+    const previewImg = document.getElementById('edit-profile-preview');
+    if (profileImg && previewImg) {
+        previewImg.src = profileImg.src;
     }
     
     document.getElementById('edit-username-check-icon').className = 'fa-solid fa-circle-check username-status status-valid';
     isEditUsernameAvailable = true; 
 
-    // 🛡️ रीयल-टाइम इमोजी और कैरेक्टर लिमिट फ़िल्टर
+    // आटोमैटिक इमेज पिकर बाइंडिंग एक्टिवेट करें
+    window.initProfileImagePicker();
+
+    // इमोजी और कैरेक्टर लिमिट फ़िल्टर
     const sanitizeAndClean = (e, limit = null) => {
         let val = e.target.value;
         const emojiPattern = /[\uD800-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
@@ -367,11 +433,11 @@ window.openEditProfile = () => {
     };
 
     nameInput.oninput = (e) => {
-        sanitizeAndClean(e, 15); // अधिकतम 15 अक्षर, कोई इमोजी नहीं
+        sanitizeAndClean(e, 15);
     };
 
     usernameInput.oninput = (e) => {
-        sanitizeAndClean(e); // कोई इमोजी नहीं
+        sanitizeAndClean(e);
         window.checkEditUsernameAvailability();
     };
 };
@@ -421,8 +487,7 @@ window.checkEditUsernameAvailability = () => {
     }, 600); 
 };
 
-// प्रोफ़ाइल सेविंग क्रियान्वयक (डेटाबेस राइट सुरक्षा के साथ)
-// 🌟 सेविंग प्रोसेसर (स्मार्ट, फास्ट और बिना क्रैश के चलने वाला अपडेटेड वर्जन)
+// 🌟 प्रोफ़ाइल सेविंग क्रियान्वयक (फ़ास्ट और फ़्लिकर-मुक्त अपडेट)
 window.handleSaveProfile = async () => { 
     let n = document.getElementById('edit-name').value.trim(); 
     let b = document.getElementById('edit-bio').value.trim(); 
@@ -430,7 +495,6 @@ window.handleSaveProfile = async () => {
     
     if(u.startsWith('@')) u = u.substring(1); 
 
-    // 🛡️ सुरक्षा परत: इमोजी छानना और अक्षरों की अधिकतम सीमा (15) लागू करना
     const emojiPattern = /[\uD800-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
     n = n.replace(emojiPattern, '').substring(0, 15);
     u = u.replace(emojiPattern, '');
@@ -442,7 +506,6 @@ window.handleSaveProfile = async () => {
     const btn = document.getElementById('btn-save-profile');
     const originalContent = btn ? btn.innerHTML : "Save Changes";
     
-    // स्मूथ विज़ुअल फीडबैक: बटन को लोडर स्टेट में डालें
     if(btn) { 
         btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...`; 
         btn.disabled = true; 
@@ -451,18 +514,44 @@ window.handleSaveProfile = async () => {
     try {
         let url = null;
         
-        // यदि यूज़र ने नई प्रोफ़ाइल इमेज चुनी है तो उसे अपलोड करें
+        // 🌟 तात्कालिक स्थानीय ऑब्जेक्ट प्रिव्यू (बिना किसी देरी के सबसे तेज प्रिव्यू अनुभव के लिए)
+        let localPreviewUrl = null;
+        if (window.profileRawFile) {
+            localPreviewUrl = URL.createObjectURL(window.profileRawFile);
+        } else if (window.selectedMediaBase64) {
+            localPreviewUrl = window.selectedMediaBase64;
+        }
+
+        // स्क्रीन पर डीपी तुरंत बदलें
+        if (localPreviewUrl) {
+            const profileImg = document.getElementById('profile-img');
+            if (profileImg) profileImg.src = localPreviewUrl;
+            
+            const myStoryImg = document.getElementById('my-story-ring-img');
+            if (myStoryImg) myStoryImg.src = localPreviewUrl;
+        }
+
+        // फ़ाइल अपलोड प्रोसेस
         if(window.profileRawFile) {
-            let blobToUpload = window.profileRawFile;
-            if(window.selectedMediaType === 'image' && window.selectedMediaBase64) {
-                 const res = await fetch(window.selectedMediaBase64);
-                 blobToUpload = await res.blob();
+            if (typeof window.uploadFile === 'function') {
+                try {
+                    let blobToUpload = window.profileRawFile;
+                    if(window.selectedMediaType === 'image' && window.selectedMediaBase64) {
+                         const res = await fetch(window.selectedMediaBase64);
+                         blobToUpload = await res.blob();
+                    }
+                    const uploadData = await window.uploadFile(blobToUpload);
+                    url = uploadData?.url || uploadData;
+                } catch (uploadErr) {
+                    console.warn("Storage upload failed, falling back to base64 data", uploadErr);
+                    url = window.selectedMediaBase64; // बैकअप
+                }
+            } else {
+                url = window.selectedMediaBase64; // बैकअप
             }
-            const uploadData = await window.uploadFile(blobToUpload);
-            url = uploadData.url;
         }
         
-        // 🌟 फ़ायरबेस ऑथ प्रोफाइल अपडेट (अब बिना किसी रुकावट के सीधे काम करेगा)
+        // फ़ायरबेस ऑथ प्रोफ़ाइल को अपडेट करें
         if (typeof window.updateProfile === 'function' && window.currentUser) {
             await window.updateProfile(window.currentUser, { 
                 displayName: n, 
@@ -470,36 +559,56 @@ window.handleSaveProfile = async () => {
             });
         }
         
+        // अंतिम डीपी का चयन
+        const finalAvatar = url || localPreviewUrl || window.currentUserData?.avatarBase64 || window.currentUserData?.photoURL || "";
+        
         const updateData = { name: n, bio: b, username: u }; 
-        if(url) { updateData.avatarBase64 = url; updateData.photoURL = url; }
+        if(finalAvatar) { 
+            updateData.avatarBase64 = finalAvatar; 
+            updateData.photoURL = finalAvatar; 
+        }
         
         // फ़ायरस्टोर डेटाबेस डॉक्यूमेंट अपडेट करें
         await window.updateDoc(window.doc(window.db, "users", window.currentUser.uid), updateData); 
 
-        // रीयल-टाइम लोकल स्टेट कैश सिंक करें ताकि बदलाव तुरंत दिखाई दें
+        // रीयल-टाइम लोकल स्टेट कैश सिंक करें
         if (window.currentUserData) {
             window.currentUserData.name = n;
             window.currentUserData.bio = b;
             window.currentUserData.username = u;
-            if(url) { window.currentUserData.avatarBase64 = url; window.currentUserData.photoURL = url; }
+            if(finalAvatar) { 
+                window.currentUserData.avatarBase64 = finalAvatar; 
+                window.currentUserData.photoURL = finalAvatar; 
+            }
+        }
+
+        // 🌟 डोम पर टेक्स्ट और डीपी तुरंत रिफ्लेक्ट करें (बिना स्क्रीन को रीसेट किए)
+        const profileImg = document.getElementById('profile-img');
+        if (profileImg && finalAvatar) profileImg.src = finalAvatar;
+
+        const myStoryImg = document.getElementById('my-story-ring-img');
+        if (myStoryImg && finalAvatar) myStoryImg.src = finalAvatar;
+
+        const profileName = document.getElementById('profile-name');
+        if (profileName) profileName.innerText = n;
+
+        const profileBio = document.getElementById('profile-bio');
+        if (profileBio) profileBio.innerText = b;
+
+        const profileUsername = document.getElementById('profile-username');
+        if (profileUsername) {
+            const badgeHtml = (window.currentUserData?.isVerified && typeof window.getVerifiedBadgeHTML === 'function') 
+                ? window.getVerifiedBadgeHTML(true, 18) 
+                : "";
+            profileUsername.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">@${u}${badgeHtml}</span>`;
         }
 
         // प्रोफ़ाइल फाइल कैश साफ़ करें
         window.profileRawFile = null;
         window.selectedMediaBase64 = null;
-
-        if(url) {
-           const myStoryImg = document.getElementById('my-story-ring-img');
-           if(myStoryImg) myStoryImg.src = url;
-        }
         
-        // एडिट मोडल को तुरंत और स्मूथली बंद करें
+        // एडिट मोडल को बंद करें
         window.toggleModal('edit-profile-modal', false); 
-        
-        // बिना यूज़र अनुभव को प्रभावित किए प्रोफ़ाइल स्क्रीन रेंडर करें
-        if(typeof window.viewUserProfile === 'function') {
-            await window.viewUserProfile(window.currentUser.uid);
-        }
         
         if(typeof showCustomAlert === 'function') {
             showCustomAlert("Success", "Your profile has been saved successfully!", "success");
@@ -510,13 +619,13 @@ window.handleSaveProfile = async () => {
             showCustomAlert("Error", e.message || "Something went wrong.", "error"); 
         }
     } finally { 
-        // बटन को वापस पुरानी सामान्य स्थिति में लाएं
         if(btn) { 
             btn.innerHTML = originalContent; 
             btn.disabled = false; 
         }
     }
 };
+
 // ==========================================
 // --- FOLLOWERS / FOLLOWING LIST MODULE ---
 // ==========================================
