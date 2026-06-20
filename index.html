@@ -12,25 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ff006e">
 
-    <meta name="description" content="DK Love Chats - Secure, private, and fast Web Chat Application. Connect instantly with features like nearby radar, reels, and real-time stories.">
-    <meta name="keywords" content="DK Love Chats, secure chat, messaging web app, love chats pwa, nearby radar chat">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://deepak1455.github.io/DK-love-chats-/">
-
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "DK Love Chats",
-      "url": "https://deepak1455.github.io/DK-love-chats-/",
-      "description": "A secure, smart, and fast Progressive Web Application for real-time messaging, sharing reels, and stories.",
-      "applicationCategory": "SocialNetworkingApplication",
-      "operatingSystem": "All"
-    }
-    </script>
-
-
-<!-- FontAwesome (Asynchronous Load) -->
+    <!-- FontAwesome (Asynchronous Load) -->
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
@@ -1056,17 +1038,17 @@
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-    <div class="nav-item active" onclick="switchTab('home')" role="button" aria-label="Home"><i class="fa-solid fa-house"></i></div>
-    <div class="nav-item" onclick="openGlobalSearch()" role="button" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></div>
-    <div class="nav-item" onclick="switchTab('reels')" role="button" aria-label="Reels"><i class="fa-solid fa-clapperboard"></i></div>
-    <div class="nav-item" onclick="toggleModal('create-post-modal', true)" role="button" aria-label="Create Post">
+    <div class="nav-item active" onclick="switchTab('home')"><i class="fa-solid fa-house"></i></div>
+    <div class="nav-item" onclick="openGlobalSearch()"><i class="fa-solid fa-magnifying-glass"></i></div>
+    <div class="nav-item" onclick="switchTab('reels')"><i class="fa-solid fa-clapperboard"></i></div>
+    <div class="nav-item" onclick="toggleModal('create-post-modal', true)">
         <i class="fa-solid fa-circle-plus" style="font-size: 2.2rem; color:var(--primary); transform: translateY(-3px);"></i>
     </div>
-    <div class="nav-item" onclick="switchTab('chat')" style="position: relative;" role="button" aria-label="Messages">
+    <div class="nav-item" onclick="switchTab('chat')" style="position: relative;">
         <i class="fa-solid fa-comment-dots"></i>
         <div id="bottom-msg-badge" class="msg-badge" style="display:none;">0</div>
     </div>
-    <div class="nav-item" onclick="switchTab('profile')" role="button" aria-label="Profile"><i class="fa-solid fa-user"></i></div>
+    <div class="nav-item" onclick="switchTab('profile')"><i class="fa-solid fa-user"></i></div>
 </nav>
 
 <!-- 🌟 CSS FIX FOR CHAT ROOM SLIDE ANIMATION -->
