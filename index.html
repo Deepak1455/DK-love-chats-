@@ -28,6 +28,17 @@
       "operatingSystem": "All"
     }
     </script>
+
+<!-- ⚡ SPEED BOOSTER: Preconnect to Third-Party CDNs & APIs -->
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link rel="dns-prefetch" href="https://fonts.gstatic.com">
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+    
 <!-- FontAwesome (Asynchronous Load) -->
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
@@ -1054,17 +1065,17 @@
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-    <div class="nav-item active" onclick="switchTab('home')"><i class="fa-solid fa-house"></i></div>
-    <div class="nav-item" onclick="openGlobalSearch()"><i class="fa-solid fa-magnifying-glass"></i></div>
-    <div class="nav-item" onclick="switchTab('reels')"><i class="fa-solid fa-clapperboard"></i></div>
-    <div class="nav-item" onclick="toggleModal('create-post-modal', true)">
+    <div class="nav-item active" onclick="switchTab('home')" role="button" aria-label="Home"><i class="fa-solid fa-house"></i></div>
+    <div class="nav-item" onclick="openGlobalSearch()" role="button" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></div>
+    <div class="nav-item" onclick="switchTab('reels')" role="button" aria-label="Reels"><i class="fa-solid fa-clapperboard"></i></div>
+    <div class="nav-item" onclick="toggleModal('create-post-modal', true)" role="button" aria-label="Create Post">
         <i class="fa-solid fa-circle-plus" style="font-size: 2.2rem; color:var(--primary); transform: translateY(-3px);"></i>
     </div>
-    <div class="nav-item" onclick="switchTab('chat')" style="position: relative;">
+    <div class="nav-item" onclick="switchTab('chat')" style="position: relative;" role="button" aria-label="Messages">
         <i class="fa-solid fa-comment-dots"></i>
         <div id="bottom-msg-badge" class="msg-badge" style="display:none;">0</div>
     </div>
-    <div class="nav-item" onclick="switchTab('profile')"><i class="fa-solid fa-user"></i></div>
+    <div class="nav-item" onclick="switchTab('profile')" role="button" aria-label="Profile"><i class="fa-solid fa-user"></i></div>
 </nav>
 
 <!-- 🌟 CSS FIX FOR CHAT ROOM SLIDE ANIMATION -->
