@@ -2589,68 +2589,7 @@ window.closeSinglePostView = () => {
     }
 };
 
-// ==========================================
-// --- COMMENTS SYSTEM ---
-// ==========================================
-// ==========================================
-// --- 🌟 SMART & SMOOTH COMMENTS SYSTEM ---
-// ==========================================
 
-window.openComments = (pid) => { 
-    activeCommentPostId = pid; 
-    window.toggleModal('comments-modal', true); 
-    
-    const l = document.getElementById('comments-list'); 
-    if (l) {
-        // सुंदर पुल इंडिकेटर और स्मूथ CSS लोडर
-        l.innerHTML = `
-            <div class="comment-header-indicator" style="width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; margin: 10px auto 5px;"></div>
-            <div style="text-align:center; padding:30px;">
-                <div class="splash-loader" style="width:30px; height:30px; margin:0 auto; border: 2px solid #ff006e; border-top-color: transparent; border-radius: 50%; animation: fa-spin 1s linear infinite;"></div>
-            </div>`; 
-    }
-    
-    if (unsubscribeComments) unsubscribeComments(); 
-    
-    unsubscribeComments = onSnapshot(
-        query(collection(db, "posts", pid, "comments"), orderBy("timestamp", "asc")), 
-        (s) => { 
-            if (!l) return;
-            
-            // बार-बार DOM राइटिंग से बचने के लिए स्ट्रिंग असेंबलर का उपयोग (Fast Rendering)
-            let htmlContent = `<div class="comment-header-indicator" style="width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; margin: 10px auto 5px;"></div>`; 
-            
-            if (s.empty) {
-                l.innerHTML = htmlContent + `<div style="text-align:center; color:#94a3b8; padding:40px; font-weight:600; font-size:0.9rem;">No comments yet.<br><small style="font-weight:400; color:#cbd5e1;">Be the first to share your thoughts!</small></div>`;
-                return;
-            }
-            
-            s.forEach(d => { 
-                const c = d.data();
-                const cid = d.id;
-                const avatar = c.userPhoto || "https://ui-avatars.com/api/?name=" + encodeURIComponent(c.userName); 
-                const isLiked = c.likes && c.likes.includes(currentUser.uid);
-                
-                htmlContent += `
-                <div class="comment-item fade-in" style="display: flex; align-items: flex-start; gap: 12px; padding: 15px; border-bottom: 1px solid #f1f5f9; will-change: transform, opacity;">
-                    <img src="${avatar}" class="comment-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer;" onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${c.userId}'); window.toggleModal('comments-modal', false);">
-                    <div class="comment-body" style="flex: 1;">
-                        <div class="comment-user" style="font-weight: 800; color: #1a1a1a; font-size: 0.9rem; cursor: pointer;" onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${c.userId}'); window.toggleModal('comments-modal', false);">${c.userName}</div>
-                        <div class="comment-text" style="color: #475569; font-size: 0.85rem; margin-top: 2px; word-break: break-word;">${c.text}</div>
-                    </div>
-                    <div class="comment-like-container" onclick="window.handleLikeComment('${cid}', ${isLiked}, '${c.userId}', '${c.text}')" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #94a3b8; min-width: 30px;">
-                        <i class="fa-${isLiked ? 'solid' : 'regular'} fa-heart comment-like-btn ${isLiked ? 'liked' : ''}" style="font-size: 1rem; color: ${isLiked ? '#ff006e' : '#cbd5e1'}; transition: transform 0.1s ease;"></i>
-                        <span style="font-size: 0.7rem; font-weight: 700; margin-top: 4px; color: #64748b;">${c.likes ? c.likes.length : 0}</span>
-                    </div>
-                </div>`;
-            });
-            l.innerHTML = htmlContent;
-        },
-        (error) => {
-            console.error("Comments Realtime Sync error:", error);
-        }
-    ); 
-};
 
 // कमेंट्स लाइक के लिए त्वरित स्पैम-क्लिक प्रोटेक्शन लॉक
 window.commentLikeLock = window.commentLikeLock || new Set();
