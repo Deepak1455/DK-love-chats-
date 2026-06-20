@@ -216,7 +216,8 @@ function createReelElement(id, data) {
             <div class="reel-action-btn" onclick="window.openComments('${id}')">
                 <i class="fa-solid fa-comment-dots"></i><span id="reel-comment-count-${id}">${commentCount}</span>
             </div>
-            <div class="reel-action-btn" onclick="window.openShareModal('${id}', 'post')">
+            <!-- 🌟 BUG FIX: 'post' प्रकार को 'reel' किया गया है और इंस्टेंट पेलोड पास किया गया है -->
+            <div class="reel-action-btn" onclick="window.openShareModal('${id}', 'reel', { url: '${videoUrl}', type: 'video', ownerId: '${data.userId}', ownerName: '${initialUsername.replace(/'/g, "\\'")}', ownerPhoto: '${(data.userPhoto || "https://i.pravatar.cc/150").replace(/'/g, "\\'")}' })">
                 <i class="fa-solid fa-paper-plane"></i><span id="reel-share-count-${id}">${shareCount}</span>
             </div>
         </div>
@@ -483,38 +484,4 @@ window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
 /**
  * रील को स्टोरी के रूप में जोड़ने का फंक्शन
  */
-window.shareReelToStory = async () => {
-    if (!window.currentUser) {
-        alert("Please login first to add a story.");
-        return;
-    }
-    if (!window.currentShareReelId || !window.currentShareReelUrl) {
-        alert("Invalid Reel Data.");
-        return;
-    }
-
-    try {
-        const storyData = {
-            userId: window.currentUser.uid,
-            userName: window.currentUserData?.userName || window.currentUser.displayName || "User",
-            userPhoto: window.currentUserData?.userPhoto || window.currentUser.photoURL || "https://i.pravatar.cc/150",
-            mediaUrl: window.currentShareReelUrl,
-            mediaType: "video", 
-            createdAt: window.serverTimestamp ? window.serverTimestamp() : new Date(),
-            reelIdRef: window.currentShareReelId 
-        };
-
-        const storiesRef = window.collection(window.db, "stories");
-        await window.addDoc(storiesRef, storyData);
-        
-        alert("Successfully added to your Story!");
-        window.closeShareModal();
-        
-        if (typeof window.loadStories === 'function') {
-            window.loadStories();
-        }
-    } catch (e) {
-        console.error("Story Post Error:", e);
-        alert("Failed to add Story.");
-    }
-};
+window.shareReelToStory = window.handleShareReelToStory;
