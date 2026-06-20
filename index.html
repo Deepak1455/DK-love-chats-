@@ -699,47 +699,132 @@
         <div id="user-list-content" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.2); padding: 10px;"></div>
     </div>
 </div>
-
-<!-- SHARE MODAL -->
-<div id="share-modal" class="hidden">
-    <div class="modal-content fade-in" style="height: 75vh; display: flex; flex-direction: column; padding: 0; position: relative;">
-        <div style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:bold; font-size:1.1rem;">Share to...</span>
-            <i class="fa-solid fa-xmark" style="font-size:1.5rem; cursor:pointer;" onclick="toggleModal('share-modal', false)"></i>
+<!-- 🌟 INSTAGRAM BOTTOM SHEET STYLE SHARE MODAL (UPDATED & BUG FIXED) -->
+<div id="share-modal" class="hidden" onclick="window.toggleModal('share-modal', false)" style="
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    background: rgba(0, 0, 0, 0.45); 
+    backdrop-filter: blur(8px);
+    z-index: 5500; 
+    display: none; /* 💡 BUG FIX: flex को शुरुआती लोड पर 'none' किया गया है ताकि स्क्रीन ब्लॉक न हो */
+    align-items: flex-end; 
+    justify-content: center; 
+    transition: opacity 0.25s ease;
+    will-change: opacity;
+    opacity: 0;
+    pointer-events: none; /* 💡 BUG FIX: बंद होने पर क्लिक्स आर-पार जा सकें */
+">
+    <!-- Bottom Sheet Container (68% height default, expandable) -->
+    <div id="share-sheet-container" onclick="event.stopPropagation()" style="
+        width: 100%; 
+        max-width: 500px;
+        height: 68dvh; 
+        background: #ffffff; 
+        border-radius: 24px 24px 0 0; 
+        display: flex; 
+        flex-direction: column; 
+        transform: translate3d(0, 100%, 0); 
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s ease, border-radius 0.25s ease;
+        will-change: transform, height, border-radius;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+    ">
+        <!-- Top Drag & Toggle Size Handle -->
+        <div id="share-drag-bar" onclick="window.toggleShareSheetSize()" style="width: 100%; padding: 10px 0 5px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex-shrink: 0; background: #ffffff; user-select: none;">
+            <i id="share-drag-icon" class="fa-solid fa-chevron-up" style="color: #cbd5e1; font-size: 0.75rem; transition: transform 0.2s;"></i>
+            <div style="width: 40px; height: 5px; background: #e2e8f0; border-radius: 10px;"></div>
         </div>
-        <div style="padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1);">
+
+        <!-- Header -->
+        <div style="padding: 5px 15px 10px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; background: #ffffff; flex-shrink: 0;">
+            <div style="width: 30px;"></div> <!-- Spacer -->
+            <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem; color: #1e293b; text-align: center; flex: 1;">Share</h3>
+            <i class="fa-solid fa-xmark" style="font-size: 1.25rem; color: #64748b; cursor: pointer; padding: 5px;" onclick="window.toggleModal('share-modal', false)"></i>
+        </div>
+
+        <!-- Search Bar -->
+        <div style="padding: 12px 15px; background: #ffffff; border-bottom: 1px solid #f1f5f9; flex-shrink: 0;">
             <div style="position: relative;">
-                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 0.9rem;"></i>
-                <input type="text" id="share-list-search" placeholder="Search friends..." oninput="handleShareListSearch()" style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; outline: none; font-size: 0.95rem; transition: 0.3s;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.95rem;"></i>
+                <input type="text" id="share-list-search" placeholder="Search friends..." onfocus="window.expandShareSheetToFullScreen()" oninput="window.handleShareListSearch()" style="width: 100%; padding: 12px 15px 12px 42px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #1e293b; outline: none; font-size: 0.95rem; font-weight: 500; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02); transition: 0.2s;">
             </div>
         </div>
-        <div id="share-options" style="flex:1; overflow-y:auto; padding: 10px; padding-bottom: 10px;"></div>
-        <div id="share-quick-actions" style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(16, 0, 43, 0.4); display: flex; flex-direction: column; gap: 12px;">
-            <button onclick="window.handleShareReelToStory()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #ff006e, #8338ec); border: none; color: white; border-radius: 20px; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 110, 0.2); transition: 0.2s;">
-                <i class="fa-solid fa-circle-plus"></i> Add to Your Story
+
+        <!-- Scrollable Users Grid -->
+        <div id="share-options" style="flex: 1; overflow-y: auto; background: #ffffff; padding-bottom: 20px; -webkit-overflow-scrolling: touch;">
+            <div id="share-loading-state" style="text-align:center; padding:30px;">
+                <div class="splash-loader" style="width:30px; height:30px; margin:0 auto; border: 2px solid #ff006e; border-top-color: transparent; border-radius: 50%; animation: fa-spin 1s linear infinite;"></div>
+            </div>
+            <div id="share-users-wrapper" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 10px; padding: 20px 15px; background: #ffffff;"></div>
+        </div>
+
+        <!-- Pinned Bottom Panel -->
+        <div id="share-quick-actions" style="padding: 15px 15px 25px 15px; border-top: 1px solid #f1f5f9; background: #ffffff; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.02); z-index: 100;">
+            
+            <!-- Add to Story Button -->
+            <button onclick="window.handleShareReelToStory()" style="width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0,0,0,0.08); color: #1e293b; border-radius: 14px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+                <i class="fa-solid fa-circle-plus" style="color: var(--primary, #ff006e);"></i> Add to Your Story
             </button>
-            <div style="display: flex; justify-content: space-around; align-items: center; gap: 5px;">
+            
+
+            
+<!-- Pinned Stable Dynamic Send Button (Smart, Smooth & 100% Aligned) -->
+<button id="btn-send-share" onclick="window.sendBatchShare()" style="
+    display: none !important; 
+    position: relative !important;   /* 💡 BUG FIX: बाहरी CSS की एब्सोल्यूट पोजीशनिंग को ओवरराइड किया गया */
+    left: auto !important;           /* 💡 BUG FIX: left: 50% को निरस्त किया गया */
+    width: 100% !important;          /* 💡 BUG FIX: चौड़ाई हमेशा 100% रहेगी */
+    transform: scale(1) !important;  /* 💡 BUG FIX: बिना खिसके केवल माइक्रो-स्केलिंग होगी */
+    padding: 15px; 
+    border-radius: 16px; 
+    background: var(--primary-grad, linear-gradient(45deg, #ff006e, #ff8e53)); 
+    color: #ffffff; 
+    font-weight: 800; 
+    font-size: 1.05rem; 
+    border: none; 
+    box-shadow: 0 6px 20px rgba(255, 0, 110, 0.35); 
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: transform 0.1s ease;
+    margin-top: 20px; 
+" onmousedown="this.style.setProperty('transform', 'scale(0.96)', 'important')" onmouseup="this.style.setProperty('transform', 'scale(1)', 'important')">Send</button>
+
+            <!-- External Share Grid Wrapper (Collapsible in real-time) -->
+            <div id="external-share-channels" style="display: flex; justify-content: space-around; align-items: center; gap: 10px; margin-top: 5px; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; max-height: 80px; opacity: 1; will-change: max-height, opacity;">
                 <div class="social-share-icon" onclick="window.shareExternalPlatform('whatsapp')" style="text-align: center; cursor: pointer; flex: 1;">
-                    <div style="width: 40px; height: 40px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; margin: 0 auto; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);"><i class="fa-brands fa-whatsapp"></i></div>
-                    <span style="font-size: 0.7rem; color: #aaa; display: block; margin-top: 4px;">WhatsApp</span>
+                    <div style="width: 44px; height: 44px; background: #e8faf0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: #25D366; margin: 0 auto; transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <span style="font-size: 0.72rem; color: #64748b; font-weight: 600; display: block; margin-top: 5px;">WhatsApp</span>
                 </div>
                 <div class="social-share-icon" onclick="window.shareExternalPlatform('instagram')" style="text-align: center; cursor: pointer; flex: 1;">
-                    <div style="width: 40px; height: 40px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; margin: 0 auto; box-shadow: 0 4px 10px rgba(220, 39, 67, 0.2);"><i class="fa-brands fa-instagram"></i></div>
-                    <span style="font-size: 0.7rem; color: #aaa; display: block; margin-top: 4px;">Instagram</span>
+                    <div style="width: 44px; height: 44px; background: #fdf2f4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: #dc2743; margin: 0 auto; transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <i class="fa-brands fa-instagram"></i>
+                    </div>
+                    <span style="font-size: 0.72rem; color: #64748b; font-weight: 600; display: block; margin-top: 5px;">Instagram</span>
                 </div>
                 <div class="social-share-icon" onclick="window.shareExternalPlatform('facebook')" style="text-align: center; cursor: pointer; flex: 1;">
-                    <div style="width: 40px; height: 40px; background: #1877F2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; margin: 0 auto; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.2);"><i class="fa-brands fa-facebook-f"></i></div>
-                    <span style="font-size: 0.7rem; color: #aaa; display: block; margin-top: 4px;">Facebook</span>
+                    <div style="width: 44px; height: 44px; background: #eef4ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: #1877F2; margin: 0 auto; transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </div>
+                    <span style="font-size: 0.72rem; color: #64748b; font-weight: 600; display: block; margin-top: 5px;">Facebook</span>
                 </div>
                 <div class="social-share-icon" onclick="window.copyCurrentItemLink()" style="text-align: center; cursor: pointer; flex: 1;">
-                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; margin: 0 auto;"><i class="fa-solid fa-link"></i></div>
-                    <span style="font-size: 0.7rem; color: #aaa; display: block; margin-top: 4px;">Copy Link</span>
+                    <div style="width: 44px; height: 44px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #475569; margin: 0 auto; transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                        <i class="fa-solid fa-link"></i>
+                    </div>
+                    <span style="font-size: 0.72rem; color: #64748b; font-weight: 600; display: block; margin-top: 5px;">Copy Link</span>
                 </div>
             </div>
         </div>
-        <button id="btn-send-share" onclick="sendBatchShare()" style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: 85%; padding: 14px; border-radius: 25px; background: var(--primary-grad); color: white; font-weight: bold; font-size: 1rem; border: none; box-shadow: 0 5px 20px rgba(255,0,110,0.5); display: none; z-index: 150; cursor: pointer;">Send</button>
     </div>
 </div>
+
 
 <!-- OFFLINE NEARBY RADAR MODAL -->
 <div id="offline-radar-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #05050a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -1279,6 +1364,7 @@
 <script type="module" src="share.js"></script>
 <script type="module" src="voicenote.js"></script>
 <script type="module" src="call.js"></script>
+<script type="module" src="popscreen.js"></script>
 
 <!-- CALL SCREEN OVERLAY -->
 <div id="call-screen-overlay" class="call-overlay">
