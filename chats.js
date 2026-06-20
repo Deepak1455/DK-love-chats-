@@ -11,6 +11,7 @@ import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, u
 window.chatDrafts = JSON.parse(localStorage.getItem('loveChats_drafts') || "{}");
 window.unreadCounts = window.unreadCounts || {};
 window.allCachedUsers = window.allCachedUsers || [];
+window.fullInboxUsers = []; // 🌟 शेयर पॉप सिंक के लिए वैश्विक इन्बॉक्स एरे
 window.currentChatId = null;
 window.currentReplyData = null;
 window.pendingUnlockData = null;
@@ -178,6 +179,12 @@ window.loadUserList = async () => {
 
         if(typeof window.renderActiveNowBar === 'function') window.renderActiveNowBar(window.allCachedUsers); 
         window.filterChatList();
+
+        // 🌟 रीयल-टाइम शेयर पॉप स्क्रीन के लिए इन्बॉक्स यूज़र्स को ग्लोबली सिंक करें
+        window.fullInboxUsers = fullInboxUsers;
+        if (typeof window.updateShareModalList === 'function') {
+            window.updateShareModalList();
+        }
     });
 };
 
@@ -243,7 +250,7 @@ window.getInboxUserHTML = (user, currentUser, currentUserData, lockedChats) => {
         statusHtml,
         badgeHtml,
         count,
-        userBadgeHtml, // 🌟 सिंक की गई नई प्रॉपर्टी
+        userBadgeHtml, 
         safeName
     };
 };
@@ -278,7 +285,6 @@ window.createOrUpdateInboxCard = (user, index, listContainer) => {
                 <div class="online-dot-target" style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#00b894; border-radius:50%; border:2.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:${info.isOnlineDot ? 'block' : 'none'};"></div>
             </div>
             <div style="flex:1; margin-left:15px; display:flex; flex-direction:column; justify-content:center; overflow:hidden;">
-                <!-- 🌟 इनबॉक्स लिस्ट में नाम के बगल में रोज़ गोल्ड बैच -->
                 <div class="name-target" style="font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display: inline-flex; align-items: center; gap: 4px; ${info.nameStyle}">${user.name}${info.userBadgeHtml}</div>
                 <div class="status-target" style="font-size:0.85rem; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${info.previewStyle}">${info.statusHtml}</div>
             </div>
@@ -301,7 +307,6 @@ window.createOrUpdateInboxCard = (user, index, listContainer) => {
         const dotEl = card.querySelector('.online-dot-target');
         if (dotEl) dotEl.style.display = info.isOnlineDot ? 'block' : 'none';
 
-        // 🌟 रियल-टाइम इनबॉक्स कार्ड वेरिफिकेशन टिक सिंक्रोनाइजेशन
         const nameEl = card.querySelector('.name-target');
         if (nameEl) {
             const targetNameHTML = `${user.name}${info.userBadgeHtml}`;
@@ -334,39 +339,29 @@ window.filterChatList = () => {
     if (!listContainer) return;
     
     const allCachedUsers = window.allCachedUsers || [];
-    let nextDisplayUsers = [];
+    const currentInboxList = window.fullInboxUsers || [];
     
-    if (queryText) {
-        nextDisplayUsers = allCachedUsers.filter(u => 
-            (u.name || "").toLowerCase().includes(queryText) || 
-            (u.username || "").toLowerCase().includes(queryText)
+    // यदि खोज चल रही है, तो सभी कैश्ड यूज़र्स को फ़िल्टर करें; अन्यथा केवल इन्बॉक्स यूज़र्स ही दिखाएं
+    const usersToFilter = (queryText && queryText.length > 0) ? allCachedUsers : currentInboxList;
+    
+    if (queryText && queryText.length > 0) {
+        displayInboxUsers = usersToFilter.filter(u => 
+            u.name.toLowerCase().includes(queryText) || 
+            (u.username && u.username.toLowerCase().includes(queryText))
         );
-    } else { 
-        nextDisplayUsers = [...fullInboxUsers]; 
+    } else {
+        displayInboxUsers = [...currentInboxList];
     }
-
-    const nextUids = new Set(nextDisplayUsers.slice(0, 20).map(u => u.uid));
-    Array.from(listContainer.children).forEach(child => {
-        const id = child.id?.replace("inbox-user-", "");
-        if (id && !nextUids.has(id)) {
-            child.remove();
-        }
-    });
-
-    displayInboxUsers = nextDisplayUsers;
+    
+    listContainer.innerHTML = ""; 
     currentInboxIndex = 0; 
+    isFetchingInbox = false;
     
     if (displayInboxUsers.length === 0) {
-        if (queryText) {
-            listContainer.innerHTML = `<div style="text-align:center; padding:50px; color:#aaa;">No users found</div>`;
-        } else {
-            listContainer.innerHTML = `<div style="text-align:center; padding:50px; color:#aaa;"><i class="fa-regular fa-comments" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i><br>No recent messages.<br>Search above to start chatting!</div>`;
-        }
+        listContainer.innerHTML = queryText 
+            ? `<div style="text-align:center; padding:50px; color:#aaa;">No results found for "${queryText}"</div>` 
+            : `<div style="text-align:center; padding:50px; color:#aaa;"><i class="fa-regular fa-comments" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i><br>No recent messages.<br>Search above to start chatting!</div>`;
         return;
-    }
-
-    if (listContainer.querySelector('.fa-comments') || listContainer.innerText.includes("No users found")) {
-        listContainer.innerHTML = "";
     }
 
     window.loadMoreInboxUsers();
@@ -660,7 +655,10 @@ window.getSeenTimeAgo = (timestamp) => {
     if (diffHours < 24) return `Seen ${diffHours} hr`;
     return `Seen ${Math.floor(diffHours / 24)} d`;
 };
-// 🌟 [Calling Bridge]: chats.js में कॉलिंग सिस्टम को सक्रिय रूप से जोड़ने के लिए
+
+// ==========================================
+// --- CALLING SYSTEM INTEGRATIONS ---
+// ==========================================
 window.startCallFromChat = async (type) => {
     const targetUid = window.currentChatId?.targetUid;
     if (!targetUid) {
@@ -673,7 +671,6 @@ window.startCallFromChat = async (type) => {
     if (navigator.vibrate) navigator.vibrate(30);
 
     try {
-        // call.js को गतिशील रूप से इंपोर्ट करें और संबंधित कॉल आरंभ करें
         const module = await import('./call.js');
         if (type === 'voice') {
             if (typeof module.startAudioCall === 'function') {
@@ -694,7 +691,6 @@ window.startCallFromChat = async (type) => {
         }
     } catch (err) {
         console.warn("Calling module dynamic fetch failed, executing fallback:", err.message);
-        // फ़ॉलबैक डायरेक्ट विंडो ट्रिगर्स
         if (type === 'voice' && typeof window.startAudioCall === 'function') {
             window.startAudioCall(targetUid);
         } else if (type === 'video' && typeof window.startVideoCall === 'function') {
@@ -707,57 +703,53 @@ window.startCallFromChat = async (type) => {
     }
 };
 
+window.toggleCallCardboard = function(event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    var board = document.getElementById('chat-call-cardboard');
+    if (board) {
+        if (board.style.opacity === '1') {
+            board.style.opacity = '0';
+            board.style.transform = 'translateY(-10px) scale(0.95)';
+            board.style.pointerEvents = 'none';
+        } else {
+            board.style.opacity = '1';
+            board.style.transform = 'translateY(0) scale(1)';
+            board.style.pointerEvents = 'auto';
+        }
+    }
+    if (navigator.vibrate) {
+        navigator.vibrate(15);
+    }
+};
 
-    // 🌟 सीधे इनलाइन स्टाइल बदलने वाला 100% विश्वसनीय टॉगल इंजन
-    window.toggleCallCardboard = function(event) {
-        if (event) {
-            event.stopPropagation();
-            event.preventDefault();
-        }
-        var board = document.getElementById('chat-call-cardboard');
-        if (board) {
-            // यदि कार्डबोर्ड पहले से खुला है (opacity = 1) तो उसे छिपाएं, अन्यथा दिखाएं
-            if (board.style.opacity === '1') {
-                board.style.opacity = '0';
-                board.style.transform = 'translateY(-10px) scale(0.95)';
-                board.style.pointerEvents = 'none';
-            } else {
-                board.style.opacity = '1';
-                board.style.transform = 'translateY(0) scale(1)';
-                board.style.pointerEvents = 'auto';
-            }
-        }
-        if (navigator.vibrate) {
-            navigator.vibrate(15);
-        }
-    };
-    
-    window.closeCallCardboard = function() {
-        var board = document.getElementById('chat-call-cardboard');
-        if (board) {
+window.closeCallCardboard = function() {
+    var board = document.getElementById('chat-call-cardboard');
+    if (board) {
+        board.style.opacity = '0';
+        board.style.transform = 'translateY(-10px) scale(0.95)';
+        board.style.pointerEvents = 'none';
+    }
+};
+
+document.addEventListener('click', function(e) {
+    var board = document.getElementById('chat-call-cardboard');
+    var trigger = document.getElementById('chat-call-trigger');
+    if (board && trigger) {
+        if (!board.contains(e.target) && !trigger.contains(e.target)) {
             board.style.opacity = '0';
             board.style.transform = 'translateY(-10px) scale(0.95)';
             board.style.pointerEvents = 'none';
         }
-    };
-
-    // 🌟 कहीं भी बाहर क्लिक करने पर ड्रॉपडाउन तुरंत बंद होना
-    document.addEventListener('click', function(e) {
-        var board = document.getElementById('chat-call-cardboard');
-        var trigger = document.getElementById('chat-call-trigger');
-        if (board && trigger) {
-            if (!board.contains(e.target) && !trigger.contains(e.target)) {
-                board.style.opacity = '0';
-                board.style.transform = 'translateY(-10px) scale(0.95)';
-                board.style.pointerEvents = 'none';
-            }
-        }
-    });
+    }
+});
 
 // ==========================================
 // --- CHAT ROOM INITIALIZATION & RENDER ---
 // ==========================================
- window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
+window.openChatRoom = async (targetUid, targetName, placeholder, isFake) => {
     try {
         if (typeof window.resetInboxSearch === 'function') {
             window.resetInboxSearch();
@@ -871,7 +863,6 @@ window.startCallFromChat = async (type) => {
             if(imgEl) imgEl.src = u.exists() ? (u.data().avatarBase64 || u.data().photoURL) : placeholder;
         } catch(e) { if(imgEl) imgEl.src = placeholder; }
 
-        // 🌟 रूम हेडर लोड होते समय लोकल कैश से वेरिफिकेशन टिक लोड करें
         const liveUserData = window.allCachedUsers?.find(u => u.uid === targetUid);
         const cachedBadgeHtml = (liveUserData?.isVerified === true && typeof window.getVerifiedBadgeHTML === 'function')
             ? window.getVerifiedBadgeHTML(true, 18)
@@ -886,11 +877,10 @@ window.startCallFromChat = async (type) => {
                 const isOnline = (Date.now() - data.lastActive) < 120000;
                 statusEl.innerHTML = isOnline ? '<span style="color:#00b894; font-weight:800;">Online</span>' : `<span style="color:#64748b;">${typeof window.timeAgo === 'function' ? window.timeAgo(data.lastActive) : 'Offline'}</span>`;
                 
-                // 🌟 रियल-टाइम अपडेट: चैट रूम हेडर में नाम के ठीक बगल में रोज़ गोल्ड टिक
                 if (titleEl) {
                     const freshName = data.name || targetName;
                     const badgeHtml = data.isVerified === true && typeof window.getVerifiedBadgeHTML === 'function'
-                        ? window.getVerifiedBadgeHTML(true, 18) // हेडर के अनुकूल 18px
+                        ? window.getVerifiedBadgeHTML(true, 18) 
                         : '';
                     titleEl.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">${freshName}${badgeHtml}</span>`;
                 }
@@ -1048,8 +1038,35 @@ window.startCallFromChat = async (type) => {
                                 let targetId = msg.sharedPostId || msg.sharedReelId || msg.repliedStoryId;
                                 let ownerId = msg.repliedStoryOwnerId || msg.sharedOwnerId || msg.sharedReelOwnerId;
                                 const navAction = `window.openSharedContentFromChat('${typeStr}', '${targetId}', '${ownerId}')`;
-                                
-                                cardHtml = `<div class="chat-shared-standalone-card reply-pop-effect" onclick="${navAction}"><div class="shared-card-header"><img src="${ownerPhoto}" class="shared-card-dp" loading="lazy"><div class="shared-card-user-info"><span class="shared-card-name">${ownerName}</span><span class="shared-card-type"><i class="fa-solid ${icon}"></i> ${typeLabel}</span></div></div><div class="shared-card-body" style="aspect-ratio: 16/9; background: #e2e8f0; overflow: hidden; border-radius: 12px;"><img src="${mediaUrl?.replace(/\.[^/.]+$/, ".jpg")}" class="shared-card-img" style="width:100%; height:100%; object-fit:cover;" loading="lazy">${msg.isReelShare ? '<div class="shared-play-btn"><i class="fa-solid fa-play"></i></div>' : ''}</div><div class="shared-card-footer"><span>${actionText}</span><i class="fa-solid fa-chevron-right"></i></div></div>`;
+                  // Standalone Shared Card के HTML रेंडर को इस तरह अपडेट करें:
+const isOwnerVerified = msg.sharedOwnerIsVerified === true; // या कैश डेटा से चेक करें
+
+cardHtml = `
+<div class="chat-shared-standalone-card reply-pop-effect" data-cardboard-owner="${ownerId}" onclick="${navAction}">
+    <div class="shared-card-header" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #f8fafc; border-bottom: 1px solid #f1f5f9;">
+        <img src="${ownerPhoto}" class="shared-card-dp shared-owner-avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0;" loading="lazy">
+        <div class="shared-card-user-info" style="display: flex; flex-direction: column; min-width: 0;">
+            <div style="display: flex; align-items: center; flex-wrap: nowrap; overflow: hidden; max-width: 100%;">
+                <span class="shared-card-name shared-owner-name" style="font-weight: 800; color: #1e293b; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${ownerName}</span>
+                
+                <!-- 🎖️ रीयल-टाइम रोज़ गोल्ड बैच के लिए टार्गेट कंटेनर (शुरुआती लोड पर तुरंत शो होगा) -->
+                <span class="shared-owner-badge-container-wrapper" style="display: inline-flex; align-items: center;">
+                    ${isOwnerVerified ? ROSE_GOLD_CARD_TICK : '<span class="shared-owner-badge comment-badge-container"></span>'}
+                </span>
+            </div>
+            <span class="shared-card-type" style="font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 1px;"><i class="fa-solid ${icon}"></i> ${typeLabel}</span>
+        </div>
+    </div>
+    <div class="shared-card-body" style="aspect-ratio: 16/9; background: #e2e8f0; overflow: hidden; border-radius: 12px; position: relative;">
+        <img src="${mediaUrl?.replace(/\.[^/.]+$/, ".jpg")}" class="shared-card-img" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
+        ${msg.isReelShare ? '<div class="shared-play-btn"><i class="fa-solid fa-play"></i></div>' : ''}
+    </div>
+    <div class="shared-card-footer" style="padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: #ffffff; border-radius: 0 0 24px 24px;">
+        <span style="font-size: 0.8rem; font-weight: 800; color: #475569;">${actionText}</span>
+        <i class="fa-solid fa-chevron-right" style="font-size: 0.75rem; color: var(--primary);"></i>
+    </div>
+</div>`;              
+
                             }
                             
                             if (msg.mediaUrl && !isShare) {
@@ -1421,15 +1438,20 @@ window.closeChat = () => {
     if(alertBanner) { alertBanner.style.opacity = '0'; alertBanner.style.transform = 'translateX(-50%) translateY(-50px)'; }
 
     const overlay = document.getElementById('chat-mood-overlay');
-    if(overlay) { overlay.className = ''; overlay.innerHTML = ''; }
-    
-    if(typeof moodTimeout !== 'undefined' && moodTimeout) { clearTimeout(moodTimeout); moodTimeout = null; }
+    if(overlay) { overlay.innerHTML = ""; }
 
-    if(window.chatResizeObserver) { window.chatResizeObserver.disconnect(); window.chatResizeObserver = null; }
-
-    if(window.unsubscribeChat) { window.unsubscribeChat(); window.unsubscribeChat = null; }
-    if(unsubscribeUserStatus) { unsubscribeUserStatus(); unsubscribeUserStatus = null; }
-    if(unsubscribeTyping) { unsubscribeTyping(); unsubscribeTyping = null; }
+    if (window.unsubscribeChat) {
+        window.unsubscribeChat();
+        window.unsubscribeChat = null;
+    }
+    if (unsubscribeUserStatus) {
+        unsubscribeUserStatus();
+        unsubscribeUserStatus = null;
+    }
+    if (unsubscribeTyping) {
+        unsubscribeTyping();
+        unsubscribeTyping = null;
+    }
     
     const chatMessagesArea = document.getElementById('chat-messages-area');
     if(chatMessagesArea) chatMessagesArea.innerHTML = ""; 
@@ -1859,7 +1881,6 @@ window.openChatProfile = async () => {
     document.getElementById('cp-mute-icon').className = isMuted ? "fa-solid fa-bell" : "fa-solid fa-bell-slash";
     document.getElementById('cp-mute-icon').style.color = isMuted ? "#00b894" : "#475569";
 
-    // 🌟 रीयल-टाइम अपडेट: डिटेल्स स्क्रीन के लिए यूज़र के नाम के पास 22px का बड़ा टिक
     if (window.unsubscribeCpProfile) window.unsubscribeCpProfile();
     window.unsubscribeCpProfile = onSnapshot(doc(window.db, "users", targetUid), (docSnap) => {
         if (docSnap.exists() && modal.classList.contains('active')) {
@@ -1939,7 +1960,6 @@ window.switchCpTab = (tab) => {
 window.closeChatProfile = () => {
     const modal = document.getElementById('chat-profile-modal');
     if (modal) { modal.classList.remove('active'); if(navigator.vibrate) navigator.vibrate(30); }
-    // 🌟 मेमोरी सफ़ाई: लिसनर को निष्क्रिय करें
     if (window.unsubscribeCpProfile) {
         window.unsubscribeCpProfile();
         window.unsubscribeCpProfile = null;
