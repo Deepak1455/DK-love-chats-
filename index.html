@@ -37,11 +37,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"></noscript>
-    <!-- 🎨 सभी CSS स्टाइलशीट्स -->
-    <link rel="stylesheet" href="style.css">
+    <!-- 🎨 सभी CSS स्टाइलशीट्स (Critical CSS loaded first, others preloaded asynchronously) -->
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="auth.css">
+
+<!-- Non-critical CSS (Asynchronous Preload to speed up initial load) -->
+<link rel="preload" href="call.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="global-nav.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="feed-reels.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="messagelist.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="chat.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="profile.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="story.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="settings.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="modals.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+
+<noscript>
     <link rel="stylesheet" href="call.css">
     <link rel="stylesheet" href="global-nav.css">
-    <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="feed-reels.css">
     <link rel="stylesheet" href="messagelist.css">
     <link rel="stylesheet" href="chat.css">
@@ -49,6 +62,7 @@
     <link rel="stylesheet" href="story.css">
     <link rel="stylesheet" href="settings.css">
     <link rel="stylesheet" href="modals.css">
+</noscript>
 </head>
 <body>
 
