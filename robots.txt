@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://deepak1455.github.io/DK-love-chats-/sitemap.xml
