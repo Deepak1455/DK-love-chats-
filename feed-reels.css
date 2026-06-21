@@ -18,6 +18,11 @@
 /* ==========================================
    2. STORIES BAR
    ========================================== */
+
+
+/* ==========================================
+   2. STORIES BAR (Clean Solid Border Style)
+   ========================================== */
 .stories-bar {
     background: #f1f5f9 !important;
     margin: 15px 12px 5px 12px !important;
@@ -27,17 +32,20 @@
     gap: 15px !important;
     overflow-x: auto !important;
     position: relative !important;
-    border: 3px solid transparent !important;
-    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
-                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
-    background-origin: border-box !important;
-    background-clip: padding-box, border-box !important;
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.05) !important;
+    
+    /* Simple clean solid border instead of gradient */
+    border: 1.5px solid #cbd5e1 !important; 
+    background-image: none !important; /* रंगीन ग्रेडिएंट को हटाया गया */
+    
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03) !important;
     -webkit-overflow-scrolling: touch;
 }
 
 .stories-bar::-webkit-scrollbar { height: 3px !important; }
 .stories-bar::-webkit-scrollbar-thumb { background: rgba(255, 0, 110, 0.2) !important; border-radius: 10px !important; }
+
+
+
 
 .story-item { 
     display: flex; flex-direction: column; align-items: center; 
@@ -76,7 +84,7 @@
 }
 
 /* ==========================================
-   3. POST CARDS (3D Board Style)
+   3. POST CARDS (Clean Solid Border Style)
    ========================================== */
 .post-card { 
     background: #f1f5f9 !important; 
@@ -84,12 +92,13 @@
     border-radius: 28px !important; 
     padding: 12px !important;
     position: relative !important;
-    border: 3.5px solid transparent !important;
-    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
-                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
-    background-origin: border-box !important;
-    background-clip: padding-box, border-box !important;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12), 0 5px 10px rgba(0, 0, 0, 0.05) !important;
+    
+    /* Simple clean solid border instead of gradient */
+    border: 1.5px solid #cbd5e1 !important; 
+    background-image: none !important; /* रंगीन ग्रेडिएंट को हटाया गया */
+    
+    /* Soft Premium Shadow for clean 3D look */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
     transform: translateZ(0);
     will-change: transform, opacity;
 }
@@ -146,10 +155,11 @@
 }
 
 /* ==========================================
-   4. POST MEDIA & HEART ANIMATIONS
+   4. POST MEDIA & HEART ANIMATIONS (UPDATED)
    ========================================== */
 .post-media-container {
-    position: relative; width: 100%;
+    position: relative; 
+    width: 100%;
     background: #e2e8f0 !important;
     border-radius: 22px !important;
     padding: 8px !important;
@@ -160,7 +170,7 @@
 .smooth-img {
     width: 100%; max-height: 500px; object-fit: contain; 
     border-radius: 16px !important; 
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important; 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important; 
     opacity: 0; transition: opacity 0.5s ease-out, transform 0.3s;
     cursor: zoom-in; display: block; background: #f8fafc;
 }
@@ -172,55 +182,155 @@
     animation: premiumShimmer 1.5s infinite linear;
 }
 
-/* Heart Pop Animation */
+/* 💖 PREMIUM DOUBLE-TAP HEART POP ANIMATION */
 .heart-pop { 
-    position: absolute; top: 50%; left: 50%; 
+    position: absolute; 
+    top: 50%; 
+    left: 50%; 
     transform: translate(-50%, -50%) scale(0); 
-    font-size: 5rem; color: rgba(255, 255, 255, 0.95); 
-    filter: drop-shadow(0 0 20px #ff006e); 
-    pointer-events: none; animation: popHeart 0.8s ease-out; z-index: 10; 
-}
-@keyframes popHeart { 
-    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 
-    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; } 
-    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } 
+    font-size: 6rem; 
+    color: #ff006e; 
+    filter: drop-shadow(0 0 30px rgba(255, 0, 110, 0.8)); 
+    pointer-events: none; 
+    z-index: 100;
+    will-change: transform, opacity;
+    animation: popHeart 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
 }
 
+@keyframes popHeart { 
+    0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 0; } 
+    20% { transform: translate(-50%, -50%) scale(1.4) rotate(10deg); opacity: 1; filter: drop-shadow(0 0 25px #ff006e); } 
+    40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 
+    75% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 
+    100% { transform: translate(-50%, -100%) scale(0.4) rotate(15deg); opacity: 0; } 
+}
+
+/* 🌟 shape-shifting micro-confetti particles */
+.micro-confetti-particle {
+    position: absolute;
+    pointer-events: none;
+    z-index: 99;
+    font-size: 1.1rem;
+    animation: microConfettiFly 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes microConfettiFly {
+    0% {
+        transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.3) rotate(var(--rot));
+        opacity: 0;
+    }
+}
+
+/* 🚀 FLOATING EMOJI BURST ANIMATION */
+.floating-emoji-particle {
+    position: absolute;
+    display: inline-block;
+    user-select: none;
+    pointer-events: none;
+    z-index: 120;
+    will-change: transform, opacity;
+    animation: emojiFlyUp 0.9s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes emojiFlyUp {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.6) rotate(var(--rot));
+        opacity: 0;
+    }
+}
 /* ==========================================
-   5. POST ACTIONS & CAPTIONS
+   5. POST ACTIONS & CAPTIONS (INTEGRATED)
    ========================================== */
 .post-actions { 
     background: #ffffff !important; 
     margin: 15px 0 5px 0 !important;
-    padding: 12px !important;
+    padding: 12px 14px !important;
     border-radius: 22px !important;
     border: 1.5px solid #e2e8f0 !important;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03) !important;
+    
+    /* Flex Column layout to stack: Caption -> Icons -> Emojis */
     display: flex !important;
-    justify-content: space-around !important;
-    align-items: center;
+    flex-direction: column !important;
+    gap: 12px !important;
 }
 
-.action-btn { font-size: 1.5rem !important; color: #475569 !important; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
-.action-btn:active { transform: scale(0.7) rotate(-10deg); }
-.action-btn.liked { color: #ff4757 !important; animation: pop 0.4s; filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.4)); }
-
-[id^="like-count-"], [id^="post-comment-count-"], [id^="post-share-count-"] {
-    color: #1e293b !important; font-weight: 900 !important; font-size: 0.75rem; margin-top: 4px; display: block;
-}
-
+/* Row 1 (Top): Caption Text integrated cleanly inside the cardboard */
 .post-caption { 
-    margin-top: 10px !important;
-    padding: 15px !important;
-    background: #ffffff !important;
-    border-radius: 18px !important;
+    margin-top: 0 !important;
+    padding: 4px 6px 12px 6px !important;
+    background: transparent !important; /* कार्डबोर्ड का बैकग्राउंड इस्तेमाल होगा */
+    border-radius: 0 !important;
     color: #1a1a1a !important;
-    border: 1px solid #e2e8f0 !important;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important; /* नीचे की रो के लिए क्लीन सेपरेटर */
     font-weight: 600 !important;
-    font-size: 0.95rem; line-height: 1.5;
+    font-size: 0.95rem; 
+    line-height: 1.5;
+    width: 100% !important;
+    text-align: left !important;
 }
 .post-caption b { font-weight: 900; margin-right: 6px; color: #ff006e; }
 
+/* Row 2 (Middle): Action Icons */
+.action-buttons-row {
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.action-btn { 
+    font-size: 1.4rem !important; 
+    color: #475569 !important; 
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    cursor: pointer; 
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+.action-btn:active { transform: scale(0.7) rotate(-10deg); }
+.action-btn.liked { 
+    color: #ff4757 !important; 
+    animation: pop 0.4s; 
+    filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.3)); 
+}
+
+[id^="like-count-"], [id^="post-comment-count-"], [id^="post-share-count-"] {
+    color: #1e293b !important; 
+    font-weight: 900 !important; 
+    font-size: 0.75rem; 
+    margin-top: 4px; 
+    display: block;
+}
+
+/* Row 3 (Bottom): Quick Emojis directly under icons inside the same cardboard */
+.quick-reactions-row {
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding-top: 10px !important;
+    border-top: 1px solid #e2e8f0 !important; /* इमोजी रो के लिए डिवाइडर */
+}
+
+.reaction-emoji { 
+    font-size: 1.3rem !important; 
+    cursor: pointer; 
+    user-select: none; 
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+}
+.reaction-emoji:active { 
+    transform: scale(1.4); 
+}
 /* ==========================================
    6. SKELETON LOADERS
    ========================================== */
