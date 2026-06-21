@@ -67,7 +67,7 @@
 #profile-follows-you-card i { font-size: 1rem; }
 
 /* ==========================================
-   3. VIP INFO CARD BOARD (Name, Username, Bio)
+   3. VIP INFO CARD BOARD (Clean Solid Border)
    ========================================== */
 .profile-info-card {
     background: #f1f5f9 !important; /* Premium Platinum Blue */
@@ -77,16 +77,11 @@
     width: 90%;
     max-width: 380px;
     position: relative !important;
-    border: 3.5px solid transparent !important;
+    border: 1.5px solid #cbd5e1 !important; /* साफ़ और सिंपल सॉलिड बॉर्डर */
+    background-image: none !important; /* रंगीन ग्रेडिएंट बॉर्डर को हटा दिया गया है */
     
-    /* 🌈 4 Corners Gradient Border */
-    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
-                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
-    background-origin: border-box !important;
-    background-clip: padding-box, border-box !important;
-    
-    /* 💎 3D Depth Shadow */
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    /* 💎 Soft Clean Shadow */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
     text-align: center !important;
 }
 
@@ -142,28 +137,32 @@
 .stat-label { font-size: 0.8rem; color: #64748b !important; font-weight: 700 !important; }
 
 /* ==========================================
-   5. REFERRAL CARD (My Profile Only)
+/* ==========================================
+   5. REFERRAL CARD (Cleaned & Style Matched)
    ========================================== */
 #my-referral-card {
-    margin: 15px auto; width: 90%; max-width: 380px; 
+    margin: 15px auto; 
+    width: 90%; 
+    max-width: 380px; 
     background: #f1f5f9 !important;
-    border: 3px solid transparent !important;
-    border-radius: 20px; padding: 15px; text-align: center;
-    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
-                      linear-gradient(135deg, #8338ec, #3a86ff) !important;
-    background-origin: border-box !important;
-    background-clip: padding-box, border-box !important;
-    box-shadow: 0 10px 25px rgba(131, 56, 236, 0.1) !important;
+    border: 1.5px solid #cbd5e1 !important; /* क्लीन लाइट-ग्रे बॉर्डर */
+    border-radius: 20px; 
+    padding: 15px; 
+    text-align: center;
+    background-image: none !important; /* कलर ग्रेडिएंट पूरी तरह हटाया गया */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
 }
 
 #profile-refer-code {
     background: #ffffff !important;
-    color: #8338ec !important;
+    color: #8338ec !important; /* केवल कोड का टेक्स्ट हाइलाइटेड रहेगा */
     border-radius: 12px !important;
     padding: 10px !important;
-    border: 1.5px solid #e2e8f0 !important;
+    border: 1.5px solid #cbd5e1 !important;
     font-family: 'Courier New', Courier, monospace; 
-    font-weight: 800; font-size: 1.2rem; letter-spacing: 2px;
+    font-weight: 800; 
+    font-size: 1.2rem; 
+    letter-spacing: 2px;
 }
 
 /* ==========================================
@@ -268,4 +267,17 @@
     width: 28px; height: 28px; border-radius: 8px; 
     display: flex; align-items: center; justify-content: center; 
     z-index: 15; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+/* प्रोफ़ाइल कार्ड को प्रीमियम डार्क थीम में बदलने के लिए */
+.profile-card-board {
+    background: linear-gradient(145deg, #10002b, #151525) !important;
+    border: 2px solid transparent !important;
+    background-image: linear-gradient(#10002b, #151525), linear-gradient(135deg, #0095f6, #8338ec, #ff006e) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4), 0 0 15px rgba(0, 149, 246, 0.15) !important;
+    color: #ffffff !important;
+    border-radius: 24px;
+    padding: 20px;
+    box-sizing: border-box;
 }
