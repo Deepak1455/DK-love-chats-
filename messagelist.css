@@ -55,7 +55,7 @@
     position: relative !important;
     border: 3px solid transparent !important;
     background-image: linear-gradient(#f1f5f9, #f1f5f9), 
-                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
+                       !important;
     background-origin: border-box !important;
     background-clip: padding-box, border-box !important;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), inset 0 2px 5px rgba(255, 255, 255, 0.9) !important;
@@ -115,8 +115,7 @@
     display: flex !important;
     align-items: center !important;
     border: 3px solid transparent !important;
-    background-image: linear-gradient(#f1f5f9, #f1f5f9), 
-                      linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
+    
     background-origin: border-box !important;
     background-clip: padding-box, border-box !important;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
