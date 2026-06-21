@@ -210,3 +210,27 @@
     50% { background: rgba(255, 0, 110, 0.1); }
     100% { transform: translateY(0) scale(1); opacity: 1; background: #f1f5f9; }
 }
+/* =================================================== */
+/* --- MESSAGE LIST INBOX (Clean Solid Borders) --- */
+/* =================================================== */
+
+/* चैट लिस्ट स्क्रीन पर प्रत्येक यूज़र कार्डबोर्ड के लिए */
+#chat-list-container .chat-item {
+    background: #f1f5f9 !important; /* हल्का ग्रे-नीला शेड */
+    border: 1.5px solid #cbd5e1 !important; /* साफ़ और सिंपल सॉलिड बॉर्डर */
+    border-radius: 18px !important;
+    margin-bottom: 12px !important;
+    padding: 12px 15px !important;
+    position: relative !important;
+    background-image: none !important; /* रंगीन ग्रेडिएंट बॉर्डर को हटा दिया गया है */
+    
+    /* 💎 Soft Clean Depth Shadow */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03) !important;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+/* टैप करने पर फ़ीडबैक एनीमेशन */
+#chat-list-container .chat-item:active {
+    transform: scale(0.98);
+    background-color: #e2e8f0 !important;
+}
