@@ -481,30 +481,19 @@ window.loadNotificationMediaPreview = async (notifId, postId, type = 'post') => 
 };
 
 // ===================================================
-// 🌟 SMART PRE-FETCH SENDER INTERCEPTOR (SAFE & HIGH-SPEED)
+// 🌟 SMART PRE-FETCH SENDER INTERCEPTOR
 // ===================================================
 async function sendNotification(targetUid, type, message, payload, mediaUrl = "", coverUrl = "") {
-    // स्वयं को नोटिफिकेशन भेजने से रोकें
-    if (!window.currentUser || targetUid === window.currentUser.uid) return;
-    
+    if(!window.currentUser || targetUid === window.currentUser.uid) return;
     try {
-        let fromPhoto = window.currentUser.photoURL || "";
-        if (window.currentUserData && window.currentUserData.avatarBase64) {
+        let fromPhoto = window.currentUser.photoURL;
+        if(window.currentUserData && window.currentUserData.avatarBase64) {
             fromPhoto = window.currentUserData.avatarBase64;
-        }
-
-        // 🧠 1. FCM पेलोड सुरक्षा फिक्स (FCM Payload Size Protection):
-        // बड़ी Base64 इमेज (जो 2KB से अधिक लंबी हो) फ़ायरबेस पुश सीमा (4KB) को पार करके पुश नोटिफिकेशन क्रैश कर सकती है।
-        // इसलिए, यदि इमेज बेस64 है, तो हम सुरक्षित रूप से लाइटवेट अवतार यूआरएल का उपयोग करेंगे।
-        let safePhoto = fromPhoto;
-        if (safePhoto && safePhoto.startsWith('data:') && safePhoto.length > 2048) {
-            safePhoto = window.currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(window.currentUser.displayName)}`;
         }
 
         let finalMediaUrl = mediaUrl;
         let finalCoverUrl = coverUrl;
 
-        // यदि मीडिया यूआरएल खाली है तो बैकग्राउंड में डेटाबेस से प्री-फैच करें
         if (!finalMediaUrl && !finalCoverUrl && payload) {
             try {
                 const collectionName = type === 'like_story' ? "stories" : "posts";
@@ -524,26 +513,20 @@ async function sendNotification(targetUid, type, message, payload, mediaUrl = ""
             }
         }
 
-        // 🌟 2. बैकएंड इंटीग्रेशन के साथ नया दस्तावेज़ जोड़ना
         await addDoc(collection(window.db, "users", targetUid, "notifications"), {
             type: type, 
-            fromName: window.currentUser.displayName || "Someone", 
-            fromPhoto: safePhoto, // केवल सुरक्षित साइज़ वाली इमेज ही सर्वर पर जाएगी
+            fromName: window.currentUser.displayName, 
+            fromPhoto: fromPhoto, 
             senderUid: window.currentUser.uid, 
             text: message, 
             timestamp: serverTimestamp(), 
             read: false, 
             payload: payload || "",
             mediaUrl: finalMediaUrl || "",
-            coverUrl: finalCoverUrl || "",
-            
-            // 🌟 3. बैकएंड प्रोसेसर के लिए आवश्यक फ़ील्ड्स
-            receiverId: targetUid, // सर्वर इसे पढ़कर रिसीवर का पता लगाता है
-            userId: targetUid,     // बैकअप फील्ड
-            pushSent: false        // सर्वर को सूचित करता है कि अभी पुश नोटिफिकेशन भेजना बाकी है
+            coverUrl: finalCoverUrl || ""
         });
     } catch(e) {
-        console.error("Error sending notification safely:", e);
+        console.error("Error sending notification:", e);
     }
 }
 window.sendNotification = sendNotification;
@@ -566,6 +549,79 @@ function renderNotificationSkeletons(container, count = 5) {
         </div>`;
     }
     container.innerHTML = skHTML;
+}
+
+// ===================================================
+// 🌟 सेंडर की डीटेल्स को रीयल-टाइम में सुनने और अपडेट करने वाला इंजन (Rose Gold Tick के साथ)
+// ===================================================
+function bindRealTimeSenderDetails(cardId, senderUid, fallbackName, fallbackPhoto) {
+    if (!senderUid || !window.db) return;
+
+    // डॉक्यूमेंट पाथ सेट करें
+    const docRef = doc(window.db, "users", senderUid);
+    
+    // Firestore का रीयल-टाइम लिसनर बाइंड करें
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+        const card = document.getElementById(cardId);
+        
+        // सुरक्षा जांच: अगर कार्ड अब DOM में मौजूद नहीं है (जैसे यूजर ने नोटिफिकेशन डिलीट कर दी),
+        // तो इस लिसनर को तुरंत अनसब्सक्राइब करें ताकि मेमोरी लीक न हो।
+        if (!card) {
+            unsubscribe();
+            return;
+        }
+
+        if (docSnap.exists()) {
+            const userData = docSnap.data();
+            const nameEl = card.querySelector('.sender-name-text');
+            const imgEl = card.querySelector('.sender-avatar-img');
+            const badgeContainer = card.querySelector('.sender-badge-container');
+
+            // मान प्राप्त करें (प्राइमरी या फॉलबैक)
+            const updatedName = userData.name || fallbackName;
+            const updatedPhoto = userData.avatarBase64 || userData.photoURL || fallbackPhoto;
+            
+            // वेरिफिकेशन स्टेटस जांचें
+            const isVerified = userData.isVerified === true || 
+                               userData.verified === true || 
+                               userData.verificationStatus === 'verified' || 
+                               userData.verificationType === 'gold' || 
+                               userData.verificationType === 'premium';
+
+            // रीयल-टाइम नाम अपडेट करें
+            if (nameEl && nameEl.innerText !== updatedName) {
+                nameEl.innerText = updatedName;
+            }
+
+            // रीयल-टाइम प्रोफाइल पिक्चर (DP) अपडेट करें
+            if (imgEl && imgEl.src !== updatedPhoto) {
+                imgEl.src = updatedPhoto;
+            }
+
+            // रीयल-टाइम Rose Gold Verified Tick अपडेट करें
+            if (badgeContainer) {
+                if (isVerified) {
+                    badgeContainer.innerHTML = `
+                    <svg width="15" height="15" viewBox="0 0 128 128" style="vertical-align: middle; display: inline-block; margin-left: 5px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));">
+                        <defs>
+                            <linearGradient id="roseGoldNotifSeal" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#fae3e0"/>
+                                <stop offset="40%" stop-color="#f3a193"/>
+                                <stop offset="100%" stop-color="#b76e79"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M64 10L79 22L98 20L96 39L110 54L96 69L98 88L79 86L64 100L49 86L30 88L32 69L18 54L32 39L30 20L49 22Z" fill="url(#roseGoldNotifSeal)"/>
+                        <circle cx="64" cy="54" r="30" fill="#FFFFFF" opacity="0.12"/>
+                        <path d="M47 55L59 67L82 44" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>`;
+                } else {
+                    badgeContainer.innerHTML = "";
+                }
+            }
+        }
+    }, (err) => {
+        console.warn("Real-time sender update subscription skipped or failed:", err.message);
+    });
 }
 
 // ===================================================
@@ -618,9 +674,10 @@ function createNotificationCardElement(n, animationDelay) {
     if (n.type === 'like' || n.type === 'comment' || n.type === 'like_comment' || n.type === 'like_story') {
         const isCoverVideo = coverSrc && (coverSrc.includes('.mp4') || coverSrc.includes('.mov') || coverSrc.includes('.webm'));
         
+        // --- CLEAN DESIGN FIXED (No more 3D card borders with rainbow gradients) ---
         if (coverSrc && !isCoverVideo) {
             mediaThumbnailHTML = `
-            <div style="width: 52px; height: 52px; background: #ffffff; border-radius: 12px; padding: 2px; border: 2px solid transparent; background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b); background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" onclick="${clickAction}">
+            <div style="width: 52px; height: 52px; background: #ffffff; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" onclick="${clickAction}">
                 <img src="${coverSrc}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" decoding="async" loading="lazy">
             </div>`;
         } else {
@@ -629,7 +686,7 @@ function createNotificationCardElement(n, animationDelay) {
             
             if (isVideoFile) {
                 mediaThumbnailHTML = `
-                <div style="width: 52px; height: 52px; background: #ffffff; border-radius: 12px; padding: 2px; border: 2px solid transparent; background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b); background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" onclick="${clickAction}">
+                <div style="width: 52px; height: 52px; background: #ffffff; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" onclick="${clickAction}">
                     <div style="position: relative; width: 100%; height: 100%; border-radius: 8px; overflow: hidden;">
                         <video src="${videoUrl}#t=1" style="width: 100%; height: 100%; object-fit: cover;" muted playsinline></video>
                         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.5); width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.5rem;">
@@ -639,12 +696,12 @@ function createNotificationCardElement(n, animationDelay) {
                 </div>`;
             } else if (mediaSrc) {
                 mediaThumbnailHTML = `
-                <div style="width: 52px; height: 52px; background: #ffffff; border-radius: 12px; padding: 2px; border: 2px solid transparent; background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b); background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" onclick="${clickAction}">
+                <div style="width: 52px; height: 52px; background: #ffffff; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" onclick="${clickAction}">
                     <img src="${mediaSrc}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" decoding="async" loading="lazy">
                 </div>`;
             } else {
                 mediaThumbnailHTML = `
-                <div id="notif-media-${n.id}" style="width: 52px; height: 52px; background: #ffffff; border-radius: 12px; padding: 2px; border: 2px solid transparent; background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b); background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" onclick="${clickAction}">
+                <div id="notif-media-${n.id}" style="width: 52px; height: 52px; background: #ffffff; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" onclick="${clickAction}">
                      <div class="skeleton" style="width: 100%; height: 100%; border-radius: 8px;"></div>
                 </div>`;
             }
@@ -666,9 +723,12 @@ function createNotificationCardElement(n, animationDelay) {
     card.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
             <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                <img src="${n.fromPhoto}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" onclick="${clickAction}" decoding="async" loading="lazy">
+                <img class="sender-avatar-img" src="${n.fromPhoto}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" onclick="${clickAction}" decoding="async" loading="lazy">
                 <div style="flex: 1;" onclick="${clickAction}">
-                    <div style="font-weight: 800; color: #000; font-size: 0.95rem;">${n.fromName}</div>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span class="sender-name-text" style="font-weight: 800; color: #000; font-size: 0.95rem;">${n.fromName}</span>
+                        <span class="sender-badge-container"></span>
+                    </div>
                     <div style="color: #475569; font-size: 0.85rem; font-weight: 600; line-height: 1.3;">${mainDescription}</div>
                     <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
                         <span style="color: var(--primary); font-size: 0.7rem; font-weight: 700;">${timeText}</span>
@@ -755,7 +815,6 @@ window.startNotificationListener = async (notifLimit = 10, isScrollAppend = fals
             let animationDelay = 0;
             let currentChild = notifFullList.firstElementChild;
 
-            // 🎯 IN-PLACE DOM PATCHING (Zero-Lag Diffing)
             aggregatedNotifs.forEach((n) => {
                 let existingCard = document.getElementById(`notif-${n.id}`);
 
@@ -770,6 +829,11 @@ window.startNotificationListener = async (notifLimit = 10, isScrollAppend = fals
                         const dot = existingCard.querySelector('.unread-dot');
                         if (dot) dot.remove();
                     }
+
+                    if (!existingCard.dataset.subscribed) {
+                        existingCard.dataset.subscribed = "true";
+                        bindRealTimeSenderDetails(existingCard.id, n.senderUid, n.fromName, n.fromPhoto);
+                    }
                 } else {
                     const newCard = createNotificationCardElement(n, animationDelay);
                     notifFullList.insertBefore(newCard, currentChild);
@@ -777,6 +841,11 @@ window.startNotificationListener = async (notifLimit = 10, isScrollAppend = fals
 
                     if ((n.type === 'like' || n.type === 'comment' || n.type === 'like_comment' || n.type === 'like_story') && !n.coverUrl && !n.mediaUrl) {
                         window.loadNotificationMediaPreview(n.id, n.payload, n.type);
+                    }
+
+                    if (!newCard.dataset.subscribed) {
+                        newCard.dataset.subscribed = "true";
+                        bindRealTimeSenderDetails(newCard.id, n.senderUid, n.fromName, n.fromPhoto);
                     }
                 }
             });
@@ -829,7 +898,7 @@ window.startNotificationListener = async (notifLimit = 10, isScrollAppend = fals
 };
 
 // ===================================================
-// 🌟 SMART PAGINATION, SCROLL LOADER & SCROLL-TO-TOP BUTTON
+// --- SMART PAGINATION, SCROLL LOADER & SCROLL-TO-TOP ---
 // ===================================================
 function setupNotifScrollLoader() {
     const modal = document.getElementById('notif-full-modal');
@@ -842,8 +911,6 @@ function setupNotifScrollLoader() {
         scrollTopBtn.className = 'notif-scroll-top-btn';
         scrollTopBtn.innerHTML = `<i class="fa-solid fa-arrow-up-long"></i>`;
         
-        // ⚡ सुधार: इसे मोडल के अंदर अपेंड करने के बजाय सीधे "document.body" पर जोड़ें।
-        // इससे कार्ड्स की रेंडरिंग लेयर और मोडल ट्रांसफॉर्म का बटन पर कोई प्रभाव नहीं पड़ेगा।
         document.body.appendChild(scrollTopBtn);
         
         scrollTopBtn.addEventListener('click', (e) => {
@@ -1092,7 +1159,7 @@ function displaySmartToast(toastData) {
 }
 
 // ===================================================
-// 🎯 SMART ACTION TOAST TRIGGER (Actionable on Tap)
+// --- 🎯 SMART ACTION TOAST TRIGGER (Actionable on Tap) ---
 // ===================================================
 window.triggerNotificationToast = (notifData) => {
     const { type, fromName, fromPhoto, senderUid, text, payload } = notifData;
