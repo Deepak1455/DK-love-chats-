@@ -404,7 +404,7 @@ function preloadNeighborReels(currentReel) {
  // त्वरित लगातार क्लिक को रोकने के लिए ग्लोबल लॉक सेट
 window.reelLikeLock = window.reelLikeLock || new Set();
 
-window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
+ window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
     // 🛡️ 1. सुरक्षा लॉक: यदि इस रील पर पहले से ही लाइक की रिक्वेस्ट प्रोसेस हो रही है, तो क्लिक रोकें
     if (window.reelLikeLock.has(pid)) return;
     window.reelLikeLock.add(pid);
@@ -485,3 +485,4 @@ window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
  * रील को स्टोरी के रूप में जोड़ने का फंक्शन
  */
 window.shareReelToStory = window.handleShareReelToStory;
+
