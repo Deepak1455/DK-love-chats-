@@ -232,3 +232,26 @@ button[onclick="triggerLogoutFromSettings()"]:active {
     transform: scale(0.97);
     background: #e2e8f0 !important;
 }
+/* -----------------------------------------------------------
+   Dynamic Verification Hub Checklist Controls
+   ----------------------------------------------------------- */
+
+/* डिफ़ॉल्ट रूप से चेकलिस्ट प्रोग्रेस आइटम को फ्लेक्सिबल रखें */
+.verification-checklist-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ❌ जब एडमिन टिक असाइन करे: सभी चेकलिस्ट प्रोग्रेस रोज़ को पूरी तरह हाइड करें */
+.admin-verified-active .verification-checklist-item {
+    display: none !important;
+}
+
+/*  जब यूजर खुद मीलस्टोन पूरा करे: चेकलिस्ट प्रोग्रेस रोज़ को प्रदर्शित रखें */
+.milestone-verified-active .verification-checklist-item {
+    display: flex !important;
+}
