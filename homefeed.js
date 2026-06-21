@@ -253,10 +253,10 @@ function createPostElement(pid, p) {
     let currentLivePhoto = p.userPhoto || 'https://i.pravatar.cc/150'; 
     if (liveUserData) currentLivePhoto = liveUserData.avatarBase64 || liveUserData.photoURL || currentLivePhoto;
 
-    // 🌟 [बदलाव]: प्रारंभिक लोड के लिए फुल नाम के बजाय यूज़रनेम सेट करें
+    // यूज़रनेम सेट करें
     const initialUsername = liveUserData?.username || p.username || 'user';
 
-    // 🌟 प्रारंभिक रेंडरिंग के समय कैश से रोज़ गोल्ड टिक लोड करना
+    // रोज़ गोल्ड टिक लोड करना
     const isVerified = liveUserData?.isVerified === true;
     const initialBadgeHtml = isVerified && typeof window.getVerifiedBadgeHTML === 'function'
         ? window.getVerifiedBadgeHTML(true, 16)
@@ -281,9 +281,9 @@ function createPostElement(pid, p) {
     let avatarClass = hasStory ? (window.hasUnseenStories(p.userId) ? "user-avatar story-border-unseen" : "user-avatar story-border-seen") : "user-avatar";
     let avatarClick = hasStory ? `viewStoryGroup('${p.userId}')` : `if(typeof window.viewUserProfile==='function') window.viewUserProfile('${p.userId}')`;
 
-    // स्मार्ट कैप्शन कोलाप्स प्रोसेसिंग (नाम के बजाय यूज़रनेम का उपयोग)
+    // स्मार्ट कैप्शन कोलाप्स
     const rawCaption = p.caption || '';
-    const captionLimit = 30; // अक्षरों की सीमा
+    const captionLimit = 30; 
     let captionHTML = `<b>${initialUsername}</b> <span class="caption-text-content">${rawCaption}</span>`;
 
     if (rawCaption.length > captionLimit) {
@@ -316,30 +316,37 @@ function createPostElement(pid, p) {
         </div>
         ${mediaHTML}
         
-        <!-- क्विक इन-लाइन इमोजी रिएक्शंस बार -->
-        <div class="quick-reactions-bar">
-            <span class="reaction-emoji-btn" onclick="window.sendQuickReaction('${pid}', '❤️', '${p.userId}')">❤️</span>
-            <span class="reaction-emoji-btn" onclick="window.sendQuickReaction('${pid}', '😂', '${p.userId}')">😂</span>
-            <span class="reaction-emoji-btn" onclick="window.sendQuickReaction('${pid}', '🔥', '${p.userId}')">🔥</span>
-            <span class="reaction-emoji-btn" onclick="window.sendQuickReaction('${pid}', '😮', '${p.userId}')">😮</span>
-            <span class="reaction-emoji-btn" onclick="window.sendQuickReaction('${pid}', '😢', '${p.userId}')">😢</span>
-        </div>
+        <!-- 🌟 एकीकृत कैप्शन्स, एक्शन्स और इमोजी रिएक्शंस बोर्ड -->
+        <div class="post-actions">
+            <!-- Row 1: Integrated Caption Text (At the very top) -->
+            <div class="post-caption" id="caption-wrapper-${pid}">${captionHTML}</div>
 
-        <div class="post-actions" style="display: flex; gap: 25px; align-items: center; padding: 10px 20px 5px;">
-            <div style="display:flex; flex-direction:column; align-items:center; position:relative;">
-                <i id="like-btn-${pid}" class="fa-${liked?'solid':'regular'} fa-heart action-btn ${liked?'liked':''}" onclick="window.handleLike('${pid}', '${p.userId}', this, '${postMediaUrl}')"></i>
-                <span id="like-count-${pid}" style="font-size:0.75rem; font-weight:700; color:#555; margin-top:4px;">${p.likes?.length||0}</span>
+            <!-- Row 2: Action Icons -->
+            <div class="action-buttons-row">
+                <div class="action-btn" style="position: relative;">
+                    <i id="like-btn-${pid}" class="fa-${liked?'solid':'regular'} fa-heart ${liked?'liked':''}" onclick="window.handleLike('${pid}', '${p.userId}', this, '${postMediaUrl}')"></i>
+                    <span id="like-count-${pid}">${p.likes?.length || 0}</span>
+                </div>
+                <div class="action-btn">
+                    <i class="fa-regular fa-comment" onclick="window.openComments('${pid}')"></i>
+                    <span id="post-comment-count-${pid}">${p.commentCount || 0}</span>
+                </div>
+                <div class="action-btn">
+                    <i class="fa-regular fa-paper-plane" onclick="window.openShareModal('${pid}', 'post')"></i>
+                    <span id="post-share-count-${pid}">${p.shareCount || 0}</span>
+                </div>
             </div>
-            <div style="display:flex; flex-direction:column; align-items:center;">
-                <i class="fa-regular fa-comment action-btn" onclick="window.openComments('${pid}')"></i>
-                <span id="post-comment-count-${pid}" style="font-size:0.75rem; font-weight:700; color:#555; margin-top:4px;">${p.commentCount || 0}</span>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center;">
-                <i class="fa-regular fa-paper-plane action-btn" onclick="window.openShareModal('${pid}', 'post')"></i>
-                <span id="post-share-count-${pid}" style="font-size:0.75rem; font-weight:700; color:#555; margin-top:4px;">${p.shareCount || 0}</span>
+            
+            <!-- Row 3: In-line Emojis inside the same cardboard -->
+            <div class="quick-reactions-row">
+                <span class="reaction-emoji" onclick="window.sendQuickReaction('${pid}', '👍', '${p.userId}', this)">👍</span>
+                <span class="reaction-emoji" onclick="window.sendQuickReaction('${pid}', '❤️', '${p.userId}', this)">❤️</span>
+                <span class="reaction-emoji" onclick="window.sendQuickReaction('${pid}', '😂', '${p.userId}', this)">😂</span>
+                <span class="reaction-emoji" onclick="window.sendQuickReaction('${pid}', '😮', '${p.userId}', this)">😮</span>
+                <span class="reaction-emoji" onclick="window.sendQuickReaction('${pid}', '😢', '${p.userId}', this)">😢</span>
+                <span class="reaction-emoji" onclick="window.sendQuickReaction('${pid}', '🙏', '${p.userId}', this)">🙏</span>
             </div>
         </div>
-        <div class="post-caption" id="caption-wrapper-${pid}" style="padding:10px 20px;">${captionHTML}</div>
     `;
 
     // एलिमेंट जेनरेट होने के तुरंत बाद रियल-टाइम बाइंडिंग शुरू करें
@@ -353,7 +360,7 @@ window.createPostElement = createPostElement;
 window.loadFeed = loadFeed;
 
 // ==========================================
-// --- 3. NEW FEATURE ACTIONS ---
+// --- 3. NEW CAPTION COGNITIVE ACTIONS ---
 // ==========================================
 
 /**
@@ -379,11 +386,53 @@ window.toggleCaptionCollapse = (pid) => {
 };
 
 /**
- * क्विक इन-लाइन इमोजी रिएक्शन सबमिशन
+ * Floating Burst Effect for Quick Emojis
  */
-window.sendQuickReaction = async (pid, emoji, ownerId) => {
+window.triggerEmojiBurst = (element, emojiChar) => {
+    if (!element) return;
+    const parent = element.closest('.post-card'); 
+    if (!parent) return;
+
+    for (let i = 0; i < 6; i++) {
+        const particle = document.createElement('span');
+        particle.className = 'floating-emoji-particle';
+        particle.innerText = emojiChar;
+        
+        // Random trajectory values
+        const xRandom = (Math.random() - 0.5) * 140;
+        const yRandom = -100 - (Math.random() * 120);
+        const rotRandom = (Math.random() - 0.5) * 60;
+        
+        particle.style.cssText = `
+            position: absolute;
+            left: ${element.getBoundingClientRect().left - parent.getBoundingClientRect().left + 15}px;
+            top: ${element.getBoundingClientRect().top - parent.getBoundingClientRect().top + 15}px;
+            transform: translate(-50%, -50%) scale(0.5);
+            font-size: 1.4rem;
+            pointer-events: none;
+            z-index: 120;
+            will-change: transform, opacity;
+            --tx: ${xRandom}px;
+            --ty: ${yRandom}px;
+            --rot: ${rotRandom}deg;
+        `;
+        
+        parent.appendChild(particle);
+        setTimeout(() => particle.remove(), 900);
+    }
+};
+
+/**
+ * क्विक इन-लाइन इमोजी रिएक्शंस बार
+ */
+window.sendQuickReaction = async (pid, emoji, ownerId, clickedElement = null) => {
     if (!window.currentUser) return;
     if (window.navigator.vibrate) window.navigator.vibrate(20);
+
+    // Trigger floating emoji burst
+    if (clickedElement) {
+        window.triggerEmojiBurst(clickedElement, emoji);
+    }
 
     const commentCountSpan = document.getElementById(`post-comment-count-${pid}`);
     if (commentCountSpan) {
@@ -433,7 +482,7 @@ window.triggerMicroConfetti = (element) => {
     if (!parent) return;
 
     const colors = ['#ff006e', '#8338ec', '#00b894', '#ffbe0b', '#00d2ff', '#ff6b81'];
-    const particleCount = 8;
+    const particleCount = 10;
 
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('i');
@@ -441,7 +490,8 @@ window.triggerMicroConfetti = (element) => {
         
         const randomColor = colors[Math.floor(Math.random() * colors.length)];
         const randomAngle = (Math.random() * 360) * (Math.PI / 180);
-        const randomDistance = 40 + Math.random() * 40;
+        const randomDistance = 50 + Math.random() * 50;
+        const rotRandom = (Math.random() - 0.5) * 90;
 
         const x = Math.cos(randomAngle) * randomDistance;
         const y = Math.sin(randomAngle) * randomDistance;
@@ -449,15 +499,53 @@ window.triggerMicroConfetti = (element) => {
         particle.style.color = randomColor;
         particle.style.left = '50%';
         particle.style.top = '50%';
-        particle.style.transform = 'translate(-50%, -50%) scale(0.5)';
+        particle.style.transform = 'translate(-50%, -50%) scale(0.4)';
         particle.style.setProperty('--tx', `${x}px`);
         particle.style.setProperty('--ty', `${y}px`);
+        particle.style.setProperty('--rot', `${rotRandom}deg`);
 
         parent.appendChild(particle);
 
         setTimeout(() => {
             particle.remove();
         }, 800);
+    }
+};
+
+/**
+ * 💖 Like बटन के ठीक ऊपर तैरते हुए दिल (Mini floating hearts above like icon)
+ */
+window.triggerFloatingHeartsAboveLike = (element) => {
+    if (!element) return;
+    const parent = element.parentElement; // The container `.action-btn`
+    if (!parent) return;
+
+    for (let i = 0; i < 4; i++) {
+        const miniHeart = document.createElement('i');
+        miniHeart.className = 'fa-solid fa-heart floating-like-heart';
+        
+        // Trajectory math directly over the element location
+        const xRandom = (Math.random() - 0.5) * 35;
+        const yRandom = -45 - (Math.random() * 45); 
+        const durationRandom = 0.6 + Math.random() * 0.3;
+
+        miniHeart.style.cssText = `
+            position: absolute;
+            left: 50%;
+            top: 10%;
+            transform: translate(-50%, -50%) scale(0.3);
+            color: #ff4757;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 110;
+            will-change: transform, opacity;
+            --tx: ${xRandom}px;
+            --ty: ${yRandom}px;
+            animation: floatHeartUp ${durationRandom}s ease-out forwards;
+        `;
+        
+        parent.appendChild(miniHeart);
+        setTimeout(() => miniHeart.remove(), durationRandom * 1000);
     }
 };
 
@@ -498,7 +586,9 @@ window.handleLike = async (pid, ownerId, btnElement, postMediaUrl = "") => {
         btnElement.classList.add('liked'); btnElement.classList.replace('fa-regular', 'fa-solid');
         if(likeCountSpan) likeCountSpan.innerText = parseInt(likeCountSpan.innerText) + 1;
         
+        // Trigger animations
         window.triggerMicroConfetti(btnElement);
+        window.triggerFloatingHeartsAboveLike(btnElement);
     }
 
     const postRef = window.doc(window.db, "posts", pid);
