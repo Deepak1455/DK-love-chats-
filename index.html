@@ -12,33 +12,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ff006e">
 
-    <!-- FontAwesome (Asynchronous Load) -->
-<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-
-<!-- Fonts (Asynchronous Load) -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"></noscript>
-    <!-- 🎨 सभी CSS स्टाइलशीट्स (Critical CSS loaded first, others preloaded asynchronously) -->
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="auth.css">
-
-<!-- Non-critical CSS (Asynchronous Preload to speed up initial load) -->
-<link rel="preload" href="call.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" href="global-nav.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" href="feed-reels.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" href="messagelist.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" href="chat.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" href="profile.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" href="story.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" href="settings.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" href="modals.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-
-<noscript>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- 🎨 सभी CSS स्टाइलशीट्स -->
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="call.css">
     <link rel="stylesheet" href="global-nav.css">
+    <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="feed-reels.css">
     <link rel="stylesheet" href="messagelist.css">
     <link rel="stylesheet" href="chat.css">
@@ -46,7 +29,6 @@
     <link rel="stylesheet" href="story.css">
     <link rel="stylesheet" href="settings.css">
     <link rel="stylesheet" href="modals.css">
-</noscript>
 </head>
 <body>
 
@@ -245,7 +227,9 @@
             <i class="fa-solid fa-arrow-left" style="font-size: 1.5rem; cursor: pointer; color: #000;" onclick="toggleNotifFullModal(false)"></i>
             <h3 style="margin: 0; font-weight: 900; font-size: 1.6rem; color: #000; letter-spacing: -0.5px;">Notifications</h3>
         </div>
-        <div style="background: #f1f5f9; padding: 18px 20px; border-radius: 24px; display: flex; align-items: center; gap: 15px; margin-bottom: 30px; position: relative; border: 3px solid transparent; background-image: linear-gradient(#f1f5f9, #f1f5f9), linear-gradient(135deg, #ff006e, #8338ec, #00b894, #ffbe0b); background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 15px 30px rgba(0,0,0,0.06), inset 0 2px 5px rgba(255,255,255,1);">
+        
+        <!-- 🎯 CLEANED HEADER INFO CARD (Removed Rainbow/3D Gradient Borders) -->
+        <div style="background: #f1f5f9; padding: 18px 20px; border-radius: 24px; display: flex; align-items: center; gap: 15px; margin-bottom: 30px; position: relative; border: 1.5px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
             <div style="width: 48px; height: 48px; background: #ffffff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--primary); box-shadow: 0 5px 15px rgba(255, 0, 110, 0.15);">
                 <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
@@ -507,21 +491,21 @@
                     <p id="profile-bio">No bio yet.</p>
                 </div>
 
-                <!-- REFERRAL CARD BOARD -->
-                <div id="my-referral-card" class="hidden fade-in" style="margin: 15px auto; width: 90%; max-width: 380px; background: linear-gradient(145deg, rgba(131, 56, 236, 0.1), rgba(0, 0, 0, 0.4)); border: 1px dashed var(--primary); border-radius: 20px; padding: 15px; text-align: center; backdrop-filter: blur(10px);">
-                    <p style="font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Invite Friends & Get 100 Followers</p>
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; margin-bottom: 10px;">
-                        <span id="profile-refer-code" style="font-family: 'Courier New', Courier, monospace; font-weight: 800; font-size: 1.2rem; color: var(--primary); letter-spacing: 2px;">LOADING...</span>
-                        <i class="fa-regular fa-copy" style="color: white; cursor: pointer; font-size: 1.1rem;" onclick="copyReferCode()"></i>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
-                        <span style="font-size: 0.8rem; color: #ccc;" id="refer-progress-text">0/10 Refers</span>
-                        <span style="font-size: 0.75rem; color: var(--success); font-weight: 700;">+10 Followers / Refer</span>
-                    </div>
-                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 8px; overflow: hidden;">
-                        <div id="refer-progress-fill" style="width: 0%; height: 100%; background: var(--primary-grad); transition: 0.5s;"></div>
-                    </div>
-                </div>
+<!-- REFERRAL CARD BOARD -->
+<div id="my-referral-card" class="hidden fade-in">
+    <p style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 700;">Invite Friends & Get 100 Followers</p>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #ffffff; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+        <span id="profile-refer-code">LOADING...</span>
+        <i class="fa-regular fa-copy" style="color: #64748b; cursor: pointer; font-size: 1.1rem;" onclick="copyReferCode()"></i>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
+        <span style="font-size: 0.8rem; color: #475569; font-weight: 600;" id="refer-progress-text">0/10 Refers</span>
+        <span style="font-size: 0.75rem; color: var(--success); font-weight: 700;">+10 Followers / Refer</span>
+    </div>
+    <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; margin-top: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,0.03);">
+        <div id="refer-progress-fill" style="width: 0%; height: 100%; background: var(--primary-grad); transition: 0.5s;"></div>
+    </div>
+</div>
 
                 <!-- Stats -->
                 <div class="profile-stats">
