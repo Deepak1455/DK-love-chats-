@@ -117,41 +117,48 @@ header {
     display: flex; align-items: center; justify-content: center; font-weight: bold; display: none; 
 }
 
-/* ==========================================
-   5. BOTTOM NAVIGATION (Premium 3D Card Look)
-   ========================================== */
+/* =================================================== */
+/* --- BOTTOM NAVIGATION BAR (UPDATED INTEGRATED) --- */
+/* =================================================== */
 .bottom-nav { 
     height: var(--nav-height); 
-    display: flex; justify-content: space-around; align-items: center; 
-    position: fixed; bottom: 0px; left: 50%; transform: translateX(-50%); 
-    width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; z-index: 90; 
+    display: flex; 
+    justify-content: space-around; 
+    align-items: center; 
+    position: fixed; 
+    bottom: 0px; 
+    left: 50%;
+    transform: translateX(-50%); 
+    width: 100%; 
+    max-width: 500px; 
+    border-radius: 5px; 
+    z-index: 90; 
+    transition: transform 0.3s; 
     
-    /* 🏠 3D CARD BOARD LOOK */
+    /* 🏠 Clean Solid Look */
     background-color: #ffffff !important; 
-    
-    /* 🌈 3D RAINBOW EDGE */
-    border: 2.5px solid transparent !important;
-    background-image: linear-gradient(#ffffff, #ffffff), 
-                      linear-gradient(90deg, #ff006e, #8338ec, #00b894, #ffbe0b) !important;
-    background-origin: border-box !important;
-    background-clip: padding-box, border-box !important;
+    border-top: 1.5px solid #cbd5e1 !important; /* सिंपल लाइट-ग्रे सॉलिड टॉप बॉर्डर */
+    background-image: none !important; /* रंगीन ग्रेडिएंट को पूरी तरह से हटा दिया गया है */
 
-    /* 💎 DEEP 3D SHADOWS */
-    box-shadow: 
-        0 -10px 30px rgba(0, 0, 0, 0.05),
-        inset 0 3px 5px rgba(255, 255, 255, 1) !important;
-    backdrop-filter: blur(5px); 
-    -webkit-backdrop-filter: blur(5px);
+    /* 💎 Soft Depth Shadows */
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.04) !important;
+    backdrop-filter: blur(20px); 
 }
 
 .nav-item { 
-    color: #94a3b8; font-size: 1.4rem; cursor: pointer; padding: 12px; 
-    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; 
+    color: #64748b; 
+    font-size: 1.4rem; 
+    cursor: pointer; 
+    padding: 12px; 
+    transition: 0.3s; 
+    position: relative; 
+    background: transparent !important; /* काला रंग रोकने के लिए */
 }
 
 .nav-item.active { 
-    color: #ff006e; transform: translateY(-5px) scale(1.1); 
-    filter: drop-shadow(0 4px 10px rgba(255, 0, 110, 0.3)); 
+    color: #ff006e; 
+    transform: translateY(-5px); 
+    text-shadow: 0 4px 10px rgba(255, 0, 110, 0.2); 
 }
 
 .msg-badge {
