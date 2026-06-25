@@ -2990,21 +2990,20 @@ window.timeAgo = timeAgo;
 // --- 🛡️ AUTH STATE & BAN SECURITY ---
 // ==========================================
 let isUserBanned = false;
-// 📱 डिवाइस के अनुसार "Gmail App Launcher" लिंक प्राप्त करने का सबसे उन्नत फ़ंक्शन
-// 📱 केवल और केवल असली Gmail App (Inbox) को खोलने का सख्त फ़ंक्शन (No GPay Redirection)
+// 📱 बिना किसी प्ले स्टोर या जीपे रीडायरेक्शन के सीधे ईमेल ऐप खोलने का सबसे स्थिर फ़ंक्शन
 const getGmailDeepLink = () => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     
     if (/android/i.test(userAgent)) {
-        // [Strict Android Component Intent]
-        // यहाँ हमने जीमेल के विशिष्ट कंपोनेंट (ConversationListActivityGmail) को डायरेक्ट टारगेट किया है।
-        // इसके कारण एंड्रॉइड सिस्टम केवल Gmail ही खोलेगा, कोई अन्य ऐप (जैसे Google Pay) नहीं खुल सकता।
-        return "intent://mail.google.com/#Intent;scheme=https;package=com.google.android.gm;component=com.google.android.gm/com.google.android.gm.ConversationListActivityGmail;end";
-    } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-        // [iOS Native Link]
+        // [Android App Email Launcher Intent]
+        // यह बिना किसी कंपोज़ स्क्रीन, प्ले स्टोर या जीपे के सीधे Gmail के मुख्य इनबॉक्स (Primary Tab) को खोलेगा।
+        return "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_EMAIL;package=com.google.android.gm;end";
+    } else if (/iPad|iPhone|iPod/i.test(userAgent)) {
+        // [iOS Native Inbox Link]
+        // एप्पल आईफ़ोन में सीधे जीमेल इनबॉक्स खोलने के लिए
         return "googlegmail://";
     } else {
-        // डेस्कटॉप फ़ॉलबैक
+        // डेस्कटॉप/कंप्यूटर के लिए सामान्य वेब लिंक
         return "https://mail.google.com";
     }
 };
@@ -3050,9 +3049,9 @@ onAuthStateChanged(auth, async (user) => {
                             <div style="position: absolute; top:0; left:0; width: 100%; height:100%; background: linear-gradient(90deg, var(--primary), #8338ec); border-radius:10px; animation: progressLoading 2s infinite ease-in-out;"></div>
                         </div>
 
-                        <!-- 📱 [असली <a> टैग लिंक बटन - Instagram जैसा डायरेक्ट रिस्पांस] -->
+                        <!-- 📱 [अपडेटेड टेक्स्ट और 100% वर्किंग सुरक्षित ईमेल ऐप लिंक] -->
                         <a id="btn-open-gmail" href="${getGmailDeepLink()}" target="${/android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? '_self' : '_blank'}" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; background: #ffffff; color: #10002b; font-weight: 800; font-size: 0.95rem; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" style="width: 20px; height: 15px; object-fit: contain;"> Click here to open gmail app
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" style="width: 20px; height: 15px; object-fit: contain;"> Click here to open app
                         </a>
 
                         <button id="btn-resend-verification" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; width: 100%; padding: 12px; font-weight: 700; font-size: 0.85rem; border-radius: 14px; cursor: pointer; margin-bottom: 25px; transition: 0.2s;">
@@ -3226,7 +3225,6 @@ onAuthStateChanged(auth, async (user) => {
         }
     }
 });
-
 // ==========================================
 // --- APP SETTINGS (MAINTENANCE & UPDATE) ---
 // ==========================================
