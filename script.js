@@ -2,7 +2,7 @@
 const APP_VERSION = 2.3;
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, setDoc, getDocs, where, getDoc, writeBatch, limit, deleteDoc, arrayUnion, arrayRemove, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collectionGroup, startAfter, limitToLast } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 // 🌟 नया सुरक्षित इम्पोर्ट: isSupported को शामिल किया गया है
@@ -2176,9 +2176,15 @@ window.handleSignup = async () => {
 
     try {
         const email = emailEl.value.trim(), pass = passEl.value, name = nameEl.value.trim(), username = userEl.value.trim().toLowerCase();
+        
+        // 1. फायरबेस में नया अकाउंट बनाएं
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
         const myUid = cred.user.uid, myReferCode = username + Math.floor(1000 + Math.random() * 9000);
 
+        // 2. तुरंत वेरिफिकेशन ईमेल भेजें
+        await sendEmailVerification(cred.user);
+
+        // 3. Firestore में यूजर का डेटा स्टोर करें
         const userData = { 
             uid: myUid, name, username, email, 
             photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`,
@@ -2186,6 +2192,7 @@ window.handleSignup = async () => {
         };
         await setDoc(doc(db, "users", myUid), userData);
 
+        // रेफरल कोड प्रोसेसिंग
         if (referralInput !== "") {
             const q = query(collection(db, "users"), where("referralCode", "==", referralInput));
             const snap = await getDocs(q);
@@ -2197,14 +2204,17 @@ window.handleSignup = async () => {
                 }
             }
         }
-        if(typeof showCustomAlert === 'function') showCustomAlert("Success", `Welcome ${name}! Your account is ready. Code: ${myReferCode}`, "success");
+
+        // नोट: हम यहाँ यूजर को लॉगआउट नहीं कर रहे हैं, ताकि बैकग्राउंड में ऑटो-वेरिफिकेशन चेक किया जा सके।
+
     } catch(e) { 
         let errorMsg = "Something went wrong. Try again.";
         if (e.code === 'auth/email-already-in-use') errorMsg = "This email is already registered!";
         if (e.code === 'auth/invalid-email') errorMsg = "Please enter a valid email address.";
         if (e.code === 'auth/weak-password') errorMsg = "Password should be at least 6 characters.";
         if(typeof showCustomAlert === 'function') showCustomAlert("Signup Failed", errorMsg, "error");
-    } finally { btn.innerText = originalText; btn.disabled = false; }
+        btn.innerText = originalText; btn.disabled = false;
+    }
 };
 
 const resetLoginUI = (type = 'default') => {
@@ -2980,6 +2990,25 @@ window.timeAgo = timeAgo;
 // --- 🛡️ AUTH STATE & BAN SECURITY ---
 // ==========================================
 let isUserBanned = false;
+// 📱 डिवाइस के अनुसार "Gmail App Launcher" लिंक प्राप्त करने का सबसे उन्नत फ़ंक्शन
+const getGmailDeepLink = () => {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    
+    if (/android/i.test(userAgent)) {
+        // [Android System Launcher Intent]
+        // यह लिंक पर क्लिक करते ही बिल्कुल होम-स्क्रीन आइकॉन की तरह असली Gmail App को सीधे खोलेगा।
+        return "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.google.android.gm;end";
+    } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        // [iOS Native Deep-Link]
+        // एप्पल आईफ़ोन में सीधे जीमेल ऐप खोलने के लिए
+        return "googlegmail://";
+    } else {
+        // डेस्कटॉप/कंप्यूटर के लिए सामान्य वेब लिंक
+        return "https://mail.google.com";
+    }
+};
+
+let verificationTimer = null; // ग्लोबल टाइमर
 
 onAuthStateChanged(auth, async (user) => {
     const splash = document.getElementById('splash-screen');
@@ -2987,8 +3016,122 @@ onAuthStateChanged(auth, async (user) => {
     const authSection = document.getElementById('auth-section');
     const appContainer = document.getElementById('app-container');
     
+    if (verificationTimer) { clearInterval(verificationTimer); verificationTimer = null; }
+
     if (user) {
+        // 🛡️ [स्मार्ट ऑटो-वेरिफिकेशन डिटेक्शन लॉजिक]
+        if (!user.emailVerified) {
+            if (splash) { splash.classList.add('splash-hide'); setTimeout(() => splash.classList.add('hidden'), 500); }
+            
+            if (appContainer) appContainer.classList.add('hidden');
+            if (authSection) authSection.classList.add('hidden');
+
+            let overlay = document.getElementById('verification-waiting-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'verification-waiting-overlay';
+                overlay.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: linear-gradient(135deg, #10002b 0%, #240046 100%);
+                    z-index: 99999; display: flex; flex-direction: column;
+                    align-items: center; justify-content: center; padding: 25px;
+                    text-align: center; color: white; box-sizing: border-box;
+                `;
+                
+                overlay.innerHTML = `
+                    <div style="background: rgba(255,255,255,0.05); padding: 35px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); max-width: 380px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                        <i class="fa-solid fa-envelope-open-text fa-bounce" style="font-size: 4rem; color: #ff006e; margin-bottom: 20px; filter: drop-shadow(0 0 15px rgba(255,0,110,0.4));"></i>
+                        <h2 style="margin: 0 0 10px 0; font-weight: 800; font-size: 1.1rem; color: white; text-align: center;">Verify Your Email</h2>
+                        <p style="color: #cbd5e1; font-size: 0.85rem; font-weight: 600; line-height: 1.4; margin: 0 0 20px 0;">We have sent a verification link to <br><b style="color: var(--primary);">${user.email}</b>. Please check your inbox and verify to continue.</p>
+
+                        <!-- प्रोग्रेस बार -->
+                        <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 20px; overflow: hidden; position: relative;">
+                            <div style="position: absolute; top:0; left:0; width: 100%; height:100%; background: linear-gradient(90deg, var(--primary), #8338ec); border-radius:10px; animation: progressLoading 2s infinite ease-in-out;"></div>
+                        </div>
+
+                        <!-- 📱 [असली <a> टैग लिंक बटन - Instagram जैसा डायरेक्ट रिस्पांस] -->
+                        <a id="btn-open-gmail" href="${getGmailDeepLink()}" target="${/android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? '_self' : '_blank'}" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; background: #ffffff; color: #10002b; font-weight: 800; font-size: 0.95rem; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" style="width: 20px; height: 15px; object-fit: contain;"> Click here to open gmail app
+                        </a>
+
+                        <button id="btn-resend-verification" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; width: 100%; padding: 12px; font-weight: 700; font-size: 0.85rem; border-radius: 14px; cursor: pointer; margin-bottom: 25px; transition: 0.2s;">
+                            Resend Email Link
+                        </button>
+
+                        <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
+                            <span id="btn-cancel-verify" style="color: #ff4757; font-weight: 800; font-size: 0.9rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">Cancel / Sign Out</span>
+                        </div>
+                    </div>
+                    
+                    <style>
+                        @keyframes progressLoading {
+                            0% { left: -100%; width: 100%; }
+                            50% { left: 0%; width: 10%; }
+                            100% { left: 100%; width: 100%; }
+                        }
+                    </style>
+                `;
+                document.body.appendChild(overlay);
+
+                // iOS के लिए सुरक्षित फ़ॉलबैक
+                const gmailBtn = document.getElementById('btn-open-gmail');
+                if (gmailBtn) {
+                    gmailBtn.addEventListener('click', () => {
+                        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+                        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                            setTimeout(() => {
+                                window.location.href = "mailto:";
+                            }, 1000);
+                        }
+                    });
+                }
+
+                // 'Cancel / Sign Out' बटन इवेंट
+                document.getElementById('btn-cancel-verify').onclick = async () => {
+                    if (verificationTimer) clearInterval(verificationTimer);
+                    await signOut(auth);
+                    overlay.remove();
+                    window.location.reload(); 
+                };
+
+                // 'Resend Email Link' बटन इवेंट
+                document.getElementById('btn-resend-verification').onclick = async () => {
+                    try {
+                        const btnResend = document.getElementById('btn-resend-verification');
+                        btnResend.innerText = "Sending..."; btnResend.disabled = true;
+                        await sendEmailVerification(user);
+                        if(typeof showCustomAlert === 'function') showCustomAlert("Sent", "A new verification link has been sent.", "success");
+                        btnResend.innerText = "Resend Email Link"; btnResend.disabled = false;
+                    } catch (err) {
+                        if(typeof showCustomAlert === 'function') showCustomAlert("Error", "Too many requests. Please try again later.", "error");
+                    }
+                };
+            }
+
+            // 🔄 [स्मार्ट बैकग्राउंड पोलिंग टाइमर] - हर 3 सेकंड में जांच
+            verificationTimer = setInterval(async () => {
+                try {
+                    await user.reload(); // लाइव स्टेटस रीलोड करें
+                    
+                    if (user.emailVerified) {
+                        clearInterval(verificationTimer);
+                        overlay.remove(); // ओवरले हटाएं
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert("Verified!", "Your email has been verified successfully!", "success");
+                        }
+                        window.location.reload(); // पेज रीफ्रेश करके सुरक्षित रूप से ऐप लोड करें
+                    }
+                } catch (e) {
+                    console.log("Auto-verification check error:", e);
+                }
+            }, 3000);
+
+            return; // अनवेरिफाइड होने पर ऐप का बाकी लॉजिक रोकें
+        }
+
+        // --- 🛡️ BAN SECURITY CHECK ---
         currentUser = user;
+        window.currentUser = user;
         
         try {
             const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -3082,6 +3225,7 @@ onAuthStateChanged(auth, async (user) => {
         }
     }
 });
+
 // ==========================================
 // --- APP SETTINGS (MAINTENANCE & UPDATE) ---
 // ==========================================
