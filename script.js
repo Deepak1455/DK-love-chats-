@@ -2991,19 +2991,20 @@ window.timeAgo = timeAgo;
 // ==========================================
 let isUserBanned = false;
 // 📱 डिवाइस के अनुसार "Gmail App Launcher" लिंक प्राप्त करने का सबसे उन्नत फ़ंक्शन
+// 📱 केवल और केवल असली Gmail App (Inbox) को खोलने का सख्त फ़ंक्शन (No GPay Redirection)
 const getGmailDeepLink = () => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     
     if (/android/i.test(userAgent)) {
-        // [Android System Launcher Intent]
-        // यह लिंक पर क्लिक करते ही बिल्कुल होम-स्क्रीन आइकॉन की तरह असली Gmail App को सीधे खोलेगा।
-        return "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.google.android.gm;end";
+        // [Strict Android Component Intent]
+        // यहाँ हमने जीमेल के विशिष्ट कंपोनेंट (ConversationListActivityGmail) को डायरेक्ट टारगेट किया है।
+        // इसके कारण एंड्रॉइड सिस्टम केवल Gmail ही खोलेगा, कोई अन्य ऐप (जैसे Google Pay) नहीं खुल सकता।
+        return "intent://mail.google.com/#Intent;scheme=https;package=com.google.android.gm;component=com.google.android.gm/com.google.android.gm.ConversationListActivityGmail;end";
     } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-        // [iOS Native Deep-Link]
-        // एप्पल आईफ़ोन में सीधे जीमेल ऐप खोलने के लिए
+        // [iOS Native Link]
         return "googlegmail://";
     } else {
-        // डेस्कटॉप/कंप्यूटर के लिए सामान्य वेब लिंक
+        // डेस्कटॉप फ़ॉलबैक
         return "https://mail.google.com";
     }
 };
