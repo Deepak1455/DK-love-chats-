@@ -1731,3 +1731,291 @@ body {
 #share-options::-webkit-scrollbar {
     display: none;
 }
+/* ==========================================================================
+   PREMIUM WHITE 3D ALL SHARE MODAL
+   ========================================================================== */
+
+/* Fullscreen Frosted Glass Overlay */
+.premium-share-backdrop {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(15, 23, 42, 0.55); /* प्रीमियम सॉफ्ट डार्क टिंट */
+    backdrop-filter: blur(12px);        /* स्मूथ ग्लास ब्लर */
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 9999; 
+    display: flex; 
+    align-items: flex-end; 
+    justify-content: center;
+}
+
+/* Bottom Sheet Design */
+.premium-share-sheet {
+    background: #ffffff; 
+    width: 100%; 
+    max-width: 480px; 
+    border-radius: 28px 28px 0 0; 
+    padding: 20px 24px 30px; 
+    text-align: center; 
+    border-top: 1.5px solid #cbd5e1;
+    box-shadow: 0 -10px 40px rgba(15, 23, 42, 0.1) !important;
+    transform: translateY(100%);
+    animation: slideSheetUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes slideSheetUp {
+    to { transform: translateY(0); }
+}
+
+/* Top Sheet Notch Drag Handle */
+.share-sheet-notch {
+    width: 45px; 
+    height: 5px; 
+    background: #e2e8f0; 
+    border-radius: 10px; 
+    margin: 0 auto 20px;
+}
+
+.share-sheet-title {
+    color: #0f172a !important; 
+    font-weight: 850 !important; 
+    font-size: 1.25rem;
+    margin: 0 0 4px 0 !important;
+    letter-spacing: 0.3px;
+}
+
+.share-sheet-subtitle {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0 0 24px 0;
+    font-weight: 600;
+}
+
+/* Subtle Heart Pulsing */
+.heart-pulse {
+    display: inline-block;
+    color: #ff006e;
+    animation: heartBeat 1.5s infinite ease-in-out;
+}
+@keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+/* Grid Layout for Icons */
+.share-grid-container {
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 12px; 
+    margin-bottom: 24px;
+}
+
+/* Individual Icon Action Box */
+.share-icon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+.share-icon-card:active {
+    transform: scale(0.9); /* दबाए जाने पर 3D रिस्पॉन्स */
+}
+.share-icon-card span {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #475569;
+}
+
+/* Modern Icon Circles with Inner Shadows */
+.share-icon-circle {
+    width: 54px; 
+    height: 54px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: #ffffff; 
+    font-size: 1.4rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Platform Brand Backgrounds */
+.wa-bg { background: #25D366 !important; }
+.tg-bg { background: #0088cc !important; }
+.fb-bg { background: #1877F2 !important; }
+.more-bg { background: linear-gradient(135deg, #ff006e, #8338ec) !important; }
+
+/* Elegant Link Copy Wrapper */
+.link-copier-bar {
+    background: #f8fafc; 
+    padding: 6px 6px 6px 14px; 
+    border-radius: 14px; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    border: 1.5px solid #cbd5e1; 
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+}
+.link-copier-bar:focus-within {
+    border-color: #8338ec;
+}
+
+/* Copier Input Field */
+#share-url-box {
+    background: transparent; 
+    border: none; 
+    color: #475569; 
+    flex: 1; 
+    font-size: 0.85rem; 
+    font-weight: 700;
+    outline: none;
+    font-family: monospace;
+}
+
+/* Copy Trigger Button */
+.btn-copy-action {
+    background: linear-gradient(135deg, #ff006e, #8338ec) !important; 
+    color: #ffffff !important; 
+    border: none; 
+    padding: 10px 18px; 
+    border-radius: 10px; 
+    font-weight: 800; 
+    font-size: 0.8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(255, 0, 110, 0.15);
+    transition: transform 0.15s;
+}
+.btn-copy-action:active {
+    transform: scale(0.95);
+}
+
+/* Close/Dismiss Button */
+.btn-share-close {
+    background: transparent; 
+    border: none; 
+    color: #ef4444 !important; 
+    font-weight: 850 !important; 
+    font-size: 0.95rem; 
+    cursor: pointer; 
+    padding: 10px 20px;
+    transition: opacity 0.15s;
+}
+.btn-share-close:active {
+    opacity: 0.7;
+}
+
+.hidden { display: none !important; }
+/* ==========================================================================
+   POPUP MODAL INTEGRATED INVITE BOARD STYLING
+   ========================================================================== */
+
+/* Integrated Card Inside Sheet */
+.modal-invite-board {
+    background: #f8fafc !important; /* Soft premium background */
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 18px !important;
+    padding: 16px 14px !important;
+    margin-bottom: 20px !important;
+    position: relative;
+    text-align: center;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+/* Compact Badge */
+.modal-invite-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #ff006e, #8338ec);
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 900;
+    padding: 3px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 4px 8px rgba(255, 0, 110, 0.15);
+}
+
+.modal-invite-title {
+    font-size: 0.92rem !important;
+    font-weight: 850 !important;
+    color: #0f172a !important;
+    margin: 6px 0 10px 0 !important;
+    line-height: 1.2;
+}
+
+/* Compact Code Box */
+.modal-code-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1.2px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 4px 4px 4px 12px;
+    margin-bottom: 12px;
+}
+#modal-refer-code {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 900;
+    font-size: 1.05rem;
+    color: #8338ec;
+    letter-spacing: 1px;
+}
+.modal-copy-btn {
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.modal-copy-btn:active {
+    transform: scale(0.95);
+}
+
+/* Live Progress Tracker */
+.modal-progress-wrapper {
+    text-align: left;
+}
+.modal-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    margin-bottom: 5px;
+    font-weight: 750;
+}
+.modal-progress-text {
+    color: #475569;
+}
+.modal-progress-bonus {
+    color: #059669;
+}
+.modal-progress-track {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+#modal-refer-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff006e, #8338ec) !important;
+    border-radius: 8px;
+    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
