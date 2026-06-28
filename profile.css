@@ -1,11 +1,8 @@
 /* ==========================================================================
-   PROFILE MODULE
-   Premium White 3D Theme (VIP Card Boards, Stats, Grid)
+   PROFILE MODULE - PREMIUM WHITE 3D SYSTEM (SPLIT STATS VERSION)
    ========================================================================== */
 
-/* ==========================================
-   1. MAIN PROFILE VIEW
-   ========================================== */
+/* 1. MAIN PROFILE VIEW */
 #profile-view {
     background-color: #ffffff !important;
     background-image: none !important;
@@ -16,7 +13,7 @@
 
 .profile-header { 
     text-align: center; 
-    padding: 40px 20px 10px; 
+    padding: 30px 20px 10px; 
     position: relative; 
 }
 
@@ -31,12 +28,29 @@
 }
 .profile-back-btn:active { transform: scale(0.9); }
 
-/* ==========================================
-   2. PROFILE IMAGE (DP) & FOLLOWS YOU BADGE
-   ========================================== */
+/* 🌟 SIDE-BY-SIDE SPLIT: DP Left | Stats Right */
+.profile-header-split {
+    display: flex;
+    align-items: center; /* वर्टिकली सेंटर अलाइन करने के लिए */
+    justify-content: space-between;
+    gap: 15px;
+    width: 90%;
+    max-width: 380px;
+    margin: 0 auto 15px auto; /* कार्ड्स की तरह ही बीच में रखने के लिए */
+}
+
+.profile-header-left {
+    flex-shrink: 0;
+}
+
+.profile-header-right {
+    flex-grow: 1;
+}
+
+/* 2. PROFILE IMAGE (DP) */
 #profile-img { 
-    width: 110px; 
-    height: 110px; 
+    width: 95px !important; /* साइड अलाइनमेंट के लिए साइज संतुलित किया गया है */
+    height: 95px !important; 
     border-radius: 50%; 
     object-fit: cover; 
     cursor: pointer; 
@@ -46,6 +60,24 @@
     transition: transform 0.2s ease;
 }
 #profile-img:active { transform: scale(0.95); }
+
+/* Overlapping Verified Badge */
+#profile-dp-badge {
+    position: absolute; 
+    bottom: 3px; 
+    right: 3px; 
+    background: #ffffff; 
+    border-radius: 50%; 
+    width: 28px; 
+    height: 28px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+    border: 2px solid #ff006e; 
+    z-index: 10;
+    animation: fadeIn 0.3s ease-out;
+}
 
 /* 'Follows You' Badge */
 #profile-follows-you-card {
@@ -59,16 +91,46 @@
     display: inline-flex; 
     align-items: center;
     gap: 8px;
-    margin: 15px auto -5px auto; 
+    margin: 5px auto 12px auto; 
     box-shadow: 0 5px 15px rgba(0, 184, 148, 0.1);
     position: relative;
     letter-spacing: 0.5px;
 }
 #profile-follows-you-card i { font-size: 1rem; }
 
-/* ==========================================
-   3. VIP INFO CARD BOARD (Clean Solid Border)
-   ========================================== */
+/* 🌟 CLEAN PROFILE STATS (बिना किसी कार्ड बोर्ड या बैकग्राउंड के) */
+.profile-stats {
+    display: flex !important;
+    justify-content: space-around !important;
+    background: transparent !important; /* बैकग्राउंड हटाया गया */
+    border: none !important;             /* बॉर्डर हटाया गया */
+    box-shadow: none !important;         /* शैडो हटाई गई */
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.stat-item { 
+    text-align: center; 
+    cursor: pointer; 
+    transition: 0.2s; 
+}
+.stat-item:active { transform: scale(0.95); opacity: 0.7; }
+
+.stat-val { 
+    display: block; 
+    color: #000000 !important; 
+    font-weight: 900 !important; 
+    font-size: 1.2rem; 
+}
+.stat-label { 
+    font-size: 0.8rem; 
+    color: #64748b !important; 
+    font-weight: 700 !important; 
+}
+
+/* 3. ORIGINAL INFO CARD BOARD (पहले की तरह जैसे आपने दिया था) */
 .profile-info-card {
     background: #f1f5f9 !important; /* Premium Platinum Blue */
     margin: 20px auto !important;
@@ -77,10 +139,8 @@
     width: 90%;
     max-width: 380px;
     position: relative !important;
-    border: 1.5px solid #cbd5e1 !important; /* साफ़ और सिंपल सॉलिड बॉर्डर */
-    background-image: none !important; /* रंगीन ग्रेडिएंट बॉर्डर को हटा दिया गया है */
-    
-    /* 💎 Soft Clean Shadow */
+    border: 1.5px solid #cbd5e1 !important; 
+    background-image: none !important; 
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
     text-align: center !important;
 }
@@ -102,9 +162,11 @@
 }
 
 .bio-divider {
-    width: 150px; height: 3px;
+    width: 150px; 
+    height: 3px;
     background: linear-gradient(135deg, #ff006e, #8338ec);
-    margin: 0 auto 12px; border-radius: 5px;
+    margin: 0 auto 12px; 
+    border-radius: 5px;
 }
 
 #profile-bio { 
@@ -115,47 +177,23 @@
     font-style: italic; 
 }
 
-/* ==========================================
-   4. PROFILE STATS (Posts, Followers, Following)
-   ========================================== */
-.profile-stats {
-    background: #f1f5f9 !important;
-    margin: 15px auto !important;
-    padding: 12px !important;
-    border-radius: 20px !important;
-    display: flex !important;
-    justify-content: space-around !important;
-    border: 2px solid #e2e8f0 !important;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
-    width: 90%;
-    max-width: 380px;
-}
-
-.stat-item { text-align: center; cursor: pointer; transition: 0.2s; }
-.stat-item:active { transform: scale(0.95); opacity: 0.7; }
-.stat-val { display: block; color: #000000 !important; font-weight: 900 !important; font-size: 1.2rem; }
-.stat-label { font-size: 0.8rem; color: #64748b !important; font-weight: 700 !important; }
-
-/* ==========================================
-/* ==========================================
-   5. REFERRAL CARD (Cleaned & Style Matched)
-   ========================================== */
+/* 4. ORIGINAL REFERRAL CARD (पहले की तरह) */
 #my-referral-card {
     margin: 15px auto; 
     width: 90%; 
     max-width: 380px; 
     background: #f1f5f9 !important;
-    border: 1.5px solid #cbd5e1 !important; /* क्लीन लाइट-ग्रे बॉर्डर */
+    border: 1.5px solid #cbd5e1 !important; 
     border-radius: 20px; 
     padding: 15px; 
     text-align: center;
-    background-image: none !important; /* कलर ग्रेडिएंट पूरी तरह हटाया गया */
+    background-image: none !important; 
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
 }
 
 #profile-refer-code {
     background: #ffffff !important;
-    color: #8338ec !important; /* केवल कोड का टेक्स्ट हाइलाइटेड रहेगा */
+    color: #8338ec !important; 
     border-radius: 12px !important;
     padding: 10px !important;
     border: 1.5px solid #cbd5e1 !important;
@@ -165,11 +203,12 @@
     letter-spacing: 2px;
 }
 
-/* ==========================================
-   6. PROFILE ACTION BUTTONS
-   ========================================== */
+/* 5. ORIGINAL ACTION BUTTONS (पहले की तरह) */
 #profile-actions {
-    width: 100%; max-width: 400px; margin: 15px auto 0; padding: 0 15px;
+    width: 100%; 
+    max-width: 400px; 
+    margin: 15px auto 0; 
+    padding: 0 15px;
 }
 
 .btn-edit, .btn-msg, .btn-follow, .btn-insta-support, .btn-share-app {
@@ -177,7 +216,7 @@
     font-weight: 900 !important;
     text-transform: uppercase !important;
     letter-spacing: 1px !important;
-    transition: var(--transition-smooth, 0.2s) !important;
+    transition: 0.2s !important;
     border: none !important;
     cursor: pointer;
 }
@@ -192,9 +231,22 @@
 }
 
 /* Follow & Message Buttons */
-.btn-follow { background: linear-gradient(135deg, #ff006e, #8338ec) !important; color: white !important; box-shadow: 0 5px 15px rgba(255, 0, 110, 0.3) !important; }
-.btn-following { background: #f1f5f9 !important; color: #64748b !important; border: 1.5px solid #cbd5e1 !important; box-shadow: none !important; }
-.btn-msg { background: #1a1a1a !important; color: white !important; box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important; }
+.btn-follow { 
+    background: linear-gradient(135deg, #ff006e, #8338ec) !important; 
+    color: white !important; 
+    box-shadow: 0 5px 15px rgba(255, 0, 110, 0.3) !important; 
+}
+.btn-following { 
+    background: #f1f5f9 !important; 
+    color: #64748b !important; 
+    border: 1.5px solid #cbd5e1 !important; 
+    box-shadow: none !important; 
+}
+.btn-msg { 
+    background: #1a1a1a !important; 
+    color: white !important; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important; 
+}
 
 /* Insta & Share Buttons */
 .btn-insta-support {
@@ -210,11 +262,10 @@
     box-shadow: 0 5px 15px rgba(131, 56, 236, 0.3) !important;
 }
 
-/* ==========================================
-   7. POSTS / REELS TABS
-   ========================================== */
+/* 6. POSTS / REELS TABS */
 .profile-tabs {
-    display: flex; justify-content: center;
+    display: flex; 
+    justify-content: center;
     background: #f8fafc !important;
     border-top: 1px solid #e2e8f0 !important;
     border-bottom: 1px solid #e2e8f0 !important;
@@ -222,9 +273,13 @@
 }
 
 .profile-tab {
-    flex: 1; text-align: center; padding: 12px 0;
-    color: #94a3b8 !important; font-size: 1.5rem;
-    cursor: pointer; transition: 0.3s;
+    flex: 1; 
+    text-align: center; 
+    padding: 12px 0;
+    color: #94a3b8 !important; 
+    font-size: 1.5rem;
+    cursor: pointer; 
+    transition: 0.3s;
     border-bottom: 3px solid transparent;
 }
 .profile-tab.active {
@@ -233,42 +288,50 @@
 }
 .profile-tab:active { background: #f1f5f9; }
 
-/* ==========================================
-   8. MEDIA GRID (Posts & Reels Layout)
-   ========================================== */
+/* 7. MEDIA GRID (Posts & Reels Layout) */
 .profile-grid { 
     display: grid; 
     grid-template-columns: repeat(3, 1fr); 
-    gap: 3px; margin-top: 3px; padding: 0 3px; 
+    gap: 3px; 
+    margin-top: 3px; 
+    padding: 0 3px; 
 }
 
 .grid-item { 
-    aspect-ratio: 1/1; position: relative; cursor: pointer; 
-    background: #f1f5f9; overflow: hidden; border-radius: 6px; 
+    aspect-ratio: 1/1; 
+    position: relative; 
+    cursor: pointer; 
+    background: #f1f5f9; 
+    overflow: hidden; 
+    border-radius: 6px; 
 }
 
 .grid-media { 
-    width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    transition: transform 0.3s ease; 
 }
 
 .grid-overlay { 
-    position: absolute; top:0; left:0; width:100%; height:100%; 
-    background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; 
-    opacity: 0; transition: 0.2s; color: white; font-weight: 800; font-size: 1.1rem; gap: 5px; 
+    position: absolute; 
+    top:0; left:0; width:100%; height:100%; 
+    background: rgba(0,0,0,0.4); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    opacity: 0; 
+    transition: 0.2s; 
+    color: white; 
+    font-weight: 800; 
+    font-size: 1.1rem; 
+    gap: 5px; 
 }
 
 .grid-item:hover .grid-media { transform: scale(1.05); }
 .grid-item:hover .grid-overlay { opacity: 1; }
 
-/* Delete Button on Hover/Self */
-.delete-grid-btn {
-    position: absolute; top: 8px; right: 8px; 
-    background: rgba(255, 71, 87, 0.9); color: white; 
-    width: 28px; height: 28px; border-radius: 8px; 
-    display: flex; align-items: center; justify-content: center; 
-    z-index: 15; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-}
-/* प्रोफ़ाइल कार्ड को प्रीमियम डार्क थीम में बदलने के लिए */
+/* 8. PREMIUM DARK THEME CARD BOARD (OPTIONAL VARIANT) */
 .profile-card-board {
     background: linear-gradient(145deg, #10002b, #151525) !important;
     border: 2px solid transparent !important;
@@ -281,3 +344,5 @@
     padding: 20px;
     box-sizing: border-box;
 }
+
+.hidden { display: none !important; }
