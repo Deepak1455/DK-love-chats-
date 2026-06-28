@@ -83,39 +83,77 @@
     </div>
 </div>
 
-<!-- ADVANCED ALL SHARE MODAL -->
-<div id="all-share-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 9999; display: flex; align-items: flex-end; justify-content: center;">
-    <div class="share-sheet fade-in-up" style="background: #151525; width: 100%; max-width: 500px; border-radius: 30px 30px 0 0; padding: 25px; text-align: center; border-top: 2px solid #ff006e;">
-        <div style="width: 50px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 10px; margin: 0 auto 25px;"></div>
-        <h3 style="color: white; margin-bottom: 25px; font-weight: 800; font-size: 1.3rem;">Share DK Love Chats ❤️</h3>
+<!-- ========================================== -->
+<!-- 🚀 PREMIUM ALL SHARE MODAL (BOTTOM SHEET)  -->
+<!-- ========================================== -->
+<!-- ========================================================= -->
+<!-- 🚀 ADVANCED ALL SHARE MODAL WITH INTEGRATED REFERRAL CARD -->
+<!-- ========================================================= -->
+<div id="all-share-modal" class="hidden premium-share-backdrop">
+    <div class="premium-share-sheet fade-in-up">
+        
+        <!-- Top Drag Notch -->
+        <div class="share-sheet-notch"></div>
+        
+        <h3 class="share-sheet-title">Share DK Love Chats <span class="heart-pulse">❤️</span></h3>
+        <p class="share-sheet-subtitle">Invite friends & grow your circle instantly!</p>
 
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
-            <div class="share-icon-box" onclick="shareToPlatform('whatsapp')">
-                <div class="icon-circle" style="background: #25D366;"><i class="fa-brands fa-whatsapp"></i></div>
+        <!-- 🌟 INTEGRATED "INVITE FRIENDS & GET 100 FOLLOWERS" CARD BOARD -->
+        <div class="modal-invite-board">
+            <div class="modal-invite-badge">
+                <i class="fa-solid fa-gift"></i> INVITE REWARD
+            </div>
+            <h4 class="modal-invite-title">Invite Friends & Get 100 Followers</h4>
+            
+            <!-- Code Box Wrapper -->
+            <div class="modal-code-wrapper">
+                <span id="modal-refer-code">LOADING...</span>
+                <button class="modal-copy-btn" onclick="copyModalReferCode()">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+
+            <!-- Live Progress Bar -->
+            <div class="modal-progress-wrapper">
+                <div class="modal-progress-meta">
+                    <span id="modal-refer-progress-text" class="modal-progress-text">0/10 Refers</span>
+                    <span class="modal-progress-bonus">+10 Followers / Join</span>
+                </div>
+                <div class="modal-progress-track">
+                    <div id="modal-refer-progress-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Icons Grid -->
+        <div class="share-grid-container">
+            <div class="share-icon-card" onclick="shareToPlatform('whatsapp')">
+                <div class="share-icon-circle wa-bg"><i class="fa-brands fa-whatsapp"></i></div>
                 <span>WhatsApp</span>
             </div>
-            <div class="share-icon-box" onclick="shareToPlatform('telegram')">
-                <div class="icon-circle" style="background: #0088cc;"><i class="fa-brands fa-telegram"></i></div>
+            <div class="share-icon-card" onclick="shareToPlatform('telegram')">
+                <div class="share-icon-circle tg-bg"><i class="fa-brands fa-telegram"></i></div>
                 <span>Telegram</span>
             </div>
-            <div class="share-icon-box" onclick="shareToPlatform('facebook')">
-                <div class="icon-circle" style="background: #1877F2;"><i class="fa-brands fa-facebook"></i></div>
+            <div class="share-icon-card" onclick="shareToPlatform('facebook')">
+                <div class="share-icon-circle fb-bg"><i class="fa-brands fa-facebook"></i></div>
                 <span>Facebook</span>
             </div>
-            <div class="share-icon-box" onclick="shareToPlatform('native')">
-                <div class="icon-circle" style="background: linear-gradient(135deg, #ff006e, #8338ec);"><i class="fa-solid fa-plus"></i></div>
+            <div class="share-icon-card" onclick="shareToPlatform('native')">
+                <div class="share-icon-circle more-bg"><i class="fa-solid fa-plus"></i></div>
                 <span>More</span>
             </div>
         </div>
 
-        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 18px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
-            <input type="text" id="share-url-box" value="https://deepak1455.github.io/DK-love-chats-/" readonly style="background: transparent; border: none; color: #aaa; flex: 1; font-size: 0.9rem; outline: none;">
-            <button onclick="copyAppURL()" style="background: #ff006e; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; cursor: pointer;">Copy Link</button>
+        <!-- Copy Link Input Area -->
+        <div class="link-copier-bar">
+            <input type="text" id="share-url-box" value="https://deepak1455.github.io/DK-love-chats-/" readonly>
+            <button onclick="copyAppURL()" class="btn-copy-action">Copy Link</button>
         </div>
-        <button onclick="closeAllShare()" style="background: transparent; border: none; color: #ff4757; font-weight: 800; font-size: 1.1rem; cursor: pointer; padding: 10px;">Close</button>
+
+        <button onclick="closeAllShare()" class="btn-share-close">Close</button>
     </div>
 </div>
-
 <!-- DYNAMIC CUSTOM CONFIRM MODAL -->
 <div id="custom-confirm-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 0, 43, 0.9); backdrop-filter: blur(10px); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;">
     <div class="modal-content fade-in" style="background: linear-gradient(145deg, #1e1e2d, #10002b); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 30px; text-align: center; width: 100%; max-width: 320px; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 25px rgba(255, 71, 87, 0.2);">
@@ -452,88 +490,85 @@
                 <div style="text-align:center; padding:50px; color:#aaa;"><div class="splash-loader" style="margin:0 auto; width:30px; height:30px; border-width:2px;"></div></div>
             </div>
         </div>
-
-        <!-- PROFILE VIEW -->
-        <div id="profile-view" class="view-section">
-            <div class="profile-header">
-                <i class="fa-solid fa-arrow-left profile-back-btn" onclick="switchTab('home')"></i>
-<!-- 👤 Profile Image Wrapped with Premium Verification Badge Overlay -->
-<div class="profile-dp-container" style="position: relative; display: inline-block; margin: 0 auto;">
-    <img id="profile-img" src="" onclick="viewFullMedia(this.src, 'image')">
-    
-    <!-- 🎖️ DP Overlap Verified Badge -->
-    <div id="profile-dp-badge" class="hidden" style="
-        position: absolute; 
-        bottom: 5px; 
-        right: 5px; 
-        background: #ffffff; 
-        border-radius: 50%; 
-        width: 32px; 
-        height: 32px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
-        border: 2.5px solid #ff006e; 
-        z-index: 10;
-        animation: fadeIn 0.3s ease-out;
-    ">
-        <!-- JS द्वारा 24px का गोल्ड टिक यहाँ रेंडर होगा -->
-    </div>
-</div>
-                <div id="profile-follows-you-card" class="hidden fade-in">
-                    <i class="fa-solid fa-handshake-angle"></i> Follows You
-                </div>
-                <div class="profile-info-card fade-in">
-                    <h2 id="profile-name">User</h2>
-                    <p id="profile-username">@username</p>
-                    <div class="bio-divider"></div>
-                    <p id="profile-bio">No bio yet.</p>
-                </div>
-
-<!-- REFERRAL CARD BOARD -->
-<div id="my-referral-card" class="hidden fade-in">
-    <p style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 700;">Invite Friends & Get 100 Followers</p>
-    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #ffffff; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
-        <span id="profile-refer-code">LOADING...</span>
-        <i class="fa-regular fa-copy" style="color: #64748b; cursor: pointer; font-size: 1.1rem;" onclick="copyReferCode()"></i>
-    </div>
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
-        <span style="font-size: 0.8rem; color: #475569; font-weight: 600;" id="refer-progress-text">0/10 Refers</span>
-        <span style="font-size: 0.75rem; color: var(--success); font-weight: 700;">+10 Followers / Refer</span>
-    </div>
-    <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; margin-top: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,0.03);">
-        <div id="refer-progress-fill" style="width: 0%; height: 100%; background: var(--primary-grad); transition: 0.5s;"></div>
-    </div>
-</div>
-
-                <!-- Stats -->
-                <div class="profile-stats">
-                    <div class="stat-item"><span class="stat-val" id="profile-posts-count">0</span><span class="stat-label">Posts</span></div>
-                    <div class="stat-item" onclick="showFollowers()"><span class="stat-val" id="profile-followers-count">0</span><span class="stat-label">Followers</span></div>
-                    <div class="stat-item" onclick="showFollowing()"><span class="stat-val" id="profile-following-count">0</span><span class="stat-label">Following</span></div>
-                </div>
-
-                <!-- Actions -->
-                <div id="profile-actions" style="display:flex; justify-content:center; gap:10px; margin-top: 15px;"></div>
-            </div>
-
-            <div style="padding: 0 15px;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600;">Posts</div>
-            </div>
-            
-            <div class="profile-tabs">
-                <div class="profile-tab active" id="tab-posts" onclick="switchProfileTab('posts')"><i class="fa-solid fa-table-cells"></i></div>
-                <div class="profile-tab" id="tab-reels" onclick="switchProfileTab('reels')"><i class="fa-solid fa-clapperboard"></i></div>
-            </div>
-
-            <!-- GRIDS (सुरक्षित सिंगल डिक्लेरेशन) -->
-            <div id="profile-posts-grid" class="profile-grid" style="padding-bottom: 90px;"></div>
-            <div id="profile-reels-grid" class="profile-grid hidden" style="padding-bottom: 90px;"></div>
+<!-- ========================================== -->
+<!-- 👤 NEW PREMIUM PROFILE VIEW SECTION        -->
+<!-- ========================================== -->
+<!-- ========================================== -->
+<!-- 👤 CLASSIC SPLIT PROFILE VIEW SECTION      -->
+<!-- ========================================== -->
+<div id="profile-view" class="view-section">
+    <div class="profile-header">
+        
+        <!-- Top Bar (Back Button) -->
+        <div class="profile-header-top">
+            <i class="fa-solid fa-arrow-left profile-back-btn" onclick="switchTab('home')"></i>
         </div>
-    </main>
+
+        <!-- 🌟 SPLIT ROW: Left (DP Only) | Right (Stats Only) -->
+        <div class="profile-header-split">
+            
+            <!-- Left Side: DP & Overlay Badge -->
+            <div class="profile-header-left">
+                <div class="profile-dp-container">
+                    <img id="profile-img" src="" onclick="viewFullMedia(this.src, 'image')">
+                    
+                    <!-- DP Overlap Verified Badge -->
+                    <div id="profile-dp-badge" class="hidden">
+                        <!-- Gold tick will render here via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Stats Only (NO CARD BOARD) -->
+            <div class="profile-header-right">
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-val" id="profile-posts-count">0</span>
+                        <span class="stat-label">Posts</span>
+                    </div>
+                    <div class="stat-item" onclick="showFollowers()">
+                        <span class="stat-val" id="profile-followers-count">0</span>
+                        <span class="stat-label">Followers</span>
+                    </div>
+                    <div class="stat-item" onclick="showFollowing()">
+                        <span class="stat-val" id="profile-following-count">0</span>
+                        <span class="stat-label">Following</span>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- End of Split Row -->
+
+        <!-- Follows You Badge (Below Split) -->
+        <div id="profile-follows-you-card" class="hidden fade-in">
+            <i class="fa-solid fa-handshake-angle"></i> Follows You
+        </div>
+
+        <!-- Info Card: Name, Username, Bio (Full Width Below) -->
+        <div class="profile-info-card fade-in">
+            <h2 id="profile-name">User</h2>
+            <p id="profile-username">@username</p>
+            <div class="bio-divider"></div>
+            <p id="profile-bio">No bio yet.</p>
+        </div>
+
+
+
+        <!-- Actions Buttons (Full Width Below, exactly like original) -->
+        <div id="profile-actions" style="display:flex; justify-content:center; gap:10px; margin-top: 15px;"></div>
 </div>
 
+
+
+    <div class="profile-tabs">
+        <div class="profile-tab active" id="tab-posts" onclick="switchProfileTab('posts')"><i class="fa-solid fa-table-cells"></i></div>
+        <div class="profile-tab" id="tab-reels" onclick="switchProfileTab('reels')"><i class="fa-solid fa-clapperboard"></i></div>
+    </div>
+
+    <!-- GRIDS -->
+    <div id="profile-posts-grid" class="profile-grid" style="padding-bottom: 90px;"></div>
+    <div id="profile-reels-grid" class="profile-grid hidden" style="padding-bottom: 90px;"></div>
+</div>
 <!-- NEW POST MODAL -->
 <div id="create-post-modal" class="hidden">
     <div class="modal-content">
