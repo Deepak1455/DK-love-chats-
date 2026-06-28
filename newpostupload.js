@@ -12,6 +12,12 @@ let thumbnailPromise = null;       // Tracks async thumbnail generation to preve
 let currentUploadXHR = null;        
 let alertTimeout = null;            
 
+// लोकप्रिय और ट्रेंडिंग हैशटैग्स की लिस्ट (स्मार्ट सजेशन के लिए)
+const TRENDING_HASHTAGS = [
+    "DKLoveChats", "Love", "Trending", "ReelsVideo", "Explore", 
+    "ForYou", "Vibe", "Happy", "ChatSystem", "Friends", "SecureChat"
+];
+
 // ==========================================
 // --- 1. DIRECT GALLERY LAUNCH BINDING ---
 // ==========================================
@@ -35,6 +41,146 @@ if (document.readyState === 'loading') {
 } else {
     bindDirectGalleryTrigger();
 }
+
+// ==========================================
+// --- SMART HASHTAG HELPER FUNCTIONS ---
+// ==========================================
+
+// कैप्शन टेक्स्ट से सभी हैशटैग्स को एक्सट्रैक्ट करने का फ़ंक्शन
+function extractHashtags(text) {
+    if (!text) return [];
+    const regex = /#([\p{L}\p{N}_]+)/gu;
+    const matches = [...text.matchAll(regex)];
+    return [...new Set(matches.map(match => match[1].toLowerCase()))];
+}
+
+// 🌟 रीयल-टाइम में टेक्स्ट और बैकड्रॉप हाइलाइटर को सिंक करने का फ़ंक्शन
+window.handleCaptionInput = () => {
+    const textarea = document.getElementById('post-caption');
+    const backdrop = document.getElementById('backdrop-caption-highlight');
+    if (!textarea || !backdrop) return;
+
+    let text = textarea.value;
+
+    // XSS से सुरक्षा के लिए कैरेक्टर एस्केपिंग
+    let escapedText = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    // हैशटैग्स को नीले रंग में बदलने वाला रेगुलर एक्सप्रेशन रिप्लेसमेंट
+    let highlightedText = escapedText.replace(/#([\p{L}\p{N}_]+)/gu, '<span style="color: #0095f6; font-weight: 700;">#$1</span>');
+
+    // टेक्स्ट एरिया के स्क्रॉल और लाइन ब्रेक को सिंक में रखने के लिए फिक्स
+    backdrop.innerHTML = highlightedText + (text.endsWith('\n') ? '\n ' : '');
+    backdrop.scrollTop = textarea.scrollTop;
+
+    // हैशटैग सजेशन को रीयल-टाइम अपडेट करें
+    window.updateHashtagSuggestions();
+};
+
+// 🌟 रीयल-टाइम में स्क्रॉल सिंक बनाए रखने के लिए श्रोता
+window.syncCaptionScroll = () => {
+    const textarea = document.getElementById('post-caption');
+    const backdrop = document.getElementById('backdrop-caption-highlight');
+    if (textarea && backdrop) {
+        backdrop.scrollTop = textarea.scrollTop;
+    }
+};
+
+// 🌟 हैशटैग बटन पर क्लिक करने पर हैशटैग मार्क जोड़ने का फ़ंक्शन
+window.insertHashSymbol = () => {
+    const textarea = document.getElementById('post-caption');
+    if (!textarea) return;
+
+    if (navigator.vibrate) navigator.vibrate(15);
+
+    const text = textarea.value;
+    
+    // उपयुक्त स्पेसिंग के साथ हैशटैग इंसर्ट करें
+    if (text.endsWith(' ') || text === "") {
+        textarea.value = text + "#";
+    } else {
+        textarea.value = text + " #";
+    }
+
+    window.handleCaptionInput();
+    textarea.focus();
+};
+
+// 🛡️ डुप्लिकेट प्रिवेंशन के साथ कैप्शन में हैशटैग जोड़ने का फ़ंक्शन
+window.appendHashtagToCaption = (tag) => {
+    const textarea = document.getElementById('post-caption');
+    if (!textarea) return;
+
+    const text = textarea.value;
+    const currentTags = extractHashtags(text);
+
+    // "ek desa hashtag add na ho" -> डुप्लिकेट हैशटैग रोकने की जांच
+    if (currentTags.includes(tag.toLowerCase())) {
+        if (navigator.vibrate) navigator.vibrate([50, 50]);
+        window.showPostAlertBanner(`#${tag} is already added in this caption!`);
+        return;
+    }
+
+    if (navigator.vibrate) navigator.vibrate(10);
+
+    const words = text.split(/\s+/);
+    const lastWord = words[words.length - 1];
+
+    if (lastWord && lastWord.startsWith('#')) {
+        words[words.length - 1] = `#${tag}`;
+        textarea.value = words.join(' ') + ' ';
+    } else {
+        textarea.value = text.trim() ? `${text.trim()} #${tag} ` : `#${tag} `;
+    }
+
+    // इनपुट सिंक चलाएं ताकि बैकड्रॉप और हाइलाइटर तुरंत अपडेट हो जाएं
+    window.handleCaptionInput();
+    textarea.focus();
+};
+
+// रीयल-टाइम सजेशन को फ़िल्टर करने का फ़ंक्शन
+window.updateHashtagSuggestions = () => {
+    const textarea = document.getElementById('post-caption');
+    const container = document.getElementById('hashtag-suggestions-list');
+    if (!textarea || !container) return;
+
+    const text = textarea.value;
+    const words = text.split(/\s+/);
+    const lastWord = words[words.length - 1] || "";
+
+    let filtered = TRENDING_HASHTAGS;
+
+    if (lastWord.startsWith('#')) {
+        const query = lastWord.substring(1).toLowerCase();
+        filtered = TRENDING_HASHTAGS.filter(tag => tag.toLowerCase().includes(query));
+    }
+
+    if (filtered.length === 0) {
+        container.parentElement.style.display = 'none';
+        return;
+    }
+
+    container.parentElement.style.display = 'block';
+    container.innerHTML = filtered.map(tag => `
+        <span onclick="window.appendHashtagToCaption('${tag}')" style="
+            display: inline-block;
+            background: #f1f5f9;
+            color: #4f46e5;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            user-select: none;
+        " onmouseover="this.style.background='#e2e8f0';" onmouseout="this.style.background='#f1f5f9';">
+            #${tag}
+        </span>
+    `).join('');
+};
 
 // ==========================================
 // --- 2. INSTAGRAM STYLE CLEAN WHITE UI ---
@@ -100,17 +246,90 @@ function rebuildInstagramComposer(type) {
                 </div>
             </div>
 
-            <!-- 4. MIDDLE SECTION: USER PROFILE DP & CAPTION INPUT -->
-            <div style="display: flex; gap: 15px; padding: 18px 20px; border-bottom: 1.5px solid #f1f5f9; align-items: flex-start; background: #ffffff; flex: 1;">
+            <!-- 4. MIDDLE SECTION: USER PROFILE DP & 🌟 HIGH-END SYNCHRONIZED CAPTION INPUT -->
+            <div style="display: flex; gap: 15px; padding: 18px 20px; border-bottom: 1.5px solid #f1f5f9; align-items: flex-start; background: #ffffff;">
                 <img src="${userDp}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0; flex-shrink: 0;">
-                <textarea id="post-caption" placeholder="Write a caption..." style="flex: 1; background: transparent; border: none; color: #262626; font-size: 0.95rem; line-height: 1.5; padding: 4px 0; height: 100px; resize: none; outline: none; box-sizing: border-box; font-family: inherit; font-weight: 500;"></textarea>
+                
+                <!-- Sychnronized Textarea Wrapper -->
+                <div style="position: relative; flex: 1; min-height: 100px;">
+                    <!-- Backdrop Highlighting Div (Behind) -->
+                    <div id="backdrop-caption-highlight" style="
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100px;
+                        padding: 4px 0;
+                        font-size: 0.95rem;
+                        line-height: 1.5;
+                        color: #262626;
+                        white-space: pre-wrap;
+                        word-wrap: break-word;
+                        overflow: hidden;
+                        pointer-events: none;
+                        box-sizing: border-box;
+                        font-family: inherit;
+                        font-weight: 500;
+                    "></div>
+                    <!-- Real Native Textarea (In front, text is transparent, cursor is visible) -->
+                    <textarea id="post-caption" placeholder="Write a caption... (Use # to add hashtags)" style="
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100px;
+                        background: transparent !important;
+                        border: none;
+                        color: transparent !important;
+                        caret-color: #262626;
+                        font-size: 0.95rem;
+                        line-height: 1.5;
+                        padding: 4px 0;
+                        resize: none;
+                        outline: none;
+                        box-sizing: border-box;
+                        font-family: inherit;
+                        font-weight: 500;
+                        overflow-y: auto;
+                        z-index: 2;
+                    " oninput="window.handleCaptionInput()" onscroll="window.syncCaptionScroll()"></textarea>
+                </div>
             </div>
 
-            <div style="padding: 20px; color: #8e8e93; font-size: 0.78rem; line-height: 1.4; font-weight: 500; background: #ffffff;">
+            <!-- 🌟 INSTAGRAM # UTILITY BUTTON BAR -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1.5px solid #f1f5f9; background: #ffffff;">
+                <button onclick="window.insertHashSymbol()" style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: #f1f5f9;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 10px;
+                    padding: 6px 14px;
+                    font-weight: 800;
+                    color: #0095f6;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    transition: 0.15s ease;
+                " onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+                    <i class="fa-solid fa-hashtag" style="font-size: 0.85rem;"></i> Add Tag
+                </button>
+                <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 700;">Tap to insert a hashtag instantly</span>
+            </div>
+
+            <!-- 5. SMART HASHTAG SUGGESTION CONTAINER -->
+            <div id="hashtag-suggestions-box" style="padding: 10px 20px; border-bottom: 1.5px solid #f1f5f9; background: #ffffff; display: none;">
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Suggested Hashtags</div>
+                <div id="hashtag-suggestions-list" style="display: flex; gap: 8px; overflow-x: auto; white-space: nowrap; padding-bottom: 5px; scrollbar-width: none;">
+                    <!-- JS द्वारा सजेशन्स यहाँ रेंडर होंगे -->
+                </div>
+            </div>
+
+            <div style="padding: 20px; color: #8e8e93; font-size: 0.78rem; line-height: 1.4; font-weight: 500; background: #ffffff; flex: 1;">
                 Your ${type === 'video' ? 'Reel' : 'Post'} will be shared with your followers in their feeds, and will appear on your profile.
             </div>
 
-            <!-- 5. BOTTOM SHARE BUTTON -->
+            <!-- 6. BOTTOM SHARE BUTTON -->
             <div style="padding: 15px 20px; background: #ffffff; border-top: 1.5px solid #f1f5f9; position: sticky; bottom: 0; z-index: 10;">
                 <button onclick="window.handlePublish()" style="
                     width: 100%; 
@@ -129,6 +348,8 @@ function rebuildInstagramComposer(type) {
             </div>
         </div>
     `;
+
+    window.updateHashtagSuggestions();
 
     const captionTextarea = document.getElementById('post-caption');
     if (captionTextarea) {
@@ -206,7 +427,6 @@ window.updatePostUI = async (input) => {
                 <i class="fa-solid fa-circle-notch fa-spin" style="color:#0095f6; font-size:1.5rem;"></i>
             </div>`;
         
-        // 📹 गैलरी से सेलेक्ट करते ही तुरंत बैकग्राउंड में प्रॉमिस असाइन करें
         thumbnailPromise = generateVideoCover(file).then(cover => {
             currentVisualThumbnail = cover; 
             return cover;
@@ -290,17 +510,15 @@ window.updatePostUI = async (input) => {
     }
 };
 
-// 📹 तेज़ और सुरक्षित कवर जनरेटर (Timeouts और Error boundary के साथ)
+// 📹 तेज़ और सुरक्षित कवर जनरेटर
 function generateVideoCover(file) {
     return new Promise((resolve) => {
         const video = document.createElement('video');
         const canvas = document.createElement('canvas');
         const fileURL = URL.createObjectURL(file);
         
-        // 2.5 सेकंड का सेफ्टी गार्ड ताकि प्रॉमिस कभी न अटके
         const timeoutId = setTimeout(() => {
             cleanup();
-            // फ़ॉलबैक इमेज (हल्का ग्रे बॉक्स)
             resolve("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><rect width='120' height='120' fill='%23f1f5f9'/></svg>");
         }, 2500);
 
@@ -315,10 +533,10 @@ function generateVideoCover(file) {
         video.src = fileURL;
         video.muted = true; 
         video.playsInline = true;
-        video.preload = 'auto'; // ब्राउज़र को तुरंत लोड करने का निर्देश
+        video.preload = 'auto';
 
         video.onloadeddata = () => { 
-            video.currentTime = 0.2; // 0.2 सेकंड सीक करना ज्यादा तेज़ है
+            video.currentTime = 0.2; 
         }; 
         
         video.onseeked = () => {
@@ -327,7 +545,6 @@ function generateVideoCover(file) {
                 canvas.height = video.videoHeight || 640;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                // कंप्रेस्ड क्वालिटी 0.7 की ताकि जनरेशन इंस्टेंट हो
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.7); 
                 cleanup();
                 resolve(dataUrl);
@@ -408,7 +625,7 @@ function uploadFile(file, onProgress) {
 
         const xhr = new XMLHttpRequest();
         currentUploadXHR = xhr; 
-        xhr.open("POST", "https://api.gstatic.com/../../" ? "https://api.cloudinary.com/v1_1/dknnmldye/auto/upload" : "https://api.cloudinary.com/v1_1/dknnmldye/auto/upload");
+        xhr.open("POST", "https://api.cloudinary.com/v1_1/dknnmldye/auto/upload");
 
         xhr.upload.onprogress = (e) => {
             if (e.lengthComputable && onProgress) {
@@ -457,12 +674,14 @@ window.handlePublish = async () => {
         return;
     }
 
-    // 🌟 सुरक्षा जांच: यदि रील थंबनेल अभी जनरेट हो रहा है, तो उसके पूरे होने का इंतज़ार करें
     if (thumbnailPromise) {
         await thumbnailPromise;
     }
 
     const mediaPreview = currentVisualThumbnail; 
+
+    // डुप्लिकेट हटाते हुए क्लीन हैशटैग्स एरे जनरेट करें
+    const hashtagsList = [...new Set(extractHashtags(caption))];
 
     window.hidePostAlertBanner();
     if (navigator.vibrate) navigator.vibrate(40);
@@ -478,7 +697,6 @@ window.handlePublish = async () => {
         uploadArea.innerHTML = `
             <div id="top-upload-bar" style="display: flex; align-items: center; background: #ffffff; padding: 12px 15px; border-bottom: 1.5px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; box-shadow:0 4px 10px rgba(0,0,0,0.03);">
                 <div style="position: relative; width: 40px; height: 40px; flex-shrink: 0;">
-                    <!-- 📹 रील वीडियो से बना हुआ थंबनेल यहाँ सुरक्षित प्रदर्शित होगा -->
                     <img src="${mediaPreview}" style="width: 100%; height: 100%; border-radius: 6px; object-fit: cover; border: 1px solid #e2e8f0;">
                 </div>
                 <div style="flex: 1; margin-left: 15px;">
@@ -514,7 +732,8 @@ window.handlePublish = async () => {
             timestamp: serverTimestamp(), 
             likes: [], 
             commentCount: 0, 
-            shareCount: 0
+            shareCount: 0,
+            hashtags: hashtagsList
         });
         
         if (fillBar) fillBar.style.width = "100%";
