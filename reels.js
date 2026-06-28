@@ -1,5 +1,5 @@
 // ==========================================
-// REELS.JS - Reels Logic & UI Handling (SILENT VIEWS TRACKING)
+// REELS.JS - Reels Logic & UI Handling (SILENT VIEWS TRACKING & SMART OVERLAY CONTROL)
 // ==========================================
 
 // --- Global State Variables for Reels ---
@@ -15,6 +15,113 @@ window.activeReelHeaderListeners = window.activeReelHeaderListeners || new Map()
 // सेशन के दौरान पहले से देखे जा चुके रील्स को ट्रैक करने के लिए सेट (Set)
 if (!window.viewedReelsSession) {
     window.viewedReelsSession = new Set();
+}
+
+/**
+ * सभी चल रहे रील्स वीडियो को एक साथ पॉज करने का ग्लोबल फ़ंक्शन
+ */
+window.pauseAllReels = () => {
+    document.querySelectorAll('.reel-video').forEach(video => {
+        video.pause();
+    });
+};
+
+/**
+ * वर्तमान में स्क्रीन पर सक्रिय रील को पुनः चालू (Play) करने का ग्लोबल फ़ंक्शन
+ */
+window.resumeActiveReel = () => {
+    const activeTab = document.getElementById('reels-view');
+    // सुनिश्चित करें कि यूजर वर्तमान में रील्स टैब पर ही है
+    if (activeTab && !activeTab.classList.contains('active-view')) return;
+
+    if (window.currentVisibleReelId) {
+        const activeReelEl = document.getElementById(`reel-${window.currentVisibleReelId}`) || document.getElementById(`sv-item-${window.currentVisibleReelId}`);
+        if (activeReelEl) {
+            const video = activeReelEl.querySelector('.reel-video');
+            if (video && video.paused) {
+                video.play().catch(() => {});
+            }
+        }
+    }
+};
+
+/**
+ * 🌟 रील्स से सीधे सर्च स्क्रीन पर नेविगेट करने का हाई-स्पीड फ़ंक्शन
+ */
+window.searchHashtagFromReels = (tag) => {
+    // 1. वीडियो को तुरंत पॉज करें
+    window.pauseAllReels();
+    
+    // 2. वाइब्रेशन फ़ीडबैक
+    if (navigator.vibrate) navigator.vibrate(15);
+    
+    // 3. ग्लोबल सर्च स्क्रीन खोलें (स्लाइड एनीमेशन के साथ)
+    if (typeof window.openGlobalSearch === 'function') {
+        window.openGlobalSearch();
+    } else {
+        const searchModal = document.getElementById('global-search-modal');
+        if (searchModal) {
+            searchModal.classList.remove('hidden');
+            setTimeout(() => { searchModal.style.transform = 'translateY(0)'; }, 10);
+        }
+    }
+    
+    // 4. सर्च इनपुट भरें और एनीमेशन के साथ रीयल-टाइम परिणाम लोड करें
+    setTimeout(() => {
+        const searchInput = document.getElementById('global-search-input');
+        if (searchInput) {
+            searchInput.value = `#${tag}`;
+            window.activeSearchTab = 'foryou'; // फ़ॉर यू टैब को एक्टिव करें
+            if (typeof window.updateSearchTabsUI === 'function') window.updateSearchTabsUI();
+            if (typeof window.handleGlobalSearch === 'function') window.handleGlobalSearch();
+        }
+    }, 320); // सर्च स्क्रीन के स्लाइड-अप एनीमेशन (300ms) के साथ सिंक किया गया है
+};
+
+/**
+ * 🌟 हैशटैग्स को नीले रंग में बदलने और रील्स-सर्च चैनल से जोड़ने वाला फ़ंक्शन
+ */
+function highlightReelHashtags(text) {
+    if (!text) return "";
+    return text.replace(/#([\p{L}\p{N}_]+)/gu, (match, tag) => {
+        return `<span class="reel-hashtag-link" style="color: #0095f6 !important; font-weight: 700; cursor: pointer; text-shadow: 0 1px 2px rgba(0,0,0,0.3); transition: opacity 0.15s;" onclick="event.stopPropagation(); window.searchHashtagFromReels('${tag}')">${match}</span>`;
+    });
+}
+
+/**
+ * ब्राउज़र टैब चेंज या ऐप मिनिमाइज़ होने पर वीडियो कंट्रोल
+ */
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        window.pauseAllReels();
+    } else {
+        window.resumeActiveReel();
+    }
+});
+
+/**
+ * 🌟 स्मार्ट मोडल इंटरसेप्टर:
+ * जब भी कोई मोडल स्क्रीन पर खुलेगा, बैकग्राउंड रील स्वतः रुक जाएगी।
+ */
+if (typeof window.toggleModal === 'function') {
+    const originalToggleModal = window.toggleModal;
+    window.toggleModal = (id, show) => {
+        originalToggleModal(id, show);
+        if (show) {
+            window.pauseAllReels();
+        } else {
+            setTimeout(window.resumeActiveReel, 150);
+        }
+    };
+}
+
+// कमेंट मोडल ओपन होने पर सिंक
+if (typeof window.openComments === 'function') {
+    const originalOpenComments = window.openComments;
+    window.openComments = (id) => {
+        originalOpenComments(id);
+        window.pauseAllReels();
+    };
 }
 
 /**
@@ -61,7 +168,7 @@ window.bindRealtimeReelHeader = (reelId, userId) => {
             }
         }
 
-        // 🌟 2. नाम के बजाय यूज़रनेम (Username @) और रोज़ गोल्ड वेरिफिकेशन बैच का रियल-टाइम अपडेट
+        // 2. नाम के बजाय यूज़रनेम (Username @) और रोज़ गोल्ड वेरिफिकेशन बैच का रियल-टाइम अपडेट
         const nameSpan = item.querySelector(`.reel-user-name`);
         if (nameSpan) {
             const freshUsername = userData.username || userData.name || 'user';
@@ -69,7 +176,7 @@ window.bindRealtimeReelHeader = (reelId, userId) => {
                 ? window.getVerifiedBadgeHTML(true, 16) // रील्स हेडर के लिए 16px आकार
                 : '';
             
-            nameSpan.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">@${freshUsername}${badgeHtml}</span>`;
+            nameSpan.innerHTML = `@${freshUsername}${badgeHtml}`;
         }
     });
 
@@ -136,14 +243,12 @@ window.loadReels = async () => {
 window.incrementReelView = async (reelId) => {
     if (!window.currentUser) return;
     
-    // यदि इस सेशन में यूजर पहले ही यह रील देख चुका है, तो दोबारा काउंट न करें
     if (window.viewedReelsSession.has(reelId)) return;
     window.viewedReelsSession.add(reelId);
 
     try {
         const postRef = window.doc(window.db, "posts", reelId);
         
-        // यूनीक व्यूज के लिए Array का उपयोग करें, या सामान्य संख्यात्मक बढ़ाव का उपयोग करें
         if (typeof window.arrayUnion === 'function') {
             await window.updateDoc(postRef, {
                 views: window.arrayUnion(window.currentUser.uid)
@@ -179,7 +284,6 @@ function createReelElement(id, data) {
 
     const posterUrl = data.coverUrl || videoUrl.replace(/\.[^/.]+$/, ".jpg");
 
-    // 🌟 लोकल कैश से प्रारंभिक लोडिंग के लिए डेटा तैयार करें
     const liveUserData = window.allCachedUsers?.find(u => u.uid === data.userId);
     const initialUsername = liveUserData?.username || data.username || 'user';
     const isVerified = liveUserData?.isVerified === true;
@@ -187,6 +291,9 @@ function createReelElement(id, data) {
     const initialBadgeHtml = isVerified && typeof window.getVerifiedBadgeHTML === 'function'
         ? window.getVerifiedBadgeHTML(true, 16)
         : '';
+
+    // 🌟 रीयल-टाइम में ब्लू हैशटैग्स और रिडायरेक्शन रेंडर करें
+    const formattedCaption = highlightReelHashtags(data.caption || "");
 
     const div = document.createElement('div'); 
     div.className = 'reel-item'; 
@@ -201,13 +308,13 @@ function createReelElement(id, data) {
         <div class="reel-info-gradient"></div> 
         <div class="reel-info" style="z-index: 10;">
             <div class="reel-user">
-                <img src="${data.userPhoto || 'https://i.pravatar.cc/150'}" class="reel-avatar" onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${data.userId}')" loading="lazy">
+                <img src="${data.userPhoto || 'https://i.pravatar.cc/150'}" class="reel-avatar" onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${data.userId}')" loading="lazy" style="cursor: pointer;">
                 <div class="reel-user-detail">
-                    <!-- 🌟 पूरा नाम हटाकर यूज़रनेम और रोज़ गोल्ड टिक सेट किया गया है -->
-                    <span class="reel-user-name" style="display: inline-flex; align-items: center; gap: 4px;">@${initialUsername}${initialBadgeHtml}</span>${followBtnHtml}
+                    <!-- 🌟 यूज़रनेम पर क्लिक करने पर सीधे यूज़र प्रोफाइल खुलने का इवेंट बाइंड किया गया है -->
+                    <span class="reel-user-name" onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${data.userId}')" style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">@${initialUsername}${initialBadgeHtml}</span>${followBtnHtml}
                 </div>
             </div>
-            <div class="reel-caption">${data.caption || ""}</div>
+            <div class="reel-caption" style="text-shadow: 0 1px 2px rgba(0,0,0,0.4);">${formattedCaption}</div>
         </div>
         <div class="reel-actions" style="z-index: 10;">
             <div class="reel-action-btn ${isLiked ? 'liked' : ''}" id="reel-like-btn-${id}" onclick="window.handleReelLike('${id}', '${data.userId}', this, '${posterUrl}')">
@@ -216,14 +323,13 @@ function createReelElement(id, data) {
             <div class="reel-action-btn" onclick="window.openComments('${id}')">
                 <i class="fa-solid fa-comment-dots"></i><span id="reel-comment-count-${id}">${commentCount}</span>
             </div>
-            <!-- 🌟 BUG FIX: 'post' प्रकार को 'reel' किया गया है और इंस्टेंट पेलोड पास किया गया है -->
             <div class="reel-action-btn" onclick="window.openShareModal('${id}', 'reel', { url: '${videoUrl}', type: 'video', ownerId: '${data.userId}', ownerName: '${initialUsername.replace(/'/g, "\\'")}', ownerPhoto: '${(data.userPhoto || "https://i.pravatar.cc/150").replace(/'/g, "\\'")}' })">
                 <i class="fa-solid fa-paper-plane"></i><span id="reel-share-count-${id}">${shareCount}</span>
             </div>
         </div>
     `;
 
-    // 🌟 एलिमेंट रेंडर होने के तुरंत बाद रीयल-टाइम अपडेट इंजन बाइंड करें
+    // एलिमेंट रेंडर होने के तुरंत बाद रीयल-टाइम अपडेट इंजन बाइंड करें
     setTimeout(() => {
         window.bindRealtimeReelHeader(id, data.userId);
     }, 50);
@@ -244,7 +350,7 @@ function createReelElement(id, data) {
     };
 
     div.addEventListener('pointerup', (e) => {
-        if(e.target.closest('.reel-follow-btn') || e.target.closest('.reel-action-btn')) return;
+        if(e.target.closest('.reel-follow-btn') || e.target.closest('.reel-action-btn') || e.target.closest('.reel-avatar') || e.target.closest('.reel-user-name') || e.target.closest('.reel-caption span')) return;
         const currentTime = Date.now(), tapInterval = currentTime - lastTapTime;
 
         if (tapInterval < 300 && tapInterval > 0) {
@@ -350,7 +456,6 @@ window.setupReelObserver = (targetContainerId = 'reels-container') => {
             if (entry.isIntersecting) {
                 window.currentVisibleReelId = reelId;
                 
-                // रील के स्क्रीन पर आते ही व्यू काउंट बढ़ाने का साइलेंट ट्रिगर
                 if (typeof window.incrementReelView === 'function') {
                     window.incrementReelView(reelId);
                 }
@@ -401,11 +506,9 @@ function preloadNeighborReels(currentReel) {
 /**
  * रील को लाइक / अनलाइक करने का लॉजिक (Database Update)
  */
- // त्वरित लगातार क्लिक को रोकने के लिए ग्लोबल लॉक सेट
 window.reelLikeLock = window.reelLikeLock || new Set();
 
- window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
-    // 🛡️ 1. सुरक्षा लॉक: यदि इस रील पर पहले से ही लाइक की रिक्वेस्ट प्रोसेस हो रही है, तो क्लिक रोकें
+window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
     if (window.reelLikeLock.has(pid)) return;
     window.reelLikeLock.add(pid);
 
@@ -413,13 +516,10 @@ window.reelLikeLock = window.reelLikeLock || new Set();
     const textSpan = btnElement.querySelector('.reel-action-text');
     const icon = btnElement.querySelector('i');
     
-    // वर्तमान स्थिति को सहेजें (नेटवर्क फेल होने पर रोलबैक करने के लिए)
     const originalCount = parseInt(textSpan.innerText) || 0;
 
-    // 📱 2. हैप्टिक वाइब्रेशन फ़ीडबैक (Premium Native Feel)
     if (navigator.vibrate) navigator.vibrate(25);
 
-    // ⚡ 3. Optimistic UI Update (बिना सर्वर रिस्पॉन्स का इंतजार किए तुरंत रिस्पॉन्स)
     if (isCurrentlyLiked) {
         btnElement.classList.remove('liked'); 
         icon.className = 'fa-regular fa-heart'; 
@@ -431,7 +531,6 @@ window.reelLikeLock = window.reelLikeLock || new Set();
         
         if (typeof window.playSendSound === 'function') window.playSendSound(); 
         
-        // 🌟 4. प्रीमियम विज़ुअल इफ़ेक्ट (माइक्रो-कॉन्फेटी या फॉल-बैक हार्ट पॉप)
         if (typeof window.triggerMicroConfetti === 'function') {
             window.triggerMicroConfetti(btnElement);
         } else {
@@ -453,7 +552,6 @@ window.reelLikeLock = window.reelLikeLock || new Set();
         } else { 
             await window.updateDoc(postRef, { likes: window.arrayUnion(window.currentUser.uid) }); 
             
-            // 🌟 5. नए सुरक्षित सिस्टम के तहत बैकएंड के लिए नोटिफिकेशन ट्रिगर करना
             if (ownerId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
                 await window.sendNotification(ownerId, 'like', 'liked your reel', pid, "", coverUrl); 
             }
@@ -461,7 +559,6 @@ window.reelLikeLock = window.reelLikeLock || new Set();
     } catch(e) {
         console.error("Reel Like Error, rolling back UI changes:", e);
         
-        // 🔄 6. रोलबैक तंत्र (Rollback Mechanism): नेटवर्क एरर या विफलता पर UI को पुराना जैसा करना
         if (isCurrentlyLiked) {
             btnElement.classList.add('liked');
             icon.className = 'fa-solid fa-heart';
@@ -476,13 +573,8 @@ window.reelLikeLock = window.reelLikeLock || new Set();
             window.showToast("Connection Error", "Failed to register like. Try again.", "", "error");
         }
     } finally {
-        // प्रक्रिया पूरी होने के बाद लॉक हटा दें
         window.reelLikeLock.delete(pid);
     }
 };
 
-/**
- * रील को स्टोरी के रूप में जोड़ने का फंक्शन
- */
 window.shareReelToStory = window.handleShareReelToStory;
-
