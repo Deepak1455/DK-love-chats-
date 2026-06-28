@@ -86,6 +86,9 @@ window.forceStopAllReels = () => {
 // ==========================================
 // --- PROFILE VIEWING LOGIC (REAL-TIME) ---
 // ==========================================
+// =========================================================
+// --- UPDATE: PROFILE VIEWING LOGIC (REAL-TIME SYNCED) ---
+// =========================================================
 window.viewUserProfile = async (targetUid) => {
     if (typeof window.forceStopAllReels === 'function') window.forceStopAllReels();
 
@@ -138,13 +141,15 @@ window.viewUserProfile = async (targetUid) => {
         const actions = document.getElementById('profile-actions');
         const referCard = document.getElementById('my-referral-card'); 
 
+        // 🌟 यदि यूज़र स्वयं की प्रोफ़ाइल देख रहा है
         if(window.currentUser && targetId === window.currentUser.uid) {
             if(referCard) {
                 referCard.classList.remove('hidden');
-                document.getElementById('profile-refer-code').innerText = d.referralCode || "GETCODE123";
-                const refCount = d.referralsCount || 0;
-                document.getElementById('refer-progress-text').innerText = `${refCount}/10 Refers`;
-                document.getElementById('refer-progress-fill').style.width = Math.min((refCount / 10) * 100, 100) + "%";
+                
+                // 🛠️ BUG FIX: पहले के मैन्युअल लोडिंग को नए ऑटो-सिंक इंजन से रिप्लेस किया गया
+                if (typeof window.syncReferralData === 'function') {
+                    window.syncReferralData();
+                }
             }
             if (actions) {
                 actions.innerHTML = `
@@ -153,9 +158,7 @@ window.viewUserProfile = async (targetUid) => {
                             <button class="btn-edit" style="flex:1; height:45px;" onclick="openEditProfile()">Edit Profile</button>
                             <button class="btn-edit" style="flex:1; height:45px;" onclick="openSettingsModal()"><i class="fa-solid fa-gear"></i> Settings</button>
                         </div>
-                        <button class="btn-insta-support" style="width:100%; height:48px;" onclick="openInstagram()">
-                            <i class="fa-brands fa-instagram"></i> Open in Instagram App
-                        </button>
+
                         <button class="btn-share-app" style="width:100%; height:48px;" onclick="shareApp()">
                             <i class="fa-solid fa-share-nodes"></i> Share DK Love Chats
                         </button>
@@ -163,6 +166,7 @@ window.viewUserProfile = async (targetUid) => {
                 `;
             }
         } else {
+            // यदि दूसरे यूज़र की प्रोफ़ाइल देखी जा रही है
             if(referCard) referCard.classList.add('hidden');
             const isFollowing = window.currentUserData?.following && window.currentUserData.following.includes(targetId);
             if (actions) {
@@ -185,7 +189,9 @@ window.viewUserProfile = async (targetUid) => {
             window.updateProfileVerificationUI(targetId, d.isVerified);
         }
 
-        // Real-Time Sync Listener
+        // ==========================================
+        // --- REAL-TIME SYNC SNAPSHOT LISTENER -----
+        // ==========================================
         if (window.unsubscribeProfileUser) {
             window.unsubscribeProfileUser();
         }
@@ -205,7 +211,7 @@ window.viewUserProfile = async (targetUid) => {
                     liveNameEl.innerText = liveData.name || "User";
                 }
 
-                // 🌟 सुरक्षित रियल-टाइम इमेज चेकर (Flickering से बचने के लिए)
+                // सुरक्षित रियल-टाइम इमेज चेकर (Flickering से बचने के लिए)
                 const liveImgEl = document.getElementById('profile-img');
                 if (liveImgEl) {
                     const nextImgSrc = liveData.avatarBase64 || liveData.photoURL || "https://i.pravatar.cc/150";
@@ -220,6 +226,12 @@ window.viewUserProfile = async (targetUid) => {
 
                 if (window.currentUser && targetId === window.currentUser.uid) {
                     window.currentUserData = liveData; 
+                    
+                    // 🌟 लाइव सिंक अपडेट: यदि डेटाबेस में लाइव रेफ़रल काउंट बदलता है, तो उसे तुरंत रिफ्लेक्ट करें
+                    if (typeof window.syncReferralData === 'function') {
+                        window.syncReferralData();
+                    }
+
                     const myStoryImg = document.getElementById('my-story-ring-img');
                     if (myStoryImg) {
                         const nextImgSrc = liveData.avatarBase64 || liveData.photoURL || "https://i.pravatar.cc/150";
@@ -755,5 +767,63 @@ window.loadMoreUsersList = async () => {
         console.error("Error loading users:", e); 
     } finally { 
         isFetchingList = false; 
+    }
+};
+// =========================================================
+// --- 🛠️ SAFE GLOBAL SCOPE INJECTION FOR MODAL COPY ------
+// =========================================================
+
+// यह फ़ंक्शन बिना किसी स्कोप ब्लॉक के सीधे विंडो (Global Object) पर रजिस्टर होता है
+window.copyModalReferCode = function() {
+    const codeElement = document.getElementById('modal-refer-code');
+    if (!codeElement) return;
+    const codeToCopy = codeElement.innerText || codeElement.textContent;
+
+    // कम्पन फीडबैक (Touch Vibe)
+    if (navigator.vibrate) navigator.vibrate(15);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(codeToCopy).then(() => {
+            // टोस्ट या अलर्ट प्रदर्शित करें
+            if (typeof window.showCustomAlert === 'function') {
+                window.showCustomAlert("Copied!", "Referral Code copied to clipboard!", "success");
+            } else if (typeof window.showToast === 'function') {
+                window.showToast("Copied!", "Code copied!", window.currentUser?.photoURL, "success");
+            } else {
+                alert("Referral Code Copied: " + codeToCopy);
+            }
+        }).catch(err => {
+            console.error("Clipboard API copy failed, trying fallback:", err);
+            executeFallback(codeToCopy);
+        });
+    } else {
+        executeFallback(codeToCopy);
+    }
+
+    // फ़ॉलबैक मेथड (यदि ब्राउज़र क्लिपबोर्ड सपोर्ट न करे)
+    function executeFallback(text) {
+        if (typeof window.fallbackCopyText === 'function') {
+            window.fallbackCopyText(text, "Referral Code copied!");
+        } else {
+            const textArea = document.createElement("textarea"); 
+            textArea.value = text;
+            textArea.style.position = "fixed"; 
+            textArea.style.left = "-9999px"; 
+            textArea.style.top = "0";
+            document.body.appendChild(textArea); 
+            textArea.focus();
+            textArea.select(); 
+            try {
+                document.execCommand('copy');
+                if (typeof window.showCustomAlert === 'function') {
+                    window.showCustomAlert("Copied!", "Code copied successfully!", "success");
+                } else {
+                    alert("Referral Code Copied: " + text);
+                }
+            } catch (err) {
+                console.error("Fallback execution failed:", err);
+            }
+            document.body.removeChild(textArea);
+        }
     }
 };
