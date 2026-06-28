@@ -240,6 +240,9 @@ async function loadFeed(isRefresh = false) {
 // ==========================================
 // --- 2. CREATE POST UI ---
 // ==========================================
+// ==========================================
+// --- 2. CREATE POST UI (HASHTAG RESOLVED) -
+// ==========================================
 function createPostElement(pid, p) {
     if (!p) return document.createElement('div');
     
@@ -281,17 +284,20 @@ function createPostElement(pid, p) {
     let avatarClass = hasStory ? (window.hasUnseenStories(p.userId) ? "user-avatar story-border-unseen" : "user-avatar story-border-seen") : "user-avatar";
     let avatarClick = hasStory ? `viewStoryGroup('${p.userId}')` : `if(typeof window.viewUserProfile==='function') window.viewUserProfile('${p.userId}')`;
 
-    // स्मार्ट कैप्शन कोलाप्स
+    // 🌟 स्मार्ट हैशटैग्स और कैप्शन कोलाप्स विभाजन
     const rawCaption = p.caption || '';
+    const highlightedCaption = highlightFeedHashtags(rawCaption); // पूरे कैप्शन को हाइलाइट करें
     const captionLimit = 30; 
-    let captionHTML = `<b>${initialUsername}</b> <span class="caption-text-content">${rawCaption}</span>`;
+    let captionHTML = `<b>${initialUsername}</b> <span class="caption-text-content">${highlightedCaption}</span>`;
 
     if (rawCaption.length > captionLimit) {
         const truncated = rawCaption.substring(0, captionLimit);
+        const highlightedTruncated = highlightFeedHashtags(truncated); // आधे कैप्शन को सुरक्षित हाइलाइट करें
+        
         captionHTML = `
             <b>${initialUsername}</b> 
-            <span class="caption-text-content" id="caption-short-${pid}">${truncated}...</span>
-            <span class="caption-text-content" id="caption-full-${pid}" style="display:none;">${rawCaption}</span>
+            <span class="caption-text-content" id="caption-short-${pid}">${highlightedTruncated}...</span>
+            <span class="caption-text-content" id="caption-full-${pid}" style="display:none;">${highlightedCaption}</span>
             <span class="read-more-btn" onclick="window.toggleCaptionCollapse('${pid}')">more</span>
         `;
     }
@@ -316,7 +322,7 @@ function createPostElement(pid, p) {
         </div>
         ${mediaHTML}
         
-        <!-- 🌟 एकीकृत कैप्शन्स, एक्शन्स और इमोजी रिएक्शंस बोर्ड -->
+        <!-- एकीकृत कैप्शन्स, एक्शन्स और इमोजी रिएक्शंस बोर्ड -->
         <div class="post-actions">
             <!-- Row 1: Integrated Caption Text (At the very top) -->
             <div class="post-caption" id="caption-wrapper-${pid}">${captionHTML}</div>
@@ -706,3 +712,45 @@ window.activeCheckInterval = setInterval(() => {
         }
     });
 }, 10000);
+/**
+ * 🌟 होम फीड के लिए हैशटैग्स को हाइलाइट और नीले रंग में बदलने वाला फ़ंक्शन
+ */
+function highlightFeedHashtags(text) {
+    if (!text) return "";
+    return text.replace(/#([\p{L}\p{N}_]+)/gu, (match, tag) => {
+        return `<span class="feed-hashtag-link" style="color: #0095f6 !important; font-weight: 700; cursor: pointer; transition: opacity 0.15s;" onclick="event.stopPropagation(); window.searchHashtagFromFeed('${tag}')">${match}</span>`;
+    });
+}
+
+/**
+ * 🌟 होम फीड से सीधे सर्च स्क्रीन पर नेविगेट करने का हाई-स्पीड फ़ंक्शन
+ */
+window.searchHashtagFromFeed = (tag) => {
+    // 1. यदि रील्स चल रही हों तो उन्हें रोकें
+    if (typeof window.pauseAllReels === 'function') window.pauseAllReels();
+    
+    // 2. वाइब्रेशन फ़ीडबैक
+    if (navigator.vibrate) navigator.vibrate(15);
+    
+    // 3. ग्लोबल सर्च स्क्रीन खोलें (स्लाइड एनीमेशन के साथ)
+    if (typeof window.openGlobalSearch === 'function') {
+        window.openGlobalSearch();
+    } else {
+        const searchModal = document.getElementById('global-search-modal');
+        if (searchModal) {
+            searchModal.classList.remove('hidden');
+            setTimeout(() => { searchModal.style.transform = 'translateY(0)'; }, 10);
+        }
+    }
+    
+    // 4. सर्च इनपुट भरकर रीयल-टाइम परिणाम लोड करें
+    setTimeout(() => {
+        const searchInput = document.getElementById('global-search-input');
+        if (searchInput) {
+            searchInput.value = `#${tag}`;
+            window.activeSearchTab = 'foryou'; // फ़ॉर यू टैब एक्टिव करें
+            if (typeof window.updateSearchTabsUI === 'function') window.updateSearchTabsUI();
+            if (typeof window.handleGlobalSearch === 'function') window.handleGlobalSearch();
+        }
+    }, 320); // 300ms सर्च स्क्रीन स्लाइड-अप एनीमेशन के साथ सिंक किया गया है
+};
