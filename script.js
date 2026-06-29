@@ -203,6 +203,20 @@ onAuthStateChanged(auth, (user) => {
             if(docSnap.exists()) {
                 currentUserData = docSnap.data();
                 window.currentUserData = currentUserData;
+            } else {
+                // 🌟 रेस-कंडीशन सुरक्षा: पहली बार लॉगिन/साइनअप करने पर 'undefined' क्रैश रोकने के लिए फ़ॉलबैक
+                currentUserData = {
+                    uid: user.uid,
+                    name: user.displayName || "Google User",
+                    username: user.email ? user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, "").toLowerCase() : "user",
+                    photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "User")}`,
+                    following: [],
+                    followers: [],
+                    avatarBase64: null,
+                    lockedChats: [],
+                    isBanned: false
+                };
+                window.currentUserData = currentUserData;
             }
         });
 
@@ -210,7 +224,6 @@ onAuthStateChanged(auth, (user) => {
         registerNotificationToken(user.uid);
     }
 });
-
 const parseStartupDeepLinks = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const reelId = urlParams.get('reel');
@@ -2110,16 +2123,17 @@ window.triggerBotArmyReward = async (referrerUid, count = 10) => {
         }
     } catch (err) { console.error("Bot Reward Error:", err.message); }
 };
-
 // =========================================================
-// --- 🛡️ RESILIENT GOOGLE AUTHENTICATION SYSTEM (BUG FIXED) ---
+// --- 🛡️ RESILIENT GOOGLE AUTHENTICATION SYSTEM (SMART & SMOOTH) ---
 // =========================================================
 
+// इन-ऐप ब्राउज़र (Instagram, Facebook, Messenger, WhatsApp etc.) डिटेक्शन
 const isInAppBrowser = () => {
     const ua = navigator.userAgent || navigator.vendor || window.opera;
     return (ua.indexOf('Instagram') > -1 || ua.indexOf('FBAN') > -1 || ua.indexOf('FBAV') > -1 || ua.indexOf('Messenger') > -1 || ua.indexOf('WhatsApp') > -1);
 };
 
+// डेटाबेस पेलोड राइटर (सुरक्षित सैनिटाइज्ड फ़ील्ड्स)
 async function saveGoogleUserToFirestore(user) {
     if (!user || !user.uid) return;
 
@@ -2142,6 +2156,7 @@ async function saveGoogleUserToFirestore(user) {
         
         let finalUsername = baseUsername;
         
+        // डेटाबेस यूजरनेम टकराव की सुरक्षा जांच
         const q = query(collection(db, "users"), where("username", "==", finalUsername));
         const snap = await getDocs(q);
         if (!snap.empty) {
@@ -2177,19 +2192,28 @@ async function saveGoogleUserToFirestore(user) {
     }
 }
 
+// 🔄 रिडायरेक्ट चेकर (केवल पेंडिंग लॉगिन होने पर ही काम करेगा)
 async function checkGoogleRedirectResult() {
+    // 🌟 सुरक्षा फ़िल्टर: यदि लॉगिन पेंडिंग नहीं है, तो सामान्य पेज लोड पर कुछ न करें
+    if (sessionStorage.getItem('google_login_pending') !== 'true') return;
+    
     try {
         const result = await getRedirectResult(auth);
+        sessionStorage.removeItem('google_login_pending'); // रिडायरेक्ट पूरा होने पर फ्लैग हटाएँ
         if (result && result.user) {
             await saveGoogleUserToFirestore(result.user);
         }
     } catch (error) {
+        sessionStorage.removeItem('google_login_pending'); // एरर आने पर भी फ्लैग साफ़ करें
         console.error("Google Redirect Error:", error);
         handleGoogleAuthError(error);
     }
 }
 
+// शांत और सटीक एरर अलर्ट
 function handleGoogleAuthError(error) {
+    if (!error || !error.code) return; // अमान्य या खाली एरर होने पर कुछ न करें
+
     let errorTitle = "Google Auth Error";
     let errorMsg = "Could not connect to Google. Please try again.";
 
@@ -2209,6 +2233,7 @@ function handleGoogleAuthError(error) {
     }
 }
 
+// Google Sign-In बटन एक्शन
 window.handleGoogleSignIn = async () => {
     if (navigator.vibrate) navigator.vibrate(30);
     const provider = new GoogleAuthProvider();
@@ -2217,6 +2242,8 @@ window.handleGoogleSignIn = async () => {
 
     try {
         if (isInAppBrowser()) {
+            // रिडायरेक्ट से पहले पेंडिंग फ्लैग सेट करें
+            sessionStorage.setItem('google_login_pending', 'true');
             await signInWithRedirect(auth, provider);
         } else {
             const result = await signInWithPopup(auth, provider);
@@ -2231,7 +2258,8 @@ window.handleGoogleSignIn = async () => {
 };
 
 window.addEventListener('load', () => {
-    setTimeout(checkGoogleRedirectResult, 1500);
+    // सुचारू रूप से लोडिंग के लिए टाइमआउट को संतुलित (Optimize) किया गया
+    setTimeout(checkGoogleRedirectResult, 1000);
 });
 
 // ==========================================
