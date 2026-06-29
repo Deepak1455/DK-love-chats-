@@ -298,7 +298,7 @@
 
 <!-- AUTH SECTION -->
 <section id="auth-section">
-    <div class="auth-card fade-in" id="login-form">
+<div class="auth-card fade-in" id="login-form">
         <h1 class="logo-text">DK Love Chats</h1>
         <div class="input-group">
             <input type="text" placeholder="Username or Email" id="login-email" style="text-transform: lowercase; padding-right: 55px;" oninput="checkLoginUser()">
@@ -307,9 +307,17 @@
         </div>
         <div class="input-group"><input type="password" placeholder="Password" id="login-pass"></div>
         <button class="btn-primary" id="btn-login-action" onclick="handleLogin()">Sign In</button>
+        
+        <!-- 🌟 GOOGLE SIGN-IN BUTTON -->
+        <button class="btn-google" onclick="window.handleGoogleSignIn()" style="width: 100%; background: #ffffff; color: #10002b; border: 1px solid #cbd5e1; padding: 12px; border-radius: 20px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.1s ease;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" style="width: 20px; height: 20px;">
+            <span>Continue with Google</span>
+        </button>
+
+
         <div class="auth-switch" onclick="toggleAuth('signup')">Create an Account</div>
     </div>
-    <div class="auth-card hidden" id="signup-form">
+<div class="auth-card hidden" id="signup-form">
         <h1 class="logo-text">Join DK Chats</h1>
         <div class="input-group">
             <input type="text" placeholder="Username (e.g. @coolguy)" id="reg-username" oninput="checkUsernameAvailability()">
@@ -320,11 +328,14 @@
         <div class="input-group"><input type="password" placeholder="Password" id="reg-pass"></div>
         <div class="input-group"><input type="text" placeholder="Referral Code (Optional)" id="reg-referral-input"></div>
         <button class="btn-primary" id="btn-signup-action" onclick="handleSignup()" disabled>Create Account</button>
-        <div class="auth-switch" onclick="toggleAuth('login')">Back to Sign In</div>
-    </div>
-    <div class="auth-help-section" onclick="openInstagram()" style="margin-top: 20px; cursor: pointer; animation: fadeIn 0.8s;">
-        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-bottom: 5px;">Facing issues? </p>
-        <div class="insta-auth-link"><i class="fa-brands fa-instagram"></i> Open Instagram for Support</div>
+        
+        <!-- 🌟 GOOGLE SIGN-UP BUTTON -->
+        <button class="btn-google" onclick="window.handleGoogleSignIn()" style="width: 100%; background: #ffffff; color: #10002b; border: 1px solid #cbd5e1; padding: 12px; border-radius: 20px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.1s ease;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" style="width: 20px; height: 20px;">
+            <span>Sign up with Google</span>
+        </button>
+
+        <div class="auth-switch" onclick="toggleAuth('login')" style="margin-top: 15px;">Back to Sign In</div>
     </div>
 </section>
 
