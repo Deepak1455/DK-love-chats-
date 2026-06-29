@@ -2134,6 +2134,10 @@ const isInAppBrowser = () => {
 };
 
 // डेटाबेस पेलोड राइटर (सुरक्षित सैनिटाइज्ड फ़ील्ड्स)
+// =========================================================
+// --- 🚀 ULTRA-FAST SMART GOOGLE REGISTRATION ENGINE ---
+// =========================================================
+
 async function saveGoogleUserToFirestore(user) {
     if (!user || !user.uid) return;
 
@@ -2141,33 +2145,41 @@ async function saveGoogleUserToFirestore(user) {
     const userSnap = await getDoc(userRef);
 
     if (!userSnap.exists()) {
-        const safeEmail = user.email || "";
+        const safeEmail = (user.email || "").trim().toLowerCase();
         let baseUsername = "user";
         
+        // 1. 🌟 स्मार्ट सोशल यूजरनेम जनरेशन (अंडरस्कोर अनुमति के साथ)
         if (safeEmail.includes('@')) {
-            baseUsername = safeEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+            baseUsername = safeEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
         } else if (user.displayName) {
-            baseUsername = user.displayName.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+            baseUsername = user.displayName.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
         }
 
         if (baseUsername.length < 3) {
-            baseUsername = "user" + Math.floor(100 + Math.random() * 900);
+            baseUsername = "user_" + Math.floor(100 + Math.random() * 900);
         }
         
         let finalUsername = baseUsername;
         
-        // डेटाबेस यूजरनेम टकराव की सुरक्षा जांच
+        // त्वरित यूजरनेम टकराव की जांच
         const q = query(collection(db, "users"), where("username", "==", finalUsername));
         const snap = await getDocs(q);
         if (!snap.empty) {
-            finalUsername = baseUsername + Math.floor(1000 + Math.random() * 9000);
+            finalUsername = baseUsername + "_" + Math.floor(10 + Math.random() * 90);
         }
 
         const myReferCode = finalUsername + Math.floor(1000 + Math.random() * 9000);
         
-        const safeName = user.displayName || "Google User";
-        const safePhoto = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}`;
+        // 2. 🌟 नाम सैनिटाइजेशन (Extra spaces और Trim)
+        const safeName = (user.displayName || "Google User").replace(/\s+/g, ' ').trim();
+        
+        // 3. 🌟 HD DP अपग्रेड (96px गूगल थंबनेल को 400px क्रिस्प एचडी इमेज में बदलता है)
+        let safePhoto = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}`;
+        if (safePhoto && safePhoto.includes("googleusercontent.com")) {
+            safePhoto = safePhoto.replace(/=s96-c/g, "=s400-c"); // 96px से 400px में अपग्रेड
+        }
 
+        // पेलोड डेटा
         const userData = {
             uid: user.uid,
             name: safeName,
@@ -2182,12 +2194,14 @@ async function saveGoogleUserToFirestore(user) {
             isBanned: false
         };
 
+        // डेटाबेस में बेहद तेजी से लिखें
         await setDoc(userRef, userData);
         
         if (typeof showCustomAlert === 'function') {
             showCustomAlert("Welcome!", `Account created as @${finalUsername}`, "success");
         }
     } else {
+        // यदि यूजर पहले से है, तो केवल 'lastActive' को पैच करें
         await setDoc(userRef, { lastActive: Date.now() }, { merge: true });
     }
 }
