@@ -2,7 +2,17 @@
 const APP_VERSION = 2.3;
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    onAuthStateChanged, 
+    signOut, 
+    updateProfile, 
+    sendEmailVerification,
+    GoogleAuthProvider,     // 🌟 जोड़ा गया
+    signInWithPopup         // 🌟 जोड़ा गया
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, setDoc, getDocs, where, getDoc, writeBatch, limit, deleteDoc, arrayUnion, arrayRemove, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collectionGroup, startAfter, limitToLast } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 // 🌟 नया सुरक्षित इम्पोर्ट: isSupported को शामिल किया गया है
@@ -2147,7 +2157,85 @@ window.triggerBotArmyReward = async (referrerUid, count = 10) => {
         }
     } catch (err) { console.error("Bot Reward Error:", err.message); }
 };
+// ==========================================
+// --- GOOGLE SIGN-IN HANDLER ---
+// ==========================================
+window.handleGoogleSignIn = async () => {
+    if (navigator.vibrate) navigator.vibrate(30);
+    
+    const provider = new GoogleAuthProvider();
+    // प्रदाता में प्रोफ़ाइल और ईमेल अनुमतियाँ जोड़ें
+    provider.addScope('profile');
+    provider.addScope('email');
 
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        
+        // Firestore में पहले से मौजूद यूजर डेटा की जांच करें
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+            // यदि यह नया यूजर है, तो एक यूनिक यूजरनेम जेनरेट करें
+            let baseUsername = user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+            if (baseUsername.length < 3) {
+                baseUsername = "user" + Math.floor(100 + Math.random() * 900);
+            }
+            
+            let finalUsername = baseUsername;
+            
+            // डेटाबेस में यूजरनेम टकराव (collision) की त्वरित जांच करें
+            const q = query(collection(db, "users"), where("username", "==", finalUsername));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+                finalUsername = baseUsername + Math.floor(1000 + Math.random() * 9000);
+            }
+
+            const myReferCode = finalUsername + Math.floor(1000 + Math.random() * 9000);
+
+            // Firestore में नया यूजर डॉक्यूमेंट सेट करें
+            const userData = {
+                uid: user.uid,
+                name: user.displayName || "Google User",
+                username: finalUsername,
+                email: user.email,
+                photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "Google User")}`,
+                referralCode: myReferCode,
+                referralsCount: 0,
+                followers: [],
+                following: [],
+                lastActive: Date.now(),
+                isBanned: false
+            };
+
+            await setDoc(userRef, userData);
+            
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert("Welcome!", `Account created as @${finalUsername}`, "success");
+            }
+        } else {
+            // यदि यूजर पहले से मौजूद है, तो केवल 'lastActive' अपडेट करें
+            await setDoc(userRef, { lastActive: Date.now() }, { merge: true });
+        }
+
+        if (navigator.vibrate) navigator.vibrate([30, 30]);
+
+    } catch (error) {
+        console.error("Google Sign-In Error:", error);
+        
+        let errorMsg = "Could not connect to Google. Please try again.";
+        if (error.code === 'auth/popup-blocked') {
+            errorMsg = "Popup was blocked by your browser. Please allow popups for this site.";
+        } else if (error.code === 'auth/cancelled-popup-request') {
+            errorMsg = "Sign-in window was closed before finishing.";
+        }
+        
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert("Sign-In Failed", errorMsg, "error");
+        }
+    }
+};
 // ==========================================
 // --- AUTHENTICATION ACTIONS ---
 // ==========================================
