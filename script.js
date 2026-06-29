@@ -10,8 +10,10 @@ import {
     signOut, 
     updateProfile, 
     sendEmailVerification,
-    GoogleAuthProvider,     // 🌟 जोड़ा गया
-    signInWithPopup         // 🌟 जोड़ा गया
+    GoogleAuthProvider,
+    signInWithPopup,
+    signInWithRedirect,     // 🌟 सुरक्षित इन-ऐप ब्राउज़र रिडायरेक्ट
+    getRedirectResult       // 🌟 रिडायरेक्ट परिणाम कैप्चरर
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, setDoc, getDocs, where, getDoc, writeBatch, limit, deleteDoc, arrayUnion, arrayRemove, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collectionGroup, startAfter, limitToLast } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
@@ -248,11 +250,7 @@ window.checkAndRedirectPendingDeepLinks = async () => {
         }
     }
 };
-// ... (script.js का पहले से मौजूद कोड) ...
 
-// ==========================================
-// --- 🌟 PWA DEEP LINK ROUTING SYSTEM ---
-// ==========================================
 // ==========================================
 // --- 🌟 PWA DEEP LINK ROUTING SYSTEM (BUG RESOLVED) ---
 // ==========================================
@@ -262,7 +260,6 @@ function handleDeepLinking() {
     const viewPostId = urlParams.get('post');
     const viewReelId = urlParams.get('reel');
 
-    // 1. यदि चैट नोटिफिकेशन पर क्लिक किया गया हो
     if (openChatUserId) {
         console.log("[Deep-Link] Routing to Chat with User:", openChatUserId);
         
@@ -270,8 +267,6 @@ function handleDeepLinking() {
             window.switchTab('chat');
         }
         
-        // 🌟 सुरक्षा फ़ेच और रीयल-टाइम रेंडर (सही फ़ंक्शन बाइंडिंग):
-        // नॉन-एक्ज़िस्टेंट फ़ंक्शंस के बजाय सीधे 'window.startPrivateChat' को कॉल किया जाता है।
         const checkAndOpenChatRoom = async () => {
             let targetUser = window.allCachedUsers?.find(u => u.uid === openChatUserId);
             if (!targetUser && window.db) {
@@ -291,33 +286,26 @@ function handleDeepLinking() {
             }
         };
 
-        // फ़ायरस्टोर इनिशियलाइज़ होने के बाद चैट रूम खोलें
         setTimeout(checkAndOpenChatRoom, 1400);
 
-        // 🌟 100% पक्का एड्रेस बार क्लीनर (Address Bar Sanitizer):
-        // राउटिंग होते ही यूआरएल से 'openChat=...' को चुपचाप डिलीट करता है ताकि आगे की नेविगेशन क्रैश न हो।
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
     } 
-    // 2. यदि किसी पोस्ट के नोटिफिकेशन पर क्लिक किया गया हो
     else if (viewPostId) {
         console.log("[Deep-Link] Routing to Single Post View:", viewPostId);
         if (typeof window.openSinglePostView === 'function') {
             window.openSinglePostView(viewPostId);
         }
         
-        // यूआरएल क्लीनर
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
     } 
-    // 3. यदि किसी रील के नोटिफिकेशन पर क्लिक किया गया हो
     else if (viewReelId) {
         console.log("[Deep-Link] Routing to Reels View for Reel:", viewReelId);
         if (typeof window.switchTab === 'function') {
             window.switchTab('reels');
         }
         
-        // यूआरएल क्लीनर
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
     }
@@ -376,59 +364,36 @@ window.addEventListener('load', () => {
 // --- SMART BACK-NAVIGATION & NAVIGATION STACK SYSTEM ---
 // =========================================================
 
-// 1. जब कोई मोडल या चैट खुले, तो इसे स्टैक में दर्ज करें
 window.pushNavigationState = (type, closeFunc) => {
     const stateId = type + '_' + Date.now();
     if (!window.navHistoryStack) window.navHistoryStack = [];
     window.navHistoryStack.push({ id: stateId, type: type, close: closeFunc });
-    
-    // ब्राउज़र हिस्ट्री में नकली स्टेट पुश करें
     history.pushState({ navStateId: stateId }, null, window.location.href);
 };
 
-// 2. जब यूजर खुद क्लोज बटन दबाकर मोडल बंद करे, तो हिस्ट्री को सिंक्रोनाइज करें
 window.popNavigationState = (type) => {
     if (window.navHistoryStack && window.navHistoryStack.length > 0) {
         const lastState = window.navHistoryStack[window.navHistoryStack.length - 1];
         if (lastState.type === type) {
             window.navHistoryStack.pop();
-            window.history.back(); // बैक करके नकली स्टेट को हटा दें
+            window.history.back(); 
         }
     }
 };
 
-// 3. मुख्य Popstate इवेंट लिसनर (सीक्वेंशियल फ्लो अपडेटेड)
-// =========================================================
-// --- SMART APP EXIT ENGINE ---
-// =========================================================
-
-/**
- * ऐप से पूरी तरह बाहर निकलने (Exit) के लिए सुरक्षित फ़ंक्शन।
- * ब्राउज़र सुरक्षा सीमाओं के कारण, PWA को बंद करने के लिए window.close() 
- * और 'about:blank' रीडायरेक्शन दोनों का उपयोग किया गया है।
- */
 window.confirmAppExit = () => {
     if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100]); // एक्जिट के लिए हैप्टिक फीडबैक
+        navigator.vibrate([100, 50, 100]); 
     }
-    
-    // वर्तमान सत्र के ड्राफ्ट को साफ़ करने या सहेजने का कार्य यहाँ करें
-    
-    // ब्राउज़र विंडो बंद करने का प्रयास
     window.close();
-    
-    // सामान्य ब्राउज़र वातावरण के लिए फॉलबैक
     setTimeout(() => {
         window.location.href = "about:blank";
     }, 150);
 };
 
-// पूर्व घोषित 'lastBackPressTime' का उपयोग करते हुए 'popstate' श्रोता (Listener) में बदलाव:
 window.addEventListener('popstate', (event) => {
-    // बैक बटन दबाए जाने पर डिफ़ॉल्ट रूप से PWA को बंद होने से बचाने के लिए स्टेट को रीस्टोर करें
     history.pushState({ app: 'lovechats' }, null, window.location.href);
 
-    // [A] शेयर की गई पोस्ट से बैक आने पर पुनः चैट रूम खोलने का लॉजिक
     if (window.returnToChatData && window.targetSharedPostId) {
         const homeView = document.getElementById('home-view');
         const reelsView = document.getElementById('reels-view');
@@ -463,7 +428,6 @@ window.addEventListener('popstate', (event) => {
 
     if (typeof window.toggleSharedReturnButton === 'function') window.toggleSharedReturnButton(false);
 
-    // [B] प्राथमिकता 1: स्मार्ट नेविगेशन स्टैक की जांच (जैसे ChatProfile -> ChatRoom)
     if (window.navHistoryStack && window.navHistoryStack.length > 0) {
         const stateToClose = window.navHistoryStack.pop();
         if (stateToClose && typeof stateToClose.close === 'function') {
@@ -472,8 +436,6 @@ window.addEventListener('popstate', (event) => {
         }
     }
 
-    // [C] प्राथमिकता 2 (सुरक्षा जाल): सीधे खुले मॉडलों की सूची को स्कैन करना (Legacy Fallback)
-// 🌟 अपडेटेड स्मार्ट बैक-नेविगेशन ऐरे (वैरिफिकेशन हब सपोर्ट के साथ)
     const activeModals = [
         { id: 'chat-profile-modal', class: 'active', isHidden: false, close: () => window.closeChatProfile() },
         { id: 'media-viewer-modal', class: 'active', isHidden: false, close: () => window.closeFullScreenMedia() },
@@ -490,7 +452,7 @@ window.addEventListener('popstate', (event) => {
         { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
         { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
         { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
-        { id: 'verification-hub-modal', class: 'hidden', isHidden: true, close: () => window.closeVerificationHub() }, // 🌟 नया: वेरिफिकेशन हब बैक बटन एक्जिट सपोर्ट
+        { id: 'verification-hub-modal', class: 'hidden', isHidden: true, close: () => window.closeVerificationHub() },
         { id: 'create-post-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('create-post-modal', false) },
         { id: 'password-prompt-modal', class: 'hidden', isHidden: true, close: () => window.cancelUnlockChat() },
         { id: 'story-viewers-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('story-viewers-modal', false) },
@@ -510,43 +472,34 @@ window.addEventListener('popstate', (event) => {
         }
     }
 
-    // [D] चैट रूम बंद करने का लॉजिक (Fallback सुरक्षा के लिए)
     const chatRoom = document.getElementById('chat-room');
     if (chatRoom && chatRoom.classList.contains('active')) { 
         if(typeof window.closeChat === 'function') window.closeChat(); 
         return; 
     }
 
-    // [E] इनबॉक्स लिस्ट (Messages tab) से होम फीड पर वापस जाने का लॉजिक
     const homeView = document.getElementById('home-view');
     if (homeView && !homeView.classList.contains('active-view')) { 
         if(typeof window.switchTab === 'function') window.switchTab('home'); 
         return; 
     }
 
-    // [F] अंतिम चरण: स्मार्ट एग्जिट लॉजिक (स्मार्टफोन बैक बटन हैंडलर)
     if (homeView && homeView.classList.contains('active-view')) {
-        // यदि यूजर होम स्क्रीन पर बहुत नीचे स्क्रॉल कर चुका है, तो पहला बैक बटन केवल ऊपर स्क्रॉल करेगा।
         if (homeView.scrollTop > 200) { 
             homeView.scrollTo({ top: 0, behavior: 'smooth' }); 
             return; 
         }
 
         const currentTime = Date.now();
-        const doubleTapInterval = 2000; // 2 सेकंड की समय सीमा
+        const doubleTapInterval = 2000; 
 
-        // यदि यूजर 2 सेकंड के भीतर दोबारा बैक बटन दबाता है
         if (currentTime - lastBackPressTime < doubleTapInterval) {
-            window.confirmAppExit(); // सीधे ऐप बंद करें
+            window.confirmAppExit(); 
         } else {
             lastBackPressTime = currentTime;
-            
-            // दृश्य फीडबैक के लिए कस्टमाइज़्ड एग्जिट पुष्टिकरण मोडल खोलें
             if (typeof window.toggleModal === 'function') {
                 window.toggleModal('exit-modal', true);
             }
-            
-            // वैकल्पिक: यूजर अनुभव को बढ़ाने के लिए हल्का टोस्ट मैसेज
             if (typeof showToast === 'function') {
                 let userPhoto = currentUserData?.avatarBase64 || currentUser?.photoURL;
                 showToast("Exit Application", "Press back once more to close", userPhoto);
@@ -2157,88 +2110,134 @@ window.triggerBotArmyReward = async (referrerUid, count = 10) => {
         }
     } catch (err) { console.error("Bot Reward Error:", err.message); }
 };
-// ==========================================
-// --- GOOGLE SIGN-IN HANDLER ---
-// ==========================================
+
+// =========================================================
+// --- 🛡️ RESILIENT GOOGLE AUTHENTICATION SYSTEM (BUG FIXED) ---
+// =========================================================
+
+const isInAppBrowser = () => {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    return (ua.indexOf('Instagram') > -1 || ua.indexOf('FBAN') > -1 || ua.indexOf('FBAV') > -1 || ua.indexOf('Messenger') > -1 || ua.indexOf('WhatsApp') > -1);
+};
+
+async function saveGoogleUserToFirestore(user) {
+    if (!user || !user.uid) return;
+
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        const safeEmail = user.email || "";
+        let baseUsername = "user";
+        
+        if (safeEmail.includes('@')) {
+            baseUsername = safeEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+        } else if (user.displayName) {
+            baseUsername = user.displayName.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+        }
+
+        if (baseUsername.length < 3) {
+            baseUsername = "user" + Math.floor(100 + Math.random() * 900);
+        }
+        
+        let finalUsername = baseUsername;
+        
+        const q = query(collection(db, "users"), where("username", "==", finalUsername));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+            finalUsername = baseUsername + Math.floor(1000 + Math.random() * 9000);
+        }
+
+        const myReferCode = finalUsername + Math.floor(1000 + Math.random() * 9000);
+        
+        const safeName = user.displayName || "Google User";
+        const safePhoto = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}`;
+
+        const userData = {
+            uid: user.uid,
+            name: safeName,
+            username: finalUsername,
+            email: safeEmail,
+            photoURL: safePhoto,
+            referralCode: myReferCode,
+            referralsCount: 0,
+            followers: [],
+            following: [],
+            lastActive: Date.now(),
+            isBanned: false
+        };
+
+        await setDoc(userRef, userData);
+        
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert("Welcome!", `Account created as @${finalUsername}`, "success");
+        }
+    } else {
+        await setDoc(userRef, { lastActive: Date.now() }, { merge: true });
+    }
+}
+
+async function checkGoogleRedirectResult() {
+    try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+            await saveGoogleUserToFirestore(result.user);
+        }
+    } catch (error) {
+        console.error("Google Redirect Error:", error);
+        handleGoogleAuthError(error);
+    }
+}
+
+function handleGoogleAuthError(error) {
+    let errorTitle = "Google Auth Error";
+    let errorMsg = "Could not connect to Google. Please try again.";
+
+    if (isInAppBrowser()) {
+        errorTitle = "Open in Chrome/Safari";
+        errorMsg = "Instagram/WhatsApp browser detected! Please tap the 3 dots (...) at the top right and select 'Open in Chrome/Safari' to sign up safely.";
+    } else if (error.code === 'auth/unauthorized-domain') {
+        errorTitle = "Domain Not Authorized";
+        errorMsg = "Please make sure to add your current domain to Authorized Domains in Firebase Authentication Settings.";
+    } else if (error.code === 'auth/popup-blocked') {
+        errorTitle = "Popup Blocked";
+        errorMsg = "Popup blocked! Please allow popups or use the Redirect option.";
+    }
+
+    if (typeof showCustomAlert === 'function') {
+        showCustomAlert(errorTitle, errorMsg, "error");
+    }
+}
+
 window.handleGoogleSignIn = async () => {
     if (navigator.vibrate) navigator.vibrate(30);
-    
     const provider = new GoogleAuthProvider();
-    // प्रदाता में प्रोफ़ाइल और ईमेल अनुमतियाँ जोड़ें
     provider.addScope('profile');
     provider.addScope('email');
 
     try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-        
-        // Firestore में पहले से मौजूद यूजर डेटा की जांच करें
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-            // यदि यह नया यूजर है, तो एक यूनिक यूजरनेम जेनरेट करें
-            let baseUsername = user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-            if (baseUsername.length < 3) {
-                baseUsername = "user" + Math.floor(100 + Math.random() * 900);
-            }
-            
-            let finalUsername = baseUsername;
-            
-            // डेटाबेस में यूजरनेम टकराव (collision) की त्वरित जांच करें
-            const q = query(collection(db, "users"), where("username", "==", finalUsername));
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-                finalUsername = baseUsername + Math.floor(1000 + Math.random() * 9000);
-            }
-
-            const myReferCode = finalUsername + Math.floor(1000 + Math.random() * 9000);
-
-            // Firestore में नया यूजर डॉक्यूमेंट सेट करें
-            const userData = {
-                uid: user.uid,
-                name: user.displayName || "Google User",
-                username: finalUsername,
-                email: user.email,
-                photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "Google User")}`,
-                referralCode: myReferCode,
-                referralsCount: 0,
-                followers: [],
-                following: [],
-                lastActive: Date.now(),
-                isBanned: false
-            };
-
-            await setDoc(userRef, userData);
-            
-            if (typeof showCustomAlert === 'function') {
-                showCustomAlert("Welcome!", `Account created as @${finalUsername}`, "success");
-            }
+        if (isInAppBrowser()) {
+            await signInWithRedirect(auth, provider);
         } else {
-            // यदि यूजर पहले से मौजूद है, तो केवल 'lastActive' अपडेट करें
-            await setDoc(userRef, { lastActive: Date.now() }, { merge: true });
+            const result = await signInWithPopup(auth, provider);
+            if (result && result.user) {
+                await saveGoogleUserToFirestore(result.user);
+            }
         }
-
-        if (navigator.vibrate) navigator.vibrate([30, 30]);
-
     } catch (error) {
-        console.error("Google Sign-In Error:", error);
-        
-        let errorMsg = "Could not connect to Google. Please try again.";
-        if (error.code === 'auth/popup-blocked') {
-            errorMsg = "Popup was blocked by your browser. Please allow popups for this site.";
-        } else if (error.code === 'auth/cancelled-popup-request') {
-            errorMsg = "Sign-in window was closed before finishing.";
-        }
-        
-        if (typeof showCustomAlert === 'function') {
-            showCustomAlert("Sign-In Failed", errorMsg, "error");
-        }
+        console.error("Google Sign-In Trigger Error:", error);
+        handleGoogleAuthError(error);
     }
 };
+
+window.addEventListener('load', () => {
+    setTimeout(checkGoogleRedirectResult, 1500);
+});
+
 // ==========================================
 // --- AUTHENTICATION ACTIONS ---
 // ==========================================
+
 window.handleSignup = async () => {
     const emailEl = document.getElementById('reg-email'), passEl = document.getElementById('reg-pass');
     const nameEl = document.getElementById('reg-name'), userEl = document.getElementById('reg-username');
@@ -2265,14 +2264,11 @@ window.handleSignup = async () => {
     try {
         const email = emailEl.value.trim(), pass = passEl.value, name = nameEl.value.trim(), username = userEl.value.trim().toLowerCase();
         
-        // 1. फायरबेस में नया अकाउंट बनाएं
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
         const myUid = cred.user.uid, myReferCode = username + Math.floor(1000 + Math.random() * 9000);
 
-        // 2. तुरंत वेरिफिकेशन ईमेल भेजें
         await sendEmailVerification(cred.user);
 
-        // 3. Firestore में यूजर का डेटा स्टोर करें
         const userData = { 
             uid: myUid, name, username, email, 
             photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`,
@@ -2280,7 +2276,6 @@ window.handleSignup = async () => {
         };
         await setDoc(doc(db, "users", myUid), userData);
 
-        // रेफरल कोड प्रोसेसिंग
         if (referralInput !== "") {
             const q = query(collection(db, "users"), where("referralCode", "==", referralInput));
             const snap = await getDocs(q);
@@ -2292,8 +2287,6 @@ window.handleSignup = async () => {
                 }
             }
         }
-
-        // नोट: हम यहाँ यूजर को लॉगआउट नहीं कर रहे हैं, ताकि बैकग्राउंड में ऑटो-वेरिफिकेशन चेक किया जा सके।
 
     } catch(e) { 
         let errorMsg = "Something went wrong. Try again.";
@@ -2693,11 +2686,9 @@ window.closeSinglePostView = () => {
 window.commentLikeLock = window.commentLikeLock || new Set();
 
 window.handleLikeComment = async (commentId, isLiked, commentOwnerId, commentText) => {
-    // 🛡️ 1. सुरक्षा लॉक: यदि लाइक प्रक्रिया चल रही है, तो अन्य क्लिक रोकें
     if (window.commentLikeLock.has(commentId)) return;
     window.commentLikeLock.add(commentId);
 
-    // 📱 2. हल्का हैप्टिक वाइब्रेशन फ़ीडबैक
     if (navigator.vibrate) navigator.vibrate(25);
 
     const commentRef = window.doc(window.db, "posts", activeCommentPostId, "comments", commentId);
@@ -2708,9 +2699,7 @@ window.handleLikeComment = async (commentId, isLiked, commentOwnerId, commentTex
         } else {
             await window.updateDoc(commentRef, { likes: window.arrayUnion(window.currentUser.uid) });
             
-            // 🌟 3. खुद के कमेंट पर पुश न भेजना + बैकएंड के लिए स्पष्ट टेक्स्ट मैपिंग
             if (commentOwnerId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
-                // 'liked your comment' टेक्स्ट को यहाँ जोड़ दिया गया है ताकि बैकएंड इसे सही ढंग से पार्स कर सके
                 await window.sendNotification(
                     commentOwnerId, 
                     'like_comment', 
@@ -2722,7 +2711,6 @@ window.handleLikeComment = async (commentId, isLiked, commentOwnerId, commentTex
     } catch (e) {
         console.error("Comment like database error:", e);
     } finally {
-        // प्रक्रिया समाप्त होने के बाद ताला खोलें
         window.commentLikeLock.delete(commentId);
     }
 };
@@ -2735,11 +2723,10 @@ window.handleSendComment = async () => {
     if (!inputEl) return;
     
     const t = inputEl.value.trim(); 
-    // 🛡️ 1. सुरक्षा लॉक: यदि पहले से कोई कमेंट सेंड हो रहा है या खाली है, तो रोकें
     if (!t || !activeCommentPostId || window.isCommentSending) return;
 
     window.isCommentSending = true;
-    inputEl.value = ""; // तुरंत इनपुट खाली करें (Optimistic UI)
+    inputEl.value = ""; 
     
     try {
         let myPhoto = window.currentUserData?.avatarBase64 || window.currentUser?.photoURL;
@@ -2762,10 +2749,8 @@ window.handleSendComment = async () => {
             
             await window.updateDoc(pRef, { commentCount: newCount });
             
-            // 📱 2. सफल सबमिशन पर हल्का हैप्टिक वाइब्रेशन
             if (navigator.vibrate) navigator.vibrate(25);
 
-            // थंबनेल काउंटर को तुरंत अपडेट करना
             const reelCommentSpan = document.getElementById(`reel-comment-count-${activeCommentPostId}`);
             if (reelCommentSpan) reelCommentSpan.innerText = newCount;
             
@@ -2773,7 +2758,6 @@ window.handleSendComment = async () => {
                 span.innerText = newCount; 
             });
 
-            // 🌟 3. पुश नोटिफिकेशन ट्रिगर (संरचित टेक्स्ट के साथ ताकि बैकएंड इसे सही से पार्स कर सके)
             if (pData.userId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
                 await window.sendNotification(
                     pData.userId, 
@@ -2785,11 +2769,7 @@ window.handleSendComment = async () => {
         }
     } catch (e) { 
         console.error("Error sending comment:", e); 
-        
-        // 🔄 4. टेक्स्ट लॉस प्रोटेक्शन (Text Loss Protection on Fail):
-        // यदि इंटरनेट जाने के कारण कमेंट सेंड नहीं होता, तो टाइप किया हुआ टेक्स्ट इनपुट बॉक्स में वापस आ जाएगा, ताकि यूज़र की मेहनत बेकार न हो।
         inputEl.value = t; 
-        
         if (typeof window.showToast === 'function') {
             window.showToast("Failed to send", "Your comment was draft-restored. Try again.", "", "error");
         }
@@ -3078,25 +3058,19 @@ window.timeAgo = timeAgo;
 // --- 🛡️ AUTH STATE & BAN SECURITY ---
 // ==========================================
 let isUserBanned = false;
-// 📱 बिना किसी प्ले स्टोर या जीपे रीडायरेक्शन के सीधे ईमेल ऐप खोलने का सबसे स्थिर फ़ंक्शन
 const getGmailDeepLink = () => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     
     if (/android/i.test(userAgent)) {
-        // [Android App Email Launcher Intent]
-        // यह बिना किसी कंपोज़ स्क्रीन, प्ले स्टोर या जीपे के सीधे Gmail के मुख्य इनबॉक्स (Primary Tab) को खोलेगा।
         return "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_EMAIL;package=com.google.android.gm;end";
     } else if (/iPad|iPhone|iPod/i.test(userAgent)) {
-        // [iOS Native Inbox Link]
-        // एप्पल आईफ़ोन में सीधे जीमेल इनबॉक्स खोलने के लिए
         return "googlegmail://";
     } else {
-        // डेस्कटॉप/कंप्यूटर के लिए सामान्य वेब लिंक
         return "https://mail.google.com";
     }
 };
 
-let verificationTimer = null; // ग्लोबल टाइमर
+let verificationTimer = null; 
 
 onAuthStateChanged(auth, async (user) => {
     const splash = document.getElementById('splash-screen');
@@ -3107,7 +3081,6 @@ onAuthStateChanged(auth, async (user) => {
     if (verificationTimer) { clearInterval(verificationTimer); verificationTimer = null; }
 
     if (user) {
-        // 🛡️ [स्मार्ट ऑटो-वेरिफिकेशन डिटेक्शन लॉजिक]
         if (!user.emailVerified) {
             if (splash) { splash.classList.add('splash-hide'); setTimeout(() => splash.classList.add('hidden'), 500); }
             
@@ -3132,12 +3105,10 @@ onAuthStateChanged(auth, async (user) => {
                         <h2 style="margin: 0 0 10px 0; font-weight: 800; font-size: 1.1rem; color: white; text-align: center;">Verify Your Email</h2>
                         <p style="color: #cbd5e1; font-size: 0.85rem; font-weight: 600; line-height: 1.4; margin: 0 0 20px 0;">We have sent a verification link to <br><b style="color: var(--primary);">${user.email}</b>. Please check your inbox and verify to continue.</p>
 
-                        <!-- प्रोग्रेस बार -->
                         <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 20px; overflow: hidden; position: relative;">
                             <div style="position: absolute; top:0; left:0; width: 100%; height:100%; background: linear-gradient(90deg, var(--primary), #8338ec); border-radius:10px; animation: progressLoading 2s infinite ease-in-out;"></div>
                         </div>
 
-                        <!-- 📱 [अपडेटेड टेक्स्ट और 100% वर्किंग सुरक्षित ईमेल ऐप लिंक] -->
                         <a id="btn-open-gmail" href="${getGmailDeepLink()}" target="${/android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? '_self' : '_blank'}" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; background: #ffffff; color: #10002b; font-weight: 800; font-size: 0.95rem; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
                             <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" style="width: 20px; height: 15px; object-fit: contain;"> Click here to open app
                         </a>
@@ -3161,7 +3132,6 @@ onAuthStateChanged(auth, async (user) => {
                 `;
                 document.body.appendChild(overlay);
 
-                // iOS के लिए सुरक्षित फ़ॉलबैक
                 const gmailBtn = document.getElementById('btn-open-gmail');
                 if (gmailBtn) {
                     gmailBtn.addEventListener('click', () => {
@@ -3174,7 +3144,6 @@ onAuthStateChanged(auth, async (user) => {
                     });
                 }
 
-                // 'Cancel / Sign Out' बटन इवेंट
                 document.getElementById('btn-cancel-verify').onclick = async () => {
                     if (verificationTimer) clearInterval(verificationTimer);
                     await signOut(auth);
@@ -3182,7 +3151,6 @@ onAuthStateChanged(auth, async (user) => {
                     window.location.reload(); 
                 };
 
-                // 'Resend Email Link' बटन इवेंट
                 document.getElementById('btn-resend-verification').onclick = async () => {
                     try {
                         const btnResend = document.getElementById('btn-resend-verification');
@@ -3196,25 +3164,24 @@ onAuthStateChanged(auth, async (user) => {
                 };
             }
 
-            // 🔄 [स्मार्ट बैकग्राउंड पोलिंग टाइमर] - हर 3 सेकंड में जांच
             verificationTimer = setInterval(async () => {
                 try {
-                    await user.reload(); // लाइव स्टेटस रीलोड करें
+                    await user.reload(); 
                     
                     if (user.emailVerified) {
                         clearInterval(verificationTimer);
-                        overlay.remove(); // ओवरले हटाएं
+                        overlay.remove(); 
                         if (typeof showCustomAlert === 'function') {
                             showCustomAlert("Verified!", "Your email has been verified successfully!", "success");
                         }
-                        window.location.reload(); // पेज रीफ्रेश करके सुरक्षित रूप से ऐप लोड करें
+                        window.location.reload(); 
                     }
                 } catch (e) {
                     console.log("Auto-verification check error:", e);
                 }
             }, 3000);
 
-            return; // अनवेरिफाइड होने पर ऐप का बाकी लॉजिक रोकें
+            return; 
         }
 
         // --- 🛡️ BAN SECURITY CHECK ---
@@ -3223,8 +3190,21 @@ onAuthStateChanged(auth, async (user) => {
         
         try {
             const userDoc = await getDoc(doc(db, "users", user.uid));
-            if(userDoc.exists()) currentUserData = userDoc.data();
-            else currentUserData = { following: [], followers: [], avatarBase64: null, lockedChats: [] };
+            if(userDoc.exists()) {
+                currentUserData = userDoc.data();
+            } else {
+                // 🌟 रेस-कंडीशन सुरक्षा फ़ॉलबैक (डेटाबेस पेलोड सिंक होने तक के लिए)
+                currentUserData = {
+                    name: user.displayName || "Google User",
+                    username: user.email ? user.email.split('@')[0] : "user",
+                    photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || "User")}`,
+                    following: [],
+                    followers: [],
+                    avatarBase64: null,
+                    lockedChats: [],
+                    isBanned: false
+                };
+            }
         } catch (e) { console.log("Error fetching user data:", e); }
 
         if (currentUserData && currentUserData.isBanned === true) {
@@ -3259,7 +3239,6 @@ onAuthStateChanged(auth, async (user) => {
             }
         });
 
-        // 📅 दैनिक लॉगिन एक्टिविटी ट्रैकर सक्रिय करें (DK-love-Verified Integration)
         import("./DK-love-Verified.js")
             .then((module) => {
                 if (typeof module.recordUserActivity === 'function') {
