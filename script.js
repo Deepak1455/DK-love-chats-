@@ -2133,9 +2133,8 @@ const isInAppBrowser = () => {
     return (ua.indexOf('Instagram') > -1 || ua.indexOf('FBAN') > -1 || ua.indexOf('FBAV') > -1 || ua.indexOf('Messenger') > -1 || ua.indexOf('WhatsApp') > -1);
 };
 
-// डेटाबेस पेलोड राइटर (सुरक्षित सैनिटाइज्ड फ़ील्ड्स)
 // =========================================================
-// --- 🚀 ULTRA-FAST SMART GOOGLE REGISTRATION ENGINE ---
+// --- 🚀 SMART, SMOOTH & FAST GOOGLE AUTHENTICATION SYSTEM ---
 // =========================================================
 
 async function saveGoogleUserToFirestore(user) {
@@ -2144,45 +2143,60 @@ async function saveGoogleUserToFirestore(user) {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
 
-    if (!userSnap.exists()) {
-        const safeEmail = (user.email || "").trim().toLowerCase();
-        let baseUsername = "user";
-        
-        // 1. 🌟 स्मार्ट सोशल यूजरनेम जनरेशन (अंडरस्कोर अनुमति के साथ)
-        if (safeEmail.includes('@')) {
-            baseUsername = safeEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
-        } else if (user.displayName) {
-            baseUsername = user.displayName.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+    const safeEmail = (user.email || "").trim().toLowerCase();
+    
+    // नाम साफ़ (Sanitize) करें और ईमेल से सुंदर नाम निकालने का प्रयास करें
+    let extractedName = (user.displayName || "").replace(/\s+/g, ' ').trim();
+    if (!extractedName && safeEmail.includes('@')) {
+        const emailPrefix = safeEmail.split('@')[0];
+        extractedName = emailPrefix
+            .split(/[\._\-]/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    }
+    if (!extractedName) {
+        extractedName = "Google User";
+    }
+
+    // HD प्रोफाइल फोटो अपग्रेड (96px से 400px high-res)
+    let safePhoto = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(extractedName)}`;
+    if (safePhoto && safePhoto.includes("googleusercontent.com")) {
+        safePhoto = safePhoto.replace(/=s96-c/g, "=s400-c");
+    }
+
+    // स्मार्ट और यूनिक यूजरनेम जनरेटर (तेज और डेटाबेस-फ्रेंडली)
+    const generateUniqueUsername = async (baseName, email) => {
+        let base = "user";
+        if (email && email.includes('@')) {
+            base = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+        } else if (baseName) {
+            base = baseName.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+        }
+        if (base.length < 3) {
+            base = "user_" + Math.floor(100 + Math.random() * 900);
         }
 
-        if (baseUsername.length < 3) {
-            baseUsername = "user_" + Math.floor(100 + Math.random() * 900);
-        }
+        let uniqueUsername = base;
         
-        let finalUsername = baseUsername;
-        
-        // त्वरित यूजरनेम टकराव की जांच
-        const q = query(collection(db, "users"), where("username", "==", finalUsername));
+        // डेटाबेस में केवल एक बार त्वरित जाँच करें
+        const q = query(collection(db, "users"), where("username", "==", uniqueUsername));
         const snap = await getDocs(q);
+        
+        // यदि यूजरनेम पहले से मौजूद है, तो रैंडम 3 डिजिट जोड़कर उसे तुरंत यूनिक बनाएं (अनावश्यक लूप से बचाव)
         if (!snap.empty) {
-            finalUsername = baseUsername + "_" + Math.floor(10 + Math.random() * 90);
+            uniqueUsername = base + "_" + Math.floor(100 + Math.random() * 900);
         }
+        return uniqueUsername;
+    };
 
+    if (!userSnap.exists()) {
+        // --- 🆕 नया अकाउंट क्रिएशन (New User Sign-up) ---
+        const finalUsername = await generateUniqueUsername(extractedName, safeEmail);
         const myReferCode = finalUsername + Math.floor(1000 + Math.random() * 9000);
-        
-        // 2. 🌟 नाम सैनिटाइजेशन (Extra spaces और Trim)
-        const safeName = (user.displayName || "Google User").replace(/\s+/g, ' ').trim();
-        
-        // 3. 🌟 HD DP अपग्रेड (96px गूगल थंबनेल को 400px क्रिस्प एचडी इमेज में बदलता है)
-        let safePhoto = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}`;
-        if (safePhoto && safePhoto.includes("googleusercontent.com")) {
-            safePhoto = safePhoto.replace(/=s96-c/g, "=s400-c"); // 96px से 400px में अपग्रेड
-        }
 
-        // पेलोड डेटा
         const userData = {
             uid: user.uid,
-            name: safeName,
+            name: extractedName,
             username: finalUsername,
             email: safeEmail,
             photoURL: safePhoto,
@@ -2194,31 +2208,91 @@ async function saveGoogleUserToFirestore(user) {
             isBanned: false
         };
 
-        // डेटाबेस में बेहद तेजी से लिखें
         await setDoc(userRef, userData);
         
         if (typeof showCustomAlert === 'function') {
             showCustomAlert("Welcome!", `Account created as @${finalUsername}`, "success");
         }
     } else {
-        // यदि यूजर पहले से है, तो केवल 'lastActive' को पैच करें
-        await setDoc(userRef, { lastActive: Date.now() }, { merge: true });
+        // --- 🔄 पुराना अकाउंट (स्मार्ट ऑटो-रिपेयर / अपडेट इंजन) ---
+        const existingData = userSnap.data();
+        const updatePayload = { lastActive: Date.now() };
+        let needsUpdate = false;
+
+        // क) क्या प्रोफाइल नाम जेनेरिक/अपूर्ण है?
+        const isGenericName = !existingData.name || 
+                              existingData.name.toLowerCase() === "user" || 
+                              existingData.name.toLowerCase() === "google user" ||
+                              existingData.name.toLowerCase() === "googleuser";
+
+        if (isGenericName && extractedName && extractedName !== "Google User") {
+            updatePayload.name = extractedName;
+            needsUpdate = true;
+        }
+
+        // ख) क्या यूजरनेम जेनेरिक/अस्थायी है? (जैसे "user", "googleuser" या ऑटो-जनरेटेड "user_123")
+        const isGenericUsername = !existingData.username || 
+                                  existingData.username.toLowerCase() === "user" || 
+                                  existingData.username.toLowerCase() === "googleuser" ||
+                                  /^user_\d+$/.test(existingData.username.toLowerCase());
+
+        if (isGenericUsername) {
+            const finalUsername = await generateUniqueUsername(extractedName, safeEmail);
+            if (finalUsername !== existingData.username) {
+                updatePayload.username = finalUsername;
+                
+                if (!existingData.referralCode) {
+                    updatePayload.referralCode = finalUsername + Math.floor(1000 + Math.random() * 9000);
+                }
+                needsUpdate = true;
+            }
+        }
+
+        // ग) क्या पुरानी प्रोफाइल इमेज अस्थायी (ui-avatars) है जबकि असली उपलब्ध है?
+        if (!existingData.photoURL || existingData.photoURL.includes("ui-avatars.com")) {
+            if (user.photoURL && !user.photoURL.includes("ui-avatars.com")) {
+                updatePayload.photoURL = safePhoto;
+                needsUpdate = true;
+            }
+        }
+
+        // यदि कोई नया बदलाव हुआ है तो ही डेटाबेस में लिखें (Fast & Save Cost)
+        if (needsUpdate) {
+            await setDoc(userRef, updatePayload, { merge: true });
+            
+            // ग्लोबल कैश और लोकल स्टेट को तुरंत अपडेट करें (No Refresh Required)
+            if (window.currentUserData) {
+                if (updatePayload.name) window.currentUserData.name = updatePayload.name;
+                if (updatePayload.username) window.currentUserData.username = updatePayload.username;
+                if (updatePayload.photoURL) {
+                    window.currentUserData.photoURL = updatePayload.photoURL;
+                    window.currentUserData.avatarBase64 = updatePayload.photoURL;
+                }
+            }
+
+            if (typeof showCustomAlert === 'function') {
+                const updatedUsername = updatePayload.username || existingData.username;
+                showCustomAlert("Profile Synced!", `Your account details have been updated as @${updatedUsername}`, "success");
+            }
+        } else {
+            // कोई सुधार आवश्यक नहीं होने पर केवल सक्रियता का समय पैच करें
+            await setDoc(userRef, { lastActive: Date.now() }, { merge: true });
+        }
     }
 }
 
-// 🔄 रिडायरेक्ट चेकर (केवल पेंडिंग लॉगिन होने पर ही काम करेगा)
+// 🔄 रिडायरेक्ट परिणाम कैप्चरर
 async function checkGoogleRedirectResult() {
-    // 🌟 सुरक्षा फ़िल्टर: यदि लॉगिन पेंडिंग नहीं है, तो सामान्य पेज लोड पर कुछ न करें
     if (sessionStorage.getItem('google_login_pending') !== 'true') return;
     
     try {
         const result = await getRedirectResult(auth);
-        sessionStorage.removeItem('google_login_pending'); // रिडायरेक्ट पूरा होने पर फ्लैग हटाएँ
+        sessionStorage.removeItem('google_login_pending'); // रिडायरेक्ट पूरा होने पर फ्लैग हटाएं
         if (result && result.user) {
             await saveGoogleUserToFirestore(result.user);
         }
     } catch (error) {
-        sessionStorage.removeItem('google_login_pending'); // एरर आने पर भी फ्लैग साफ़ करें
+        sessionStorage.removeItem('google_login_pending'); // त्रुटि आने पर भी फ़्लैग साफ़ करें
         console.error("Google Redirect Error:", error);
         handleGoogleAuthError(error);
     }
@@ -2226,7 +2300,7 @@ async function checkGoogleRedirectResult() {
 
 // शांत और सटीक एरर अलर्ट
 function handleGoogleAuthError(error) {
-    if (!error || !error.code) return; // अमान्य या खाली एरर होने पर कुछ न करें
+    if (!error || !error.code) return; 
 
     let errorTitle = "Google Auth Error";
     let errorMsg = "Could not connect to Google. Please try again.";
@@ -2236,7 +2310,7 @@ function handleGoogleAuthError(error) {
         errorMsg = "Instagram/WhatsApp browser detected! Please tap the 3 dots (...) at the top right and select 'Open in Chrome/Safari' to sign up safely.";
     } else if (error.code === 'auth/unauthorized-domain') {
         errorTitle = "Domain Not Authorized";
-        errorMsg = "Please make sure to add your current domain to Authorized Domains in Firebase Authentication Settings.";
+        errorMsg = "Please add your current domain to Authorized Domains in Firebase Authentication Settings.";
     } else if (error.code === 'auth/popup-blocked') {
         errorTitle = "Popup Blocked";
         errorMsg = "Popup blocked! Please allow popups or use the Redirect option.";
@@ -2256,7 +2330,6 @@ window.handleGoogleSignIn = async () => {
 
     try {
         if (isInAppBrowser()) {
-            // रिडायरेक्ट से पहले पेंडिंग फ्लैग सेट करें
             sessionStorage.setItem('google_login_pending', 'true');
             await signInWithRedirect(auth, provider);
         } else {
@@ -2272,7 +2345,7 @@ window.handleGoogleSignIn = async () => {
 };
 
 window.addEventListener('load', () => {
-    // सुचारू रूप से लोडिंग के लिए टाइमआउट को संतुलित (Optimize) किया गया
+    // इनिशियलाइजेशन को बिना किसी रुकावट के चलाने के लिए अनुकूलित (Optimized) समय अंतराल
     setTimeout(checkGoogleRedirectResult, 1000);
 });
 
