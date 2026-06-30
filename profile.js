@@ -34,34 +34,7 @@ window.switchProfileTab = (tab) => {
     });
 };
 
-// 3. रेफरल कोड कॉपी करने का फ़ंक्शन
-window.copyReferCode = () => {
-    const codeElement = document.getElementById('profile-refer-code');
-    if (!codeElement) return;
-    const codeToCopy = codeElement.innerText;
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(codeToCopy).then(() => {
-            if (typeof showCustomAlert === 'function') showCustomAlert("Copied!", "Referral Code copied to clipboard!", "success");
-            else alert("Referral Code Copied: " + codeToCopy);
-        }).catch(err => console.error("Copy failed", err));
-    } else {
-        const textArea = document.createElement("textarea"); 
-        textArea.value = codeToCopy;
-        textArea.style.position = "fixed"; 
-        document.body.appendChild(textArea); 
-        textArea.select(); 
-        try {
-            document.execCommand('copy');
-            if(typeof showCustomAlert === 'function') showCustomAlert("Copied!", "Code copied successfully!", "success");
-        } catch (err) {
-            console.error("Fallback copy failed", err);
-        }
-        document.body.removeChild(textArea);
-    }
-};
-
-// 4. रील्स और अन्य बैकग्राउंड मीडिया को रोकने का लॉजिक
+// 3. रील्स और अन्य बैकग्राउंड मीडिया को रोकने का लॉजिक
 window.forceStopAllReels = () => {
     if (window.reelObserver) { 
         window.reelObserver.disconnect(); 
@@ -83,11 +56,8 @@ window.forceStopAllReels = () => {
     }
 };
 
-// ==========================================
-// --- PROFILE VIEWING LOGIC (REAL-TIME) ---
-// ==========================================
 // =========================================================
-// --- UPDATE: PROFILE VIEWING LOGIC (REAL-TIME SYNCED) ---
+// --- PROFILE VIEWING LOGIC (REAL-TIME SYNCED - Referral Removed) ---
 // =========================================================
 window.viewUserProfile = async (targetUid) => {
     if (typeof window.forceStopAllReels === 'function') window.forceStopAllReels();
@@ -139,18 +109,9 @@ window.viewUserProfile = async (targetUid) => {
         document.getElementById('profile-following-count').innerText = d.following ? d.following.length : 0;
         
         const actions = document.getElementById('profile-actions');
-        const referCard = document.getElementById('my-referral-card'); 
 
         // 🌟 यदि यूज़र स्वयं की प्रोफ़ाइल देख रहा है
         if(window.currentUser && targetId === window.currentUser.uid) {
-            if(referCard) {
-                referCard.classList.remove('hidden');
-                
-                // 🛠️ BUG FIX: पहले के मैन्युअल लोडिंग को नए ऑटो-सिंक इंजन से रिप्लेस किया गया
-                if (typeof window.syncReferralData === 'function') {
-                    window.syncReferralData();
-                }
-            }
             if (actions) {
                 actions.innerHTML = `
                     <div class="profile-btn-container" style="width:100%; display:flex; flex-direction:column; gap:12px; margin-top:15px;">
@@ -167,7 +128,6 @@ window.viewUserProfile = async (targetUid) => {
             }
         } else {
             // यदि दूसरे यूज़र की प्रोफ़ाइल देखी जा रही है
-            if(referCard) referCard.classList.add('hidden');
             const isFollowing = window.currentUserData?.following && window.currentUserData.following.includes(targetId);
             if (actions) {
                 actions.innerHTML = `
@@ -189,9 +149,9 @@ window.viewUserProfile = async (targetUid) => {
             window.updateProfileVerificationUI(targetId, d.isVerified);
         }
 
-        // ==========================================
-        // --- REAL-TIME SYNC SNAPSHOT LISTENER -----
-        // ==========================================
+        // =========================================================
+        // --- REAL-TIME SYNC SNAPSHOT LISTENER (Referral Removed) ---
+        // =========================================================
         if (window.unsubscribeProfileUser) {
             window.unsubscribeProfileUser();
         }
@@ -226,11 +186,6 @@ window.viewUserProfile = async (targetUid) => {
 
                 if (window.currentUser && targetId === window.currentUser.uid) {
                     window.currentUserData = liveData; 
-                    
-                    // 🌟 लाइव सिंक अपडेट: यदि डेटाबेस में लाइव रेफ़रल काउंट बदलता है, तो उसे तुरंत रिफ्लेक्ट करें
-                    if (typeof window.syncReferralData === 'function') {
-                        window.syncReferralData();
-                    }
 
                     const myStoryImg = document.getElementById('my-story-ring-img');
                     if (myStoryImg) {
@@ -273,7 +228,7 @@ window.viewUserProfile = async (targetUid) => {
     window.switchProfileTab('posts');
 };
 
-// 5. यूज़र पोस्ट्स और रील्स को लोड करना
+// 4. यूज़र पोस्ट्स और रील्स को लोड करना
 window.loadUserPosts = async (uid) => {
     if (window.unsubscribeProfilePosts) {
         window.unsubscribeProfilePosts();
@@ -365,9 +320,9 @@ window.loadUserPosts = async (uid) => {
     }, (err) => console.error("Posts Snapshot error:", err));
 };
 
-// ==========================================
+// =========================================================
 // --- EDIT PROFILE MODULE (RE-DESIGNED) ---
-// ==========================================
+// =========================================================
 let editUsernameTimer = null;
 let isEditUsernameAvailable = true;
 
@@ -390,7 +345,7 @@ window.handleProfileFileSelect = (event) => {
     reader.readAsDataURL(file);
 };
 
-// 🌟 प्रिव्यू इमेज पर क्लिक करके सीधे फाइल पिकर ट्रिगर करने और बाइंड करने का फ़ंक्शन
+// प्रिव्यू इमेज पर क्लिक करके सीधे फाइल पिकर ट्रिगर करने और बाइंड करने का फ़ंक्शन
 window.initProfileImagePicker = () => {
     const previewEl = document.getElementById('edit-profile-preview');
     const fileInput = document.getElementById('edit-profile-input') || document.getElementById('edit-avatar-input');
@@ -499,7 +454,7 @@ window.checkEditUsernameAvailability = () => {
     }, 600); 
 };
 
-// 🌟 प्रोफ़ाइल सेविंग क्रियान्वयक (फ़ास्ट और फ़्लिकर-मुक्त अपडेट)
+// प्रोफ़ाइल सेविंग क्रियान्वयक (फ़ास्ट और फ़्लिकर-मुक्त अपडेट)
 window.handleSaveProfile = async () => { 
     let n = document.getElementById('edit-name').value.trim(); 
     let b = document.getElementById('edit-bio').value.trim(); 
@@ -526,7 +481,7 @@ window.handleSaveProfile = async () => {
     try {
         let url = null;
         
-        // 🌟 तात्कालिक स्थानीय ऑब्जेक्ट प्रिव्यू (बिना किसी देरी के सबसे तेज प्रिव्यू अनुभव के लिए)
+        // तात्कालिक स्थानीय ऑब्जेक्ट प्रिव्यू
         let localPreviewUrl = null;
         if (window.profileRawFile) {
             localPreviewUrl = URL.createObjectURL(window.profileRawFile);
@@ -556,10 +511,10 @@ window.handleSaveProfile = async () => {
                     url = uploadData?.url || uploadData;
                 } catch (uploadErr) {
                     console.warn("Storage upload failed, falling back to base64 data", uploadErr);
-                    url = window.selectedMediaBase64; // बैकअप
+                    url = window.selectedMediaBase64; 
                 }
             } else {
-                url = window.selectedMediaBase64; // बैकअप
+                url = window.selectedMediaBase64; 
             }
         }
         
@@ -594,7 +549,7 @@ window.handleSaveProfile = async () => {
             }
         }
 
-        // 🌟 डोम पर टेक्स्ट और डीपी तुरंत रिफ्लेक्ट करें (बिना स्क्रीन को रीसेट किए)
+        // डोम पर टेक्स्ट और डीपी तुरंत रिफ्लेक्ट करें
         const profileImg = document.getElementById('profile-img');
         if (profileImg && finalAvatar) profileImg.src = finalAvatar;
 
@@ -638,9 +593,9 @@ window.handleSaveProfile = async () => {
     }
 };
 
-// ==========================================
-// --- FOLLOWERS / FOLLOWING LIST MODULE ---
-// ==========================================
+// =========================================================
+// --- FOLLOWERS / FOLLOWING LIST MODULE (Referral Removed) ---
+// =========================================================
 let currentListUids = [], filteredListUids = [], currentListIndex = 0, isFetchingList = false;
 
 window.openUserList = async (type, uid) => {
@@ -767,63 +722,5 @@ window.loadMoreUsersList = async () => {
         console.error("Error loading users:", e); 
     } finally { 
         isFetchingList = false; 
-    }
-};
-// =========================================================
-// --- 🛠️ SAFE GLOBAL SCOPE INJECTION FOR MODAL COPY ------
-// =========================================================
-
-// यह फ़ंक्शन बिना किसी स्कोप ब्लॉक के सीधे विंडो (Global Object) पर रजिस्टर होता है
-window.copyModalReferCode = function() {
-    const codeElement = document.getElementById('modal-refer-code');
-    if (!codeElement) return;
-    const codeToCopy = codeElement.innerText || codeElement.textContent;
-
-    // कम्पन फीडबैक (Touch Vibe)
-    if (navigator.vibrate) navigator.vibrate(15);
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(codeToCopy).then(() => {
-            // टोस्ट या अलर्ट प्रदर्शित करें
-            if (typeof window.showCustomAlert === 'function') {
-                window.showCustomAlert("Copied!", "Referral Code copied to clipboard!", "success");
-            } else if (typeof window.showToast === 'function') {
-                window.showToast("Copied!", "Code copied!", window.currentUser?.photoURL, "success");
-            } else {
-                alert("Referral Code Copied: " + codeToCopy);
-            }
-        }).catch(err => {
-            console.error("Clipboard API copy failed, trying fallback:", err);
-            executeFallback(codeToCopy);
-        });
-    } else {
-        executeFallback(codeToCopy);
-    }
-
-    // फ़ॉलबैक मेथड (यदि ब्राउज़र क्लिपबोर्ड सपोर्ट न करे)
-    function executeFallback(text) {
-        if (typeof window.fallbackCopyText === 'function') {
-            window.fallbackCopyText(text, "Referral Code copied!");
-        } else {
-            const textArea = document.createElement("textarea"); 
-            textArea.value = text;
-            textArea.style.position = "fixed"; 
-            textArea.style.left = "-9999px"; 
-            textArea.style.top = "0";
-            document.body.appendChild(textArea); 
-            textArea.focus();
-            textArea.select(); 
-            try {
-                document.execCommand('copy');
-                if (typeof window.showCustomAlert === 'function') {
-                    window.showCustomAlert("Copied!", "Code copied successfully!", "success");
-                } else {
-                    alert("Referral Code Copied: " + text);
-                }
-            } catch (err) {
-                console.error("Fallback execution failed:", err);
-            }
-            document.body.removeChild(textArea);
-        }
     }
 };
