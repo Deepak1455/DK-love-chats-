@@ -2100,29 +2100,6 @@ window.checkUsernameAvailability = () => {
     }, 500); 
 }
 
-// ==========================================
-// --- REWARD LOGIC: USE EXISTING BOTS ---
-// ==========================================
-window.triggerBotArmyReward = async (referrerUid, count = 10) => {
-    try {
-        const botQuery = query(collection(db, "users"), where("isBot", "==", true), limit(50));
-        const botSnap = await getDocs(botQuery);
-        
-        if (botSnap.empty) return;
-
-        let allAvailableBots = [];
-        botSnap.forEach(doc => allAvailableBots.push(doc.id));
-
-        const selectedBotIds = allAvailableBots.sort(() => 0.5 - Math.random()).slice(0, count);
-
-        if (selectedBotIds.length > 0) {
-            await updateDoc(doc(db, "users", referrerUid), { followers: arrayUnion(...selectedBotIds) });
-            const batch = writeBatch(db);
-            selectedBotIds.forEach(botId => batch.update(doc(db, "users", botId), { following: arrayUnion(referrerUid) }));
-            await batch.commit();
-        }
-    } catch (err) { console.error("Bot Reward Error:", err.message); }
-};
 // =========================================================
 // --- 🛡️ RESILIENT GOOGLE AUTHENTICATION SYSTEM (SMART & SMOOTH) ---
 // =========================================================
@@ -2190,9 +2167,8 @@ async function saveGoogleUserToFirestore(user) {
     };
 
     if (!userSnap.exists()) {
-        // --- 🆕 नया अकाउंट क्रिएशन (New User Sign-up) ---
+        // --- 🆕 नया अकाउंट क्रिएशन (New User Sign-up - Referral Removed) ---
         const finalUsername = await generateUniqueUsername(extractedName, safeEmail);
-        const myReferCode = finalUsername + Math.floor(1000 + Math.random() * 9000);
 
         const userData = {
             uid: user.uid,
@@ -2200,8 +2176,6 @@ async function saveGoogleUserToFirestore(user) {
             username: finalUsername,
             email: safeEmail,
             photoURL: safePhoto,
-            referralCode: myReferCode,
-            referralsCount: 0,
             followers: [],
             following: [],
             lastActive: Date.now(),
@@ -2214,7 +2188,7 @@ async function saveGoogleUserToFirestore(user) {
             showCustomAlert("Welcome!", `Account created as @${finalUsername}`, "success");
         }
     } else {
-        // --- 🔄 पुराना अकाउंट (स्मार्ट ऑटो-रिपेयर / अपडेट इंजन) ---
+        // --- 🔄 पुराना अकाउंट (स्मार्ट ऑटो-रिपेयर / अपडेट इंजन - Referral Removed) ---
         const existingData = userSnap.data();
         const updatePayload = { lastActive: Date.now() };
         let needsUpdate = false;
@@ -2240,10 +2214,6 @@ async function saveGoogleUserToFirestore(user) {
             const finalUsername = await generateUniqueUsername(extractedName, safeEmail);
             if (finalUsername !== existingData.username) {
                 updatePayload.username = finalUsername;
-                
-                if (!existingData.referralCode) {
-                    updatePayload.referralCode = finalUsername + Math.floor(1000 + Math.random() * 9000);
-                }
                 needsUpdate = true;
             }
         }
@@ -2310,7 +2280,7 @@ function handleGoogleAuthError(error) {
         errorMsg = "Instagram/WhatsApp browser detected! Please tap the 3 dots (...) at the top right and select 'Open in Chrome/Safari' to sign up safely.";
     } else if (error.code === 'auth/unauthorized-domain') {
         errorTitle = "Domain Not Authorized";
-        errorMsg = "Please add your current domain to Authorized Domains in Firebase Authentication Settings.";
+        errorMsg = "Please make sure to add your current domain to Authorized Domains in Firebase Authentication Settings.";
     } else if (error.code === 'auth/popup-blocked') {
         errorTitle = "Popup Blocked";
         errorMsg = "Popup blocked! Please allow popups or use the Redirect option.";
@@ -2345,7 +2315,6 @@ window.handleGoogleSignIn = async () => {
 };
 
 window.addEventListener('load', () => {
-    // इनिशियलाइजेशन को बिना किसी रुकावट के चलाने के लिए अनुकूलित (Optimized) समय अंतराल
     setTimeout(checkGoogleRedirectResult, 1000);
 });
 
@@ -2356,7 +2325,6 @@ window.addEventListener('load', () => {
 window.handleSignup = async () => {
     const emailEl = document.getElementById('reg-email'), passEl = document.getElementById('reg-pass');
     const nameEl = document.getElementById('reg-name'), userEl = document.getElementById('reg-username');
-    const referralInput = document.getElementById('reg-referral-input')?.value.trim() || "";
 
     const checkFields = [
         { el: userEl, name: "Username" }, { el: nameEl, name: "Full Name" },
@@ -2380,28 +2348,16 @@ window.handleSignup = async () => {
         const email = emailEl.value.trim(), pass = passEl.value, name = nameEl.value.trim(), username = userEl.value.trim().toLowerCase();
         
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        const myUid = cred.user.uid, myReferCode = username + Math.floor(1000 + Math.random() * 9000);
+        const myUid = cred.user.uid;
 
         await sendEmailVerification(cred.user);
 
         const userData = { 
             uid: myUid, name, username, email, 
             photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`,
-            referralCode: myReferCode, referralsCount: 0, followers: [], following: [], lastActive: Date.now(), isBanned: false
+            followers: [], following: [], lastActive: Date.now(), isBanned: false
         };
         await setDoc(doc(db, "users", myUid), userData);
-
-        if (referralInput !== "") {
-            const q = query(collection(db, "users"), where("referralCode", "==", referralInput));
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-                const rId = snap.docs[0].id, rData = snap.docs[0].data();
-                if ((rData.referralsCount || 0) < 10) {
-                    await updateDoc(doc(db, "users", rId), { referralsCount: (rData.referralsCount || 0) + 1 });
-                    await window.triggerBotArmyReward(rId, 10);
-                }
-            }
-        }
 
     } catch(e) { 
         let errorMsg = "Something went wrong. Try again.";
@@ -3104,30 +3060,8 @@ window.openInstagram = () => {
 };
 
 // ==========================================
-// --- REFERRAL & BOT CREATION LOGIC ---
+// --- BOT CREATION LOGIC ---
 // ==========================================
-window.processReferral = async (inputCode) => {
-    if (!inputCode || typeof inputCode !== 'string') return;
-    const cleanCode = inputCode.trim().toLowerCase();
-    
-    if (typeof currentUser !== 'undefined' && currentUser && currentUserData && currentUserData.referralCode === cleanCode) return;
-
-    try {
-        const q = query(collection(db, "users"), where("referralCode", "==", cleanCode), limit(1));
-        const snap = await getDocs(q);
-
-        if (!snap.empty) {
-            const referrerDoc = snap.docs[0], referrerId = referrerDoc.id, referrerData = referrerDoc.data();
-            const currentCount = referrerData.referralsCount || 0;
-
-            if (currentCount >= 10) return;
-
-            await updateDoc(doc(db, "users", referrerId), { referralsCount: currentCount + 1 });
-            if(typeof triggerBotArmyReward === 'function') window.triggerBotArmyReward(referrerId, 10).catch(()=>{});
-        }
-    } catch (e) { console.error("Referral Processing Error:", e); }
-};
-
 window.createRealLookingBot = async (targetUserId) => {
     try {
         const botId = 'bot_' + Math.random().toString(36).substr(2, 9);
