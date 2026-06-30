@@ -98,33 +98,6 @@
         <h3 class="share-sheet-title">Share DK Love Chats <span class="heart-pulse">❤️</span></h3>
         <p class="share-sheet-subtitle">Invite friends & grow your circle instantly!</p>
 
-        <!-- 🌟 INTEGRATED "INVITE FRIENDS & GET 100 FOLLOWERS" CARD BOARD -->
-        <div class="modal-invite-board">
-            <div class="modal-invite-badge">
-                <i class="fa-solid fa-gift"></i> INVITE REWARD
-            </div>
-            <h4 class="modal-invite-title">Invite Friends & Get 100 Followers</h4>
-            
-            <!-- Code Box Wrapper -->
-            <div class="modal-code-wrapper">
-                <span id="modal-refer-code">LOADING...</span>
-                <button class="modal-copy-btn" onclick="copyModalReferCode()">
-                    <i class="fa-regular fa-copy"></i> Copy
-                </button>
-            </div>
-
-            <!-- Live Progress Bar -->
-            <div class="modal-progress-wrapper">
-                <div class="modal-progress-meta">
-                    <span id="modal-refer-progress-text" class="modal-progress-text">0/10 Refers</span>
-                    <span class="modal-progress-bonus">+10 Followers / Join</span>
-                </div>
-                <div class="modal-progress-track">
-                    <div id="modal-refer-progress-fill" style="width: 0%;"></div>
-                </div>
-            </div>
-        </div>
-
         <!-- Social Icons Grid -->
         <div class="share-grid-container">
             <div class="share-icon-card" onclick="shareToPlatform('whatsapp')">
@@ -326,7 +299,6 @@
         <div class="input-group"><input type="text" placeholder="Full Name" id="reg-name"></div>
         <div class="input-group"><input type="email" placeholder="Email Address" id="reg-email"></div>
         <div class="input-group"><input type="password" placeholder="Password" id="reg-pass"></div>
-        <div class="input-group"><input type="text" placeholder="Referral Code (Optional)" id="reg-referral-input"></div>
         <button class="btn-primary" id="btn-signup-action" onclick="handleSignup()" disabled>Create Account</button>
         
         <!-- 🌟 GOOGLE SIGN-UP BUTTON -->
