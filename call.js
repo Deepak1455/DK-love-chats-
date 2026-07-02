@@ -165,6 +165,27 @@ export function setupCallListeners(currentUserUid) {
     }
 }
 
+// 🌟 SMART: कम्पेटिबल कनेक्शन स्टेट चेंजर (Jio/Airtel और मोबाइल वेबव्यू के लिए)
+function updateCallConnectionStatus() {
+    const statusLabel = document.getElementById("call-room-status");
+    if (!statusLabel || !peerConnection) return;
+
+    const connectionState = peerConnection.connectionState;
+    const iceConnectionState = peerConnection.iceConnectionState;
+
+    if (isCallAccepted) {
+        if (connectionState === "connected" || iceConnectionState === "connected") {
+            statusLabel.innerText = "Connected";
+        } else if (connectionState === "connecting" || iceConnectionState === "checking") {
+            statusLabel.innerText = "Connecting...";
+        } else if (connectionState === "disconnected" || connectionState === "failed") {
+            statusLabel.innerText = "Reconnecting...";
+        }
+    } else {
+        statusLabel.innerText = "Dialing...";
+    }
+}
+
 // --- CALL INITIATION ---
 export async function startCall(targetUid, targetName, targetAvatar, type = 'voice') {
     const activeDb = getDb();
@@ -242,35 +263,8 @@ export async function startCall(targetUid, targetName, targetAvatar, type = 'voi
     peerConnection = new RTCPeerConnection(rtcConfig);
     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-    peerConnection.onconnectionstatechange = () => {
-        const statusLabel = document.getElementById("call-room-status");
-        if (!statusLabel) return;
-        
-        if (isCallAccepted) {
-            switch (peerConnection.connectionState) {
-                case "connecting":
-                    statusLabel.innerText = "Connecting...";
-                    break;
-                case "connected":
-                    statusLabel.innerText = "Connected";
-                    break;
-                case "disconnected":
-                case "failed":
-                    statusLabel.innerText = "Reconnecting...";
-                    setTimeout(() => {
-                        if (peerConnection && (peerConnection.connectionState === "disconnected" || peerConnection.connectionState === "failed")) {
-                            hangupCall();
-                        }
-                    }, 4000);
-                    break;
-                case "closed":
-                    statusLabel.innerText = "Ended";
-                    break;
-            }
-        } else {
-            statusLabel.innerText = "Dialing...";
-        }
-    };
+    peerConnection.onconnectionstatechange = updateCallConnectionStatus;
+    peerConnection.oniceconnectionstatechange = updateCallConnectionStatus;
 
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
@@ -421,40 +415,32 @@ async function acceptCall(callId, callData) {
         return;
     }
 
-    const rtcConfig = await getIceServersConfiguration();
-    peerConnection = new RTCPeerConnection(rtcConfig);
-    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-    peerConnection.onconnectionstatechange = () => {
-        const label = document.getElementById("call-room-status");
-        if (!label) return;
-        if (peerConnection.connectionState === "connected") {
-            label.innerText = "Connected";
-        } else if (peerConnection.connectionState === "disconnected" || peerConnection.connectionState === "failed") {
-            label.innerText = "Reconnecting...";
-        }
-    };
-
-    peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-            updateDoc(doc(activeDb, "calls", callId), {
-                receiverCandidates: arrayUnion(event.candidate.toJSON())
-            }).catch(e => console.warn(e));
-        }
-    };
-
-    peerConnection.ontrack = (event) => {
-        remoteStream = event.streams[0];
-        const remoteVideoEl = document.getElementById("remote-video-preview");
-        if (remoteVideoEl) {
-            remoteVideoEl.srcObject = remoteStream;
-            remoteVideoEl.play().catch(e => console.log("Remote track init fail:", e));
-        }
-    };
-
-    const callRef = doc(activeDb, "calls", callId);
-    
     try {
+        const rtcConfig = await getIceServersConfiguration();
+        peerConnection = new RTCPeerConnection(rtcConfig);
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+        peerConnection.onconnectionstatechange = updateCallConnectionStatus;
+        peerConnection.oniceconnectionstatechange = updateCallConnectionStatus;
+
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                updateDoc(doc(activeDb, "calls", callId), {
+                    receiverCandidates: arrayUnion(event.candidate.toJSON())
+                }).catch(e => console.warn(e));
+            }
+        };
+
+        peerConnection.ontrack = (event) => {
+            remoteStream = event.streams[0];
+            const remoteVideoEl = document.getElementById("remote-video-preview");
+            if (remoteVideoEl) {
+                remoteVideoEl.srcObject = remoteStream;
+                remoteVideoEl.play().catch(e => console.log("Remote track init fail:", e));
+            }
+        };
+
+        const callRef = doc(activeDb, "calls", callId);
         const snap = await getDoc(callRef);
         if (!snap.exists()) {
             endCallCleanUp();
@@ -494,34 +480,35 @@ async function acceptCall(callId, callData) {
         const cameraControl = document.getElementById("btn-video-call-toggle");
         if (cameraControl && callData.type === 'video') cameraControl.style.display = "flex";
 
+        callListenerUnsubscribe = onSnapshot(callRef, (docSnap) => {
+            if (!docSnap.exists() || !peerConnection) {
+                endCallCleanUp();
+                return;
+            }
+            const updatedData = docSnap.data();
+            
+            if (updatedData.status === "ended" || updatedData.status === "rejected") {
+                endCallCleanUp();
+                return;
+            }
+
+            if (updatedData.callerCandidates && peerConnection.remoteDescription) {
+                updatedData.callerCandidates.forEach(cand => {
+                    const candKey = JSON.stringify(cand);
+                    if (!processedCandidates.has(candKey)) {
+                        processedCandidates.add(candKey);
+                        peerConnection.addIceCandidate(new RTCIceCandidate(cand)).catch(e => {});
+                    }
+                });
+            }
+        });
+
     } catch (e) {
         console.error("Handshake Connection Failed:", e);
-        endCallCleanUp();
+        // 🌟 SMART FIXED: यदि स्वीकारने के दौरान कोई एरर आए, तो कॉल रिजेक्ट कर दोनों स्क्रीन तुरंत क्लोज करें
+        rejectCall(callId);
         return;
     }
-
-    callListenerUnsubscribe = onSnapshot(callRef, (docSnap) => {
-        if (!docSnap.exists() || !peerConnection) {
-            endCallCleanUp();
-            return;
-        }
-        const updatedData = docSnap.data();
-        
-        if (updatedData.status === "ended" || updatedData.status === "rejected") {
-            endCallCleanUp();
-            return;
-        }
-
-        if (updatedData.callerCandidates && peerConnection.remoteDescription) {
-            updatedData.callerCandidates.forEach(cand => {
-                const candKey = JSON.stringify(cand);
-                if (!processedCandidates.has(candKey)) {
-                    processedCandidates.add(candKey);
-                    peerConnection.addIceCandidate(new RTCIceCandidate(cand)).catch(e => {});
-                }
-            });
-        }
-    });
 }
 
 // --- REJECT OR DISCONNECT CALL ---
