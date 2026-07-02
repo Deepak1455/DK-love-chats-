@@ -12,10 +12,12 @@ let remoteStream = null;
 let peerConnection = null;
 let activeCallId = null;
 let callListenerUnsubscribe = null;
+let incomingCallUnsubscribe = null; // इनकमिंग मॉनिटर लिसनर
 let audioContext = null;
 let ringtoneInterval = null;
+let ringTimeoutTimer = null; // रिंगिंग टाइमआउट टाइमर
 
-// 🌟 SMART: डुप्लिकेट कैंडिडेट्स को ब्लॉक करने के लिए रीयल-टाइम फ़िल्टर सेट
+// रीयल-टाइम नॉन-डुप्लिकेट कैंडिडेट सिंकिंग फ़िल्टर
 let processedCandidates = new Set();
 let isCallAccepted = false; // कॉल स्वीकार होने का स्टेट गेटवे
 
@@ -28,7 +30,7 @@ const defaultIceServers = [
     { urls: "stun:stun.services.mozilla.com" }
 ];
 
-// --- Dynamic TURN/STUN Fetching ---
+// --- Dynamic TURN/STUN Configuration Fetching ---
 async function getIceServersConfiguration() {
     const activeDb = getDb();
     if (activeDb) {
@@ -68,11 +70,11 @@ function playSoundTone(frequency, duration) {
         osc.start();
         osc.stop(audioContext.currentTime + duration);
     } catch (e) { 
-        console.warn("Audio Context playback blocked:", e.message); 
+        console.warn("Audio Context blocked:", e.message); 
     }
 }
 
-// 🌟 SMART: स्क्रीन पर पहली बार टच करते ही ऑडियो अनलॉक करें
+// स्क्रीन पर प्रथम टच के साथ ऑडियो अनलॉक बाईपास
 function unlockAudioContextOnUserInteraction() {
     const unlock = () => {
         if (!audioContext) {
@@ -116,7 +118,7 @@ function stopRingtone() {
     }
 }
 
-// --- INITIALIZE CALL SYSTEM ---
+// --- INITIALIZE INCOMING CALL LISTENERS (INSTANT SYNC UPGRADE) ---
 export function setupCallListeners(currentUserUid) {
     if (!currentUserUid) return;
 
@@ -129,15 +131,32 @@ export function setupCallListeners(currentUserUid) {
     try {
         const incomingCallQuery = query(
             collection(activeDb, "calls"), 
-            where("receiverId", "==", currentUserUid), 
-            where("status", "==", "calling")
+            where("receiverId", "==", currentUserUid)
         );
 
-        onSnapshot(incomingCallQuery, (snapshot) => {
-            snapshot.docChanges().forEach(async (change) => {
-                if (change.type === "added") {
-                    const callData = change.doc.data();
-                    showIncomingCallUI(change.doc.id, callData);
+        if (incomingCallUnsubscribe) incomingCallUnsubscribe();
+
+        // 🌟 SMART: इनकमिंग कॉल्स की हर स्थिति (Cancel, Reject, Accept) को रीयल-टाइम मॉनिटर करें
+        incomingCallUnsubscribe = onSnapshot(incomingCallQuery, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                const callId = change.doc.id;
+                const callData = change.doc.data();
+
+                if (change.type === "added" || change.type === "modified") {
+                    if (callData.status === "calling") {
+                        if (activeCallId !== callId) {
+                            showIncomingCallUI(callId, callData);
+                        }
+                    } else if (callData.status === "rejected" || callData.status === "ended") {
+                        // अगर कॉलर ने रिंगिंग के दौरान अचानक कॉल काट दी, तो रिसीवर की स्क्रीन तुरंत बंद करें
+                        if (activeCallId === callId) {
+                            endCallCleanUp();
+                        }
+                    }
+                } else if (change.type === "removed") {
+                    if (activeCallId === callId) {
+                        endCallCleanUp();
+                    }
                 }
             });
         });
@@ -168,11 +187,21 @@ export async function startCall(targetUid, targetName, targetAvatar, type = 'voi
     }
 
     activeCallId = `${callerId}_${targetUid}_${Date.now()}`;
-    isCallAccepted = false; // कॉल स्वीकार नहीं हुई है (डिफ़ॉल्ट)
+    isCallAccepted = false;
     processedCandidates.clear();
 
-    showCallUI(targetName, targetAvatar, "Dialing...");
+    showCallUI(targetName, targetAvatar, "Dialing...", type);
     startRingtone('dialing');
+
+    // 🌟 SMART: 45 सेकंड रिंगिंग टाइमआउट (No Answer पर कॉल स्वतः समाप्त होगी)
+    ringTimeoutTimer = setTimeout(() => {
+        if (!isCallAccepted) {
+            if (typeof window.showToast === 'function') {
+                window.showToast("Call Timeout", "No answer from user.", "", "warning");
+            }
+            hangupCall();
+        }
+    }, 45000);
 
     const muteBtn = document.getElementById("btn-mute-call");
     if (muteBtn) muteBtn.classList.remove("muted");
@@ -188,8 +217,6 @@ export async function startCall(targetUid, targetName, targetAvatar, type = 'voi
                 localVideoEl.srcObject = localStream;
                 localVideoEl.play().catch(e => console.log(e));
             }
-            const videoGrid = document.getElementById("call-video-grid");
-            if (videoGrid) videoGrid.classList.add("active");
         }
     } catch (err) {
         console.error("Media Access Denied", err);
@@ -219,7 +246,6 @@ export async function startCall(targetUid, targetName, targetAvatar, type = 'voi
         const statusLabel = document.getElementById("call-room-status");
         if (!statusLabel) return;
         
-        // 🌟 SMART FIXED: जब तक कॉल एक्सेप्ट न हो, तब तक केवल "Dialing..." ही दिखेगा
         if (isCallAccepted) {
             switch (peerConnection.connectionState) {
                 case "connecting":
@@ -259,7 +285,7 @@ export async function startCall(targetUid, targetName, targetAvatar, type = 'voi
         const remoteVideoEl = document.getElementById("remote-video-preview");
         if (remoteVideoEl) {
             remoteVideoEl.srcObject = remoteStream;
-            remoteVideoEl.play().catch(e => console.log(e));
+            remoteVideoEl.play().catch(e => console.log("Remote video track play block:", e));
         }
     };
 
@@ -281,7 +307,7 @@ export async function startCall(targetUid, targetName, targetAvatar, type = 'voi
         }
         const data = docSnap.data();
 
-        // 🌟 FAST: रीयल-टाइम नॉन-डुप्लिकेट कैंडिडेट सिंकिंग
+        // रीयल-टाइम कैंडिडेट्स सिंकिंग
         if (data.receiverCandidates && peerConnection && peerConnection.remoteDescription) {
             data.receiverCandidates.forEach(cand => {
                 const candKey = JSON.stringify(cand);
@@ -293,8 +319,9 @@ export async function startCall(targetUid, targetName, targetAvatar, type = 'voi
         }
 
         if (data.status === "accepted" && !peerConnection.currentRemoteDescription) {
-            isCallAccepted = true; // 🌟 कॉल स्वीकार हो चुकी है!
+            isCallAccepted = true; // 🌟 कॉल एक्सेप्ट हुई!
             stopRingtone();
+            if (ringTimeoutTimer) clearTimeout(ringTimeoutTimer);
             
             const statusLabel = document.getElementById("call-room-status");
             if (statusLabel) statusLabel.innerText = "Connecting...";
@@ -330,7 +357,7 @@ function showIncomingCallUI(callId, callData) {
     processedCandidates.clear();
     startRingtone('ringing');
 
-    showCallUI(callData.callerName, callData.callerAvatar, `Incoming ${callData.type} Call...`);
+    showCallUI(callData.callerName, callData.callerAvatar, `Incoming ${callData.type} Call...`, callData.type);
     
     const acceptBtn = document.getElementById("btn-accept-call");
     const declineBtn = document.getElementById("btn-decline-call");
@@ -360,6 +387,7 @@ async function acceptCall(callId, callData) {
 
     stopRingtone();
     isCallAccepted = true; // 🌟 कॉल स्वीकार हो चुकी है
+    if (ringTimeoutTimer) clearTimeout(ringTimeoutTimer);
     
     const acceptBtn = document.getElementById("btn-accept-call");
     if (acceptBtn) acceptBtn.style.display = "none";
@@ -386,8 +414,6 @@ async function acceptCall(callId, callData) {
                 localVideoEl.srcObject = localStream;
                 localVideoEl.play().catch(e => console.log(e));
             }
-            const videoGrid = document.getElementById("call-video-grid");
-            if (videoGrid) videoGrid.classList.add("active");
         }
     } catch (err) {
         console.error("Local Media Init Failed:", err);
@@ -422,7 +448,7 @@ async function acceptCall(callId, callData) {
         const remoteVideoEl = document.getElementById("remote-video-preview");
         if (remoteVideoEl) {
             remoteVideoEl.srcObject = remoteStream;
-            remoteVideoEl.play().catch(e => console.log(e));
+            remoteVideoEl.play().catch(e => console.log("Remote track init fail:", e));
         }
     };
 
@@ -569,12 +595,17 @@ function endCallCleanUp() {
     const acceptBtn = document.getElementById("btn-accept-call");
     if (acceptBtn) acceptBtn.style.display = "none";
 
+    if (ringTimeoutTimer) {
+        clearTimeout(ringTimeoutTimer);
+        ringTimeoutTimer = null;
+    }
+
     processedCandidates.clear();
     isCallAccepted = false;
     activeCallId = null;
 }
 
-// 🌟 SMART: अचानक टैब बंद होने पर ऑटो-कॉल हैंग-अप करें
+// 🌟 SMART: अचानक टैब बंद होने पर दूसरे फोन से ऑटो-कॉल स्क्रीन बंद करें
 window.addEventListener('beforeunload', () => {
     if (activeCallId) {
         const activeDb = getDb();
@@ -586,7 +617,7 @@ window.addEventListener('beforeunload', () => {
 });
 
 // --- UI CONTROLLERS ---
-function showCallUI(name, avatar, status) {
+function showCallUI(name, avatar, status, type = 'voice') {
     const overlay = document.getElementById("call-screen-overlay");
     if (overlay) {
         const avatarEl = document.getElementById("call-room-avatar");
@@ -606,6 +637,16 @@ function showCallUI(name, avatar, status) {
 
         const acceptBtn = document.getElementById("btn-accept-call");
         if (acceptBtn) acceptBtn.style.display = "none";
+        
+        // 🌟 SMART Layout Segregation: वीडियो ग्रिड को केवल वीडियो कॉल होने पर ही एक्टिव करें
+        const videoGrid = document.getElementById("call-video-grid");
+        if (videoGrid) {
+            if (type === 'video') {
+                videoGrid.classList.add("active");
+            } else {
+                videoGrid.classList.remove("active");
+            }
+        }
         
         overlay.classList.add("active");
     }
