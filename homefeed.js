@@ -240,9 +240,6 @@ async function loadFeed(isRefresh = false) {
 // ==========================================
 // --- 2. CREATE POST UI ---
 // ==========================================
-// ==========================================
-// --- 2. CREATE POST UI (HASHTAG RESOLVED) -
-// ==========================================
 function createPostElement(pid, p) {
     if (!p) return document.createElement('div');
     
@@ -556,8 +553,245 @@ window.triggerFloatingHeartsAboveLike = (element) => {
 };
 
 // ==========================================
-// --- 4. POST INTERACTIONS ---
+// --- 4. OPTIMIZED & SMOOTH FULL MEDIA VIEWER ---
 // ==========================================
+window.viewFullMedia = (src, type) => {
+    const container = document.getElementById('full-media-container');
+    const modal = document.getElementById('media-viewer-modal');
+    if (!container || !modal) return;
+
+    // पुराने कंटेंट को साफ़ करें और मोडल प्रदर्शित करें
+    container.innerHTML = '';
+    modal.style.display = "block";
+    
+    // हार्डवेयर एक्सीलरेशन ट्रिगर करने के लिए 'active' क्लास जोड़ें
+    requestAnimationFrame(() => {
+        modal.classList.add('active');
+    });
+
+    if (type === 'video') {
+        const video = document.createElement('video');
+        video.src = src;
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.style.cssText = `
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        `;
+        container.appendChild(video);
+    } else {
+        // स्मार्ट लोडिंग इंडिकेटर
+        const loader = document.createElement('div');
+        loader.className = 'media-loader';
+        loader.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #fff; opacity: 0.8;"></i>';
+        loader.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none;';
+        container.appendChild(loader);
+
+        const img = document.createElement('img');
+        img.src = src;
+        img.id = 'fullscreen-image';
+        img.style.cssText = `
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: grab;
+            opacity: 0;
+            will-change: transform;
+        `;
+        
+        img.onload = () => {
+            loader.remove();
+            img.style.opacity = '1';
+        };
+        img.onerror = () => {
+            loader.innerHTML = '<span style="color:#ff4757; font-size:0.9rem;">Failed to load image</span>';
+        };
+        
+        container.appendChild(img);
+
+        // जेस्चर और ज़ूम वेरिएबल्स
+        let scale = 1;
+        let startScale = 1;
+        let pointX = 0;
+        let pointY = 0;
+        let start = { x: 0, y: 0 };
+        let initialDistance = 0;
+        let lastTap = 0;
+        let isDragging = false;
+
+        const updateTransform = (duration = 0) => {
+            // ज़ूम लिमिट्स सेट करें (1x से 6x)
+            if (scale < 1) scale = 1;
+            if (scale > 6) scale = 6;
+            
+            if (scale === 1) {
+                pointX = 0;
+                pointY = 0;
+                img.style.cursor = 'grab';
+            } else {
+                img.style.cursor = 'move';
+                // 🌟 डायनामिक बाउंड्री क्लैम्पिंग ताकि ड्रैग करते समय इमेज स्क्रीन से पूरी तरह बाहर न निकल जाए
+                const containerWidth = container.clientWidth;
+                const containerHeight = container.clientHeight;
+                const imgWidth = img.clientWidth || img.offsetWidth || containerWidth;
+                const imgHeight = img.clientHeight || img.offsetHeight || containerHeight;
+
+                const scaledWidth = imgWidth * scale;
+                const scaledHeight = imgHeight * scale;
+
+                const maxDragX = scaledWidth > containerWidth ? (scaledWidth - containerWidth) / 2 : 0;
+                const maxDragY = scaledHeight > containerHeight ? (scaledHeight - containerHeight) / 2 : 0;
+
+                pointX = Math.min(Math.max(pointX, -maxDragX), maxDragX);
+                pointY = Math.min(Math.max(pointY, -maxDragY), maxDragY);
+            }
+
+            img.style.transition = duration > 0 ? `transform ${duration}ms cubic-bezier(0.1, 0.76, 0.55, 0.94)` : 'none';
+            img.style.transform = `translate3d(${pointX}px, ${pointY}px, 0px) scale(${scale})`;
+        };
+
+        // --- मोबाइल टच इवेंट्स (Pinch & Pan) ---
+        container.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                initialDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                startScale = scale;
+            } else if (e.touches.length === 1) {
+                isDragging = true;
+                start = { x: e.touches[0].clientX - pointX, y: e.touches[0].clientY - pointY };
+            }
+        }, { passive: true });
+
+        container.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault(); 
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                if (initialDistance > 0) {
+                    scale = (currentDistance / initialDistance) * startScale;
+                    updateTransform();
+                }
+            } else if (e.touches.length === 1 && scale > 1 && isDragging) {
+                e.preventDefault(); 
+                pointX = e.touches[0].clientX - start.x;
+                pointY = e.touches[0].clientY - start.y;
+                updateTransform();
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchend', (e) => {
+            isDragging = false;
+            if (e.touches.length < 2) initialDistance = 0;
+            
+            // डबल टैप टू ज़ूम इन/आउट
+            const now = Date.now();
+            const tapLength = now - lastTap;
+            if (tapLength < 300 && tapLength > 0) {
+                if (scale > 1) {
+                    scale = 1;
+                } else {
+                    scale = 2.5;
+                    // टैप की गई लोकेशन के पास ज़ूम फोकस करें
+                    if (e.changedTouches && e.changedTouches[0]) {
+                        const rect = img.getBoundingClientRect();
+                        const touchX = e.changedTouches[0].clientX - (rect.left + rect.width / 2);
+                        const touchY = e.changedTouches[0].clientY - (rect.top + rect.height / 2);
+                        pointX = -touchX * 1.5;
+                        pointY = -touchY * 1.5;
+                    }
+                }
+                updateTransform(250);
+            }
+            lastTap = now;
+        });
+
+        // --- डेस्कटॉप माउस इवेंट्स (Drag & Pan) ---
+        let isMouseDown = false;
+        container.addEventListener('mousedown', (e) => {
+            if (scale > 1) {
+                isMouseDown = true;
+                img.style.cursor = 'grabbing';
+                start = { x: e.clientX - pointX, y: e.clientY - pointY };
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isMouseDown && scale > 1) {
+                pointX = e.clientX - start.x;
+                pointY = e.clientY - start.y;
+                updateTransform();
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isMouseDown) {
+                isMouseDown = false;
+                img.style.cursor = 'move';
+            }
+        });
+
+        // --- डेस्कटॉप माउस व्हील ज़ूम ---
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = 0.15;
+            const previousScale = scale;
+            if (e.deltaY < 0) {
+                scale += zoomFactor; // ज़ूम इन
+            } else {
+                scale -= zoomFactor; // ज़ूम आउट
+            }
+            
+            const rect = img.getBoundingClientRect();
+            const mouseX = e.clientX - (rect.left + rect.width / 2);
+            const mouseY = e.clientY - (rect.top + rect.height / 2);
+            
+            scale = Math.min(Math.max(1, scale), 6);
+            
+            if (scale > 1) {
+                pointX -= mouseX * (scale - previousScale) / scale;
+                pointY -= mouseY * (scale - previousScale) / scale;
+            }
+            
+            updateTransform(100);
+        }, { passive: false });
+    }
+};
+
+window.closeFullScreenMedia = () => { 
+    const modal = document.getElementById('media-viewer-modal');
+    const container = document.getElementById('full-media-container');
+    if (!modal) return;
+    
+    modal.classList.remove('active');
+    
+    // वीडियो साउंड और प्लेबैक को तुरंत बंद करें
+    if (container) {
+        const video = container.querySelector('video');
+        if (video) {
+            video.pause();
+            video.src = "";
+            video.load();
+        }
+    }
+    
+    // स्मूथ फ़ेड-आउट एनिमेशन के बाद कंटेनर खाली करें
+    setTimeout(() => { 
+        if (container) container.innerHTML = ""; 
+        modal.style.display = "none";
+    }, 300);
+};
+
+// 🌟 विसंगति दूर करने के लिए एलायंस बाइंडिंग (viewFullScreenMedia और viewFullMedia दोनों को मैप किया गया है)
+window.viewFullScreenMedia = window.viewFullMedia;
+
 window.handleMediaClick = (element, pid, ownerId, mediaUrl, mediaType, event) => {
     if(event) event.stopPropagation();
     if (!element.clickTimeout) {
@@ -712,6 +946,7 @@ window.activeCheckInterval = setInterval(() => {
         }
     });
 }, 10000);
+
 /**
  * 🌟 होम फीड के लिए हैशटैग्स को हाइलाइट और नीले रंग में बदलने वाला फ़ंक्शन
  */
