@@ -314,7 +314,31 @@ function createReelElement(id, data) {
                     <span class="reel-user-name" onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${data.userId}')" style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">@${initialUsername}${initialBadgeHtml}</span>${followBtnHtml}
                 </div>
             </div>
-            <div class="reel-caption" style="text-shadow: 0 1px 2px rgba(0,0,0,0.4);">${formattedCaption}</div>
+
+<div class="reel-caption" style="
+    background: rgba(20, 20, 20, 0.6); 
+    backdrop-filter: blur(8px); 
+    -webkit-backdrop-filter: blur(8px); 
+    border: 1px solid rgba(255, 255, 255, 0.12); 
+    border-radius: 12px; 
+    padding: 10px 14px; 
+    margin-top: 8px; 
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); 
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4); 
+    max-width: 90%; 
+    
+    /* 🌟 कार्ड बोर्ड के अंदर स्क्रॉल सक्षम करने के लिए नई प्रॉपर्टीज 🌟 */
+    max-height: 110px;                  /* कार्ड की अधिकतम ऊंचाई */
+    overflow-y: auto;                   /* यदि कंटेंट बड़ा है, तो स्क्रॉल बार दिखाएं */
+    scrollbar-width: none;              /* फ़ायरफ़ॉक्स के लिए स्क्रॉलबार छिपाएं */
+    -webkit-overflow-scrolling: touch;   /* iOS/Mobile डिवाइस पर सुपर स्मूथ स्क्रॉल के लिए */
+    
+    word-break: break-word;
+    font-size: 0.95rem;
+    line-height: 1.4;
+">
+    ${formattedCaption}
+</div>
         </div>
         <div class="reel-actions" style="z-index: 10;">
             <div class="reel-action-btn ${isLiked ? 'liked' : ''}" id="reel-like-btn-${id}" onclick="window.handleReelLike('${id}', '${data.userId}', this, '${posterUrl}')">
