@@ -560,3 +560,39 @@
     /* नियोन ग्लो इफ़ेक्ट */
     box-shadow: 0 0 8px #ff006e, 0 0 15px rgba(131, 56, 236, 0.6) !important;
 }
+/* ⚡ लाइक बटन का मुख्य पॉप अप एनीमेशन */
+@keyframes heart-click-pop {
+    0% { transform: scale(1); }
+    25% { transform: scale(0.65); }
+    50% { transform: scale(1.4); }
+    75% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+.heart-pop-active {
+    animation: heart-click-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ⚡ मिनी बिखरने वाले पार्टिकल्स (Hearts) की स्टाइल */
+.mini-like-particle {
+    position: absolute;
+    pointer-events: none;
+    font-size: 12px;
+    z-index: 99;
+    transform: scale(0);
+}
+
+/* ⚡ बिखरने (Explosion) का एनीमेशन */
+@keyframes particle-explode {
+    0% { 
+        transform: translate(0, 0) scale(0); 
+        opacity: 1; 
+    }
+    50% { 
+        opacity: 1; 
+    }
+    100% { 
+        transform: translate(var(--tx), var(--ty)) scale(1.1); 
+        opacity: 0; 
+    }
+}
