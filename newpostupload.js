@@ -246,56 +246,92 @@ function rebuildInstagramComposer(type) {
                 </div>
             </div>
 
-            <!-- 4. MIDDLE SECTION: USER PROFILE DP & 🌟 HIGH-END SYNCHRONIZED CAPTION INPUT -->
-            <div style="display: flex; gap: 15px; padding: 18px 20px; border-bottom: 1.5px solid #f1f5f9; align-items: flex-start; background: #ffffff;">
-                <img src="${userDp}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0; flex-shrink: 0;">
-                
-                <!-- Sychnronized Textarea Wrapper -->
-                <div style="position: relative; flex: 1; min-height: 100px;">
-                    <!-- Backdrop Highlighting Div (Behind) -->
-                    <div id="backdrop-caption-highlight" style="
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100px;
-                        padding: 4px 0;
-                        font-size: 0.95rem;
-                        line-height: 1.5;
-                        color: #262626;
-                        white-space: pre-wrap;
-                        word-wrap: break-word;
-                        overflow: hidden;
-                        pointer-events: none;
-                        box-sizing: border-box;
-                        font-family: inherit;
-                        font-weight: 500;
-                    "></div>
-                    <!-- Real Native Textarea (In front, text is transparent, cursor is visible) -->
-                    <textarea id="post-caption" placeholder="Write a caption... (Use # to add hashtags)" style="
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100px;
-                        background: transparent !important;
-                        border: none;
-                        color: transparent !important;
-                        caret-color: #262626;
-                        font-size: 0.95rem;
-                        line-height: 1.5;
-                        padding: 4px 0;
-                        resize: none;
-                        outline: none;
-                        box-sizing: border-box;
-                        font-family: inherit;
-                        font-weight: 500;
-                        overflow-y: auto;
-                        z-index: 2;
-                    " oninput="window.handleCaptionInput()" onscroll="window.syncCaptionScroll()"></textarea>
-                </div>
-            </div>
-
+<!-- 4. MIDDLE SECTION: USER PROFILE DP & HIGH-END SYNCHRONIZED CAPTION INPUT -->
+<div style="display: flex; gap: 12px; padding: 18px 20px; border-bottom: 1.5px solid #f1f5f9; align-items: flex-start; background: #ffffff; box-sizing: border-box;">
+    
+    <!-- User Avatar (DT Initials या DP) -->
+    <img src="${userDp}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1.5px solid #cbd5e1; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div style="
+        display: none; 
+        width: 44px; 
+        height: 44px; 
+        border-radius: 50%; 
+        background: #e2e8f0; 
+        color: #475569; 
+        align-items: center; 
+        justify-content: center; 
+        font-weight: 700; 
+        font-size: 0.95rem; 
+        border: 1.5px solid #cbd5e1; 
+        flex-shrink: 0;
+    ">
+        DT
+    </div>
+    
+    <!-- 🌟 मुख्य कार्ड बोर्ड कंटेनर (बॉर्डर केवल यहाँ रहेगा) -->
+    <div style="
+        position: relative; 
+        flex: 1; 
+        height: 120px; 
+        border: 1.5px solid #cbd5e1; 
+        border-radius: 18px; 
+        background: #ffffff;
+        box-sizing: border-box;
+        overflow: hidden;
+    ">
+        
+        <!-- 1. Backdrop Highlighting (पीछे का टेक्स्ट) -->
+        <div id="backdrop-caption-highlight" style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 12px 14px;
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #262626;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+            pointer-events: none;
+            box-sizing: border-box;
+            /* फोंट को सिंक्रोनाइज़ करने के लिए बिल्कुल समान सिस्टम फोंट */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 500;
+            border: none !important;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        "></div>
+        
+        <!-- 2. Real Native Textarea (आगे का इनपुट - टेक्स्ट पारदर्शी रहेगा) -->
+        <textarea id="post-caption" placeholder="Write a caption... (Use # to add hashtags)" style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            color: transparent !important;
+            caret-color: #262626;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            padding: 12px 14px;
+            margin: 0;
+            resize: none;
+            box-sizing: border-box;
+            /* बिल्कुल वही फोंट यहाँ भी */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 500;
+            overflow-y: auto;
+            z-index: 2;
+        " oninput="window.handleCaptionInput()" onscroll="window.syncCaptionScroll()"></textarea>
+    </div>
+</div>
             <!-- 🌟 INSTAGRAM # UTILITY BUTTON BAR -->
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1.5px solid #f1f5f9; background: #ffffff;">
                 <button onclick="window.insertHashSymbol()" style="
