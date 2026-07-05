@@ -559,6 +559,39 @@ function preloadNeighborReels(currentReel) {
  */
 window.reelLikeLock = window.reelLikeLock || new Set();
 
+// ⚡ 1. मिनी लाइक एक्सप्लोजन के लिए नया हेल्पर फ़ंक्शन (reels.js में कहीं भी नीचे जोड़ें)
+function triggerMiniLikeExplosion(btnElement) {
+    btnElement.style.position = 'relative'; // सुनिश्चित करें कि पैरेंट रिलेटिव हो
+    const colors = ['#ff006e', '#ff85a1', '#8338ec', '#ffbe0b', '#0095f6'];
+    const numParticles = 6; // निकलने वाले मिनी हार्ट्स की संख्या
+
+    for (let i = 0; i < numParticles; i++) {
+        const particle = document.createElement('i');
+        particle.className = 'fa-solid fa-heart mini-like-particle';
+        
+        // चारों तरफ बिखराव के लिए कोण (angle) और दूरी (distance) कैलकुलेट करें
+        const angle = (i * (360 / numParticles)) * (Math.PI / 180);
+        const distance = Math.random() * 20 + 20; // 20px से 40px का दायरा
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+        
+        particle.style.setProperty('--tx', `${tx}px`);
+        particle.style.setProperty('--ty', `${ty}px`);
+        particle.style.color = colors[Math.floor(Math.random() * colors.length)];
+        
+        // आइकॉन के बिल्कुल सेंटर में रखें
+        particle.style.left = '40%';
+        particle.style.top = '30%';
+        particle.style.animation = 'particle-explode 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards';
+        
+        btnElement.appendChild(particle);
+        
+        // एनीमेशन पूरा होने पर नोड को डिलीट करें
+        setTimeout(() => particle.remove(), 600);
+    }
+}
+
+// ⚡ 2. window.handleReelLike फ़ंक्शन के अंदर केवल "Like" वाले ब्लॉक को अपडेट करें:
 window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
     if (window.reelLikeLock.has(pid)) return;
     window.reelLikeLock.add(pid);
@@ -580,19 +613,16 @@ window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
         icon.className = 'fa-solid fa-heart'; 
         textSpan.innerText = originalCount + 1;
         
-        if (typeof window.playSendSound === 'function') window.playSendSound(); 
+        // 🌟 आइकॉन पॉप एनीमेशन ट्रिगर करें
+        icon.classList.add('heart-pop-active');
+        icon.addEventListener('animationend', () => {
+            icon.classList.remove('heart-pop-active');
+        }, { once: true });
+
+        // 🌟 मिनी एक्सप्लोजन ट्रिगर करें
+        triggerMiniLikeExplosion(btnElement);
         
-        if (typeof window.triggerMicroConfetti === 'function') {
-            window.triggerMicroConfetti(btnElement);
-        } else {
-            const heart = document.createElement('i'); 
-            heart.classList.add('fa-solid', 'fa-heart', 'heart-pop'); 
-            const reelItem = btnElement.closest('.reel-item');
-            if (reelItem) {
-                reelItem.appendChild(heart); 
-                setTimeout(() => heart.remove(), 1000);
-            }
-        }
+        if (typeof window.playSendSound === 'function') window.playSendSound(); 
     }
 
     const postRef = window.doc(window.db, "posts", pid);
@@ -618,10 +648,6 @@ window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
             btnElement.classList.remove('liked');
             icon.className = 'fa-regular fa-heart';
             textSpan.innerText = originalCount;
-        }
-        
-        if (typeof window.showToast === 'function') {
-            window.showToast("Connection Error", "Failed to register like. Try again.", "", "error");
         }
     } finally {
         window.reelLikeLock.delete(pid);
