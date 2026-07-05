@@ -542,3 +542,21 @@
         opacity: 0;
     }
 }
+/* ⚡ प्रोग्रेस बार के लिए कलर-शिफ्ट एनीमेशन */
+@keyframes progress-color-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.reel-progress-bar {
+    /* नियोन कलर्स का ग्रेडिएंट (Pink -> Purple -> Light Blue -> Pink) */
+    background: linear-gradient(90deg, #ff006e, #8338ec, #0095f6, #ff006e) !important;
+    background-size: 300% 100% !important;
+    
+    /* एनीमेशन जो ग्रेडिएंट को स्मूथली घुमाएगा */
+    animation: progress-color-shift 3s ease infinite !important;
+    
+    /* नियोन ग्लो इफ़ेक्ट */
+    box-shadow: 0 0 8px #ff006e, 0 0 15px rgba(131, 56, 236, 0.6) !important;
+}
