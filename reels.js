@@ -301,6 +301,22 @@ function createReelElement(id, data) {
 
     div.innerHTML = `
         <video data-original-src="${videoUrl}" src="" poster="${posterUrl}" class="reel-video" loop playsinline preload="none"></video>
+        
+
+<!-- ⚡ प्रोग्रेस बार को Bottom Nav के ठीक ऊपर (जैसे: bottom: 60px) रखने के लिए -->
+<div class="reel-progress-container" style="
+    position: absolute; 
+    bottom: 75px; /* 👈 यहाँ अपने Bottom Nav की ऊंचाई के अनुसार 50px, 60px या 70px लिखें */
+    left: 0; 
+    width: 100%; 
+    height: 3px; 
+    background: rgba(255, 255, 255, 0.15); 
+    z-index: 15; 
+    pointer-events: none;
+">
+    <div class="reel-progress-bar" style="height: 100%; width: 0%; background: #ff006e; transition: width 0.1s linear; box-shadow: 0 0 8px #ff006e;"></div>
+</div>
+
         <div class="reel-overlay-ui" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; display: flex; align-items: center; justify-content: center;">
             <div class="reel-loading-spinner" style="display: none;"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
             <div class="reel-status-icon"></div>
@@ -315,30 +331,28 @@ function createReelElement(id, data) {
                 </div>
             </div>
 
-<div class="reel-caption" style="
-    background: rgba(20, 20, 20, 0.6); 
-    backdrop-filter: blur(8px); 
-    -webkit-backdrop-filter: blur(8px); 
-    border: 1px solid rgba(255, 255, 255, 0.12); 
-    border-radius: 12px; 
-    padding: 10px 14px; 
-    margin-top: 8px; 
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); 
-    text-shadow: 0 1px 2px rgba(0,0,0,0.4); 
-    max-width: 90%; 
-    
-    /* 🌟 कार्ड बोर्ड के अंदर स्क्रॉल सक्षम करने के लिए नई प्रॉपर्टीज 🌟 */
-    max-height: 110px;                  /* कार्ड की अधिकतम ऊंचाई */
-    overflow-y: auto;                   /* यदि कंटेंट बड़ा है, तो स्क्रॉल बार दिखाएं */
-    scrollbar-width: none;              /* फ़ायरफ़ॉक्स के लिए स्क्रॉलबार छिपाएं */
-    -webkit-overflow-scrolling: touch;   /* iOS/Mobile डिवाइस पर सुपर स्मूथ स्क्रॉल के लिए */
-    
-    word-break: break-word;
-    font-size: 0.95rem;
-    line-height: 1.4;
-">
-    ${formattedCaption}
-</div>
+            <!-- 🌟 कार्ड-बोर्ड कैप्शन कंटेनर (वर्टिकल स्क्रॉल सक्षम) -->
+            <div class="reel-caption" style="
+                background: rgba(20, 20, 20, 0.6); 
+                backdrop-filter: blur(8px); 
+                -webkit-backdrop-filter: blur(8px); 
+                border: 1px solid rgba(255, 255, 255, 0.12); 
+                border-radius: 12px; 
+                padding: 10px 14px; 
+                margin-top: 8px; 
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); 
+                text-shadow: 0 1px 2px rgba(0,0,0,0.4); 
+                max-width: 90%; 
+                max-height: 110px;                  
+                overflow-y: auto;                   
+                scrollbar-width: none;              
+                -webkit-overflow-scrolling: touch;   
+                word-break: break-word;
+                font-size: 0.95rem;
+                line-height: 1.4;
+            ">
+                ${formattedCaption}
+            </div>
         </div>
         <div class="reel-actions" style="z-index: 10;">
             <div class="reel-action-btn ${isLiked ? 'liked' : ''}" id="reel-like-btn-${id}" onclick="window.handleReelLike('${id}', '${data.userId}', this, '${posterUrl}')">
@@ -361,10 +375,24 @@ function createReelElement(id, data) {
     const video = div.querySelector('.reel-video');
     const statusIcon = div.querySelector('.reel-status-icon');
     const loadingSpinner = div.querySelector('.reel-loading-spinner');
+    const progressBar = div.querySelector('.reel-progress-bar'); // प्रोग्रेस बार एलिमेंट
     let lastTapTime = 0, clickTimeout = null;
 
     video.onwaiting = () => { loadingSpinner.style.display = 'block'; }; 
     video.onplaying = () => { loadingSpinner.style.display = 'none'; };
+
+    // ⚡ प्रोग्रेस बार इवेंट्स: वीडियो टाइम के साथ सिंक करना
+    video.ontimeupdate = () => {
+        if (!video.duration || video.paused) return;
+        const percentage = (video.currentTime / video.duration) * 100;
+        progressBar.style.width = `${percentage}%`;
+    };
+
+    video.onseeked = () => {
+        if (video.currentTime === 0) {
+            progressBar.style.width = '0%';
+        }
+    };
 
     const showStatusPop = (iconName) => {
         statusIcon.innerHTML = `<i class="fa-solid ${iconName}"></i>`; 
@@ -374,7 +402,7 @@ function createReelElement(id, data) {
     };
 
     div.addEventListener('pointerup', (e) => {
-        if(e.target.closest('.reel-follow-btn') || e.target.closest('.reel-action-btn') || e.target.closest('.reel-avatar') || e.target.closest('.reel-user-name') || e.target.closest('.reel-caption span')) return;
+        if(e.target.closest('.reel-follow-btn') || e.target.closest('.reel-action-btn') || e.target.closest('.reel-avatar') || e.target.closest('.reel-user-name') || e.target.closest('.reel-caption span') || e.target.closest('.reel-caption')) return;
         const currentTime = Date.now(), tapInterval = currentTime - lastTapTime;
 
         if (tapInterval < 300 && tapInterval > 0) {
@@ -397,7 +425,6 @@ function createReelElement(id, data) {
 
     return div;
 }
-
 /**
  * रील पर डबल टैप करने पर उड़ने वाले दिलों का एनीमेशन
  */
