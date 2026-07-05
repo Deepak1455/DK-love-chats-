@@ -302,20 +302,19 @@ function createReelElement(id, data) {
     div.innerHTML = `
         <video data-original-src="${videoUrl}" src="" poster="${posterUrl}" class="reel-video" loop playsinline preload="none"></video>
         
-
-<!-- ⚡ प्रोग्रेस बार को Bottom Nav के ठीक ऊपर (जैसे: bottom: 60px) रखने के लिए -->
-<div class="reel-progress-container" style="
-    position: absolute; 
-    bottom: 75px; /* 👈 यहाँ अपने Bottom Nav की ऊंचाई के अनुसार 50px, 60px या 70px लिखें */
-    left: 0; 
-    width: 100%; 
-    height: 3px; 
-    background: rgba(255, 255, 255, 0.15); 
-    z-index: 15; 
-    pointer-events: none;
-">
-    <div class="reel-progress-bar" style="height: 100%; width: 0%; background: #ff006e; transition: width 0.1s linear; box-shadow: 0 0 8px #ff006e;"></div>
-</div>
+        <!-- ⚡ प्रोग्रेस बार को Bottom Nav के ठीक ऊपर (जैसे: bottom: 75px) रखने के लिए -->
+        <div class="reel-progress-container" style="
+            position: absolute; 
+            bottom: 75px; /* 👈 यहाँ अपने Bottom Nav की ऊंचाई के अनुसार 50px, 60px या 70px लिखें */
+            left: 0; 
+            width: 100%; 
+            height: 3px; 
+            background: rgba(255, 255, 255, 0.15); 
+            z-index: 15; 
+            pointer-events: none;
+        ">
+            <div class="reel-progress-bar" style="height: 100%; width: 0%; background: #ff006e; transition: width 0.1s linear; box-shadow: 0 0 8px #ff006e;"></div>
+        </div>
 
         <div class="reel-overlay-ui" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; display: flex; align-items: center; justify-content: center;">
             <div class="reel-loading-spinner" style="display: none;"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
@@ -364,6 +363,11 @@ function createReelElement(id, data) {
             <div class="reel-action-btn" onclick="window.openShareModal('${id}', 'reel', { url: '${videoUrl}', type: 'video', ownerId: '${data.userId}', ownerName: '${initialUsername.replace(/'/g, "\\'")}', ownerPhoto: '${(data.userPhoto || "https://i.pravatar.cc/150").replace(/'/g, "\\'")}' })">
                 <i class="fa-solid fa-paper-plane"></i><span id="reel-share-count-${id}">${shareCount}</span>
             </div>
+            
+            <!-- ⚡ नया "Modes Options" बटन जो कैप्शन एट्रिब्यूट को सुरक्षित रखता है -->
+            <div class="reel-action-btn" data-caption="${(data.caption || '').replace(/"/g, '&quot;')}" onclick="window.openReelModesModal('${id}', this)">
+                <i class="fa-solid fa-sliders"></i><span class="reel-action-text" style="font-size: 10px;">Modes</span>
+            </div>
         </div>
     `;
 
@@ -377,6 +381,17 @@ function createReelElement(id, data) {
     const loadingSpinner = div.querySelector('.reel-loading-spinner');
     const progressBar = div.querySelector('.reel-progress-bar'); // प्रोग्रेस बार एलिमेंट
     let lastTapTime = 0, clickTimeout = null;
+
+    // ⚡ ऑटो-स्क्रॉल के सेव किए गए स्टेट को रेंडरिंग के समय लागू करें
+    video.loop = !window.isAutoScrollEnabled;
+    video.onended = () => {
+        if (window.isAutoScrollEnabled) {
+            const activeReel = document.getElementById(`reel-${id}`) || document.getElementById(`sv-item-${id}`);
+            if (activeReel && activeReel.nextElementSibling) {
+                activeReel.nextElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    };
 
     video.onwaiting = () => { loadingSpinner.style.display = 'block'; }; 
     video.onplaying = () => { loadingSpinner.style.display = 'none'; };
@@ -654,4 +669,188 @@ window.handleReelLike = async (pid, ownerId, btnElement, coverUrl = "") => {
     }
 };
 
+// --- ⚡ REELS TOOLS & AUTO SCROLL ENGINE ---
+
+// ⚡ सबसे ऊपर: लोकल स्टोरेज से ऑटो स्क्रॉल स्टेट लोड करें (यदि पहले कभी सेट नहीं किया, तो डिफ़ॉल्ट रूप से false रहेगा)
+window.isAutoScrollEnabled = localStorage.getItem('isAutoScrollEnabled') === 'true';
+
+/**
+ * ऑटो-स्क्रॉल चालू/बंद करने का इंजन
+ */
+/**
+ * ऑटो-स्क्रॉल चालू/बंद करने और स्टेट को परमानेंटली सेव करने का इंजन
+ */
+window.toggleAutoScroll = (enable) => {
+    window.isAutoScrollEnabled = enable;
+    
+    // ⚡ सेटिंग को लोकल स्टोरेज में सेव करें
+    try {
+        localStorage.setItem('isAutoScrollEnabled', enable);
+    } catch (e) {
+        console.warn("Unable to save settings to localStorage:", e);
+    }
+
+    const allVideos = document.querySelectorAll('.reel-video');
+    allVideos.forEach(video => {
+        // यदि ऑटो-स्क्रॉल ऑन है, तो वीडियो लूपिंग बंद करें
+        video.loop = !enable;
+        
+        if (enable) {
+            video.onended = function() {
+                if (window.isAutoScrollEnabled) {
+                    const activeReel = this.closest('.reel-item');
+                    if (activeReel && activeReel.nextElementSibling) {
+                        activeReel.nextElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            };
+        } else {
+            video.onended = null;
+        }
+    });
+
+    if (navigator.vibrate) navigator.vibrate(15);
+};
+
+/**
+ * फुल-स्क्रीन मोड पॉपअप खोलने का फ़ंक्शन
+ */
+window.openReelModesModal = (reelId, btnEl) => {
+    // 1. वीडियो को थोड़ी देर के लिए बैकग्राउंड में रोकें
+    window.pauseAllReels();
+
+    const rawCaption = btnEl.getAttribute('data-caption') || '';
+    
+    // यदि पेज पर मोडल मौजूद नहीं है, तो उसे डायनामिक रूप से बनाएं
+    let modal = document.getElementById('reel-modes-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'reel-modes-modal';
+        modal.className = 'reel-modes-overlay';
+        document.body.appendChild(modal);
+    }
+
+    // मोडल का फुल-स्क्रीन ग्लासमोर्फिक लेआउट
+    modal.innerHTML = `
+        <div class="reel-modes-content">
+            <div class="reel-modes-header">
+                <h3>Reels Toolbox</h3>
+                <button class="reel-modes-close" onclick="window.closeReelModesModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="reel-modes-body">
+                <!-- 🚀 ऑटो स्क्रॉल विकल्प (Auto Scroll Switch) -->
+                <div class="tool-row">
+                    <div class="tool-info">
+                        <i class="fa-solid fa-square-caret-down"></i>
+                        <div>
+                            <h4>Auto Scroll Mode</h4>
+                            <p>वीडियो खत्म होते ही अगली रील पर खुद ले जाएं</p>
+                        </div>
+                    </div>
+                    <label class="ios-switch">
+                        <input type="checkbox" id="auto-scroll-toggle" ${window.isAutoScrollEnabled ? 'checked' : ''} onchange="window.toggleAutoScroll(this.checked)">
+                        <span class="ios-slider"></span>
+                    </label>
+                </div>
+
+                <hr class="tool-divider">
+
+                <!-- 📝 कैप्शन कॉपी करने का कार्ड-बोर्ड -->
+                <div class="tool-caption-card">
+                    <div class="tool-caption-header">
+                        <span><i class="fa-solid fa-hashtag"></i> Caption & Tags</span>
+                        <button class="copy-btn" onclick="window.copyReelCaption(this, \`${rawCaption.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">
+                            <i class="fa-solid fa-clone"></i> Copy
+                        </button>
+                    </div>
+                    <div class="tool-caption-text">
+                        ${rawCaption ? rawCaption : '<span style="color: #666; font-style: italic;">No caption provided.</span>'}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // मोडल दिखाएं
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
+};
+
+/**
+ * पॉपअप बंद करने का फ़ंक्शन
+ */
+window.closeReelModesModal = () => {
+    const modal = document.getElementById('reel-modes-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            // बैकग्राउंड वीडियो फिर से शुरू करें
+            window.resumeActiveReel();
+        }, 250);
+    }
+};
+
+
+window.copyReelCaption = async (btn, text) => {
+    if (!text) return;
+    
+    let success = false;
+    
+    // 1. सबसे पहले मॉडर्न Clipboard API आज़माएं (यह केवल HTTPS / localhost पर काम करता है)
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        try {
+            await navigator.clipboard.writeText(text);
+            success = true;
+        } catch (err) {
+            console.warn("Modern clipboard copy failed, switching to fallback...", err);
+        }
+    }
+
+    // 2. यदि ऊपर वाला तरीका फेल या अनसपोर्टेड हो, तो HTTP Fallback आज़माएं (लोकल IP के लिए)
+    if (!success) {
+        try {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // स्क्रीन लेआउट हिलने से बचाने के लिए CSS सेटिंग्स
+            textArea.style.position = "fixed";
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.opacity = "0";
+            textArea.style.pointerEvents = "none";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            // पुराना लेकिन भरोसेमंद कॉपी कमांड निष्पादित करें
+            success = document.execCommand("copy");
+            document.body.removeChild(textArea);
+        } catch (err) {
+            console.error("Fallback copy mechanism failed too:", err);
+        }
+    }
+
+    // 3. कॉपी होने पर यूजर को विज़ुअल फीडबैक दें
+    if (success) {
+        if (navigator.vibrate) navigator.vibrate(30);
+        
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> Copied!`;
+        btn.style.background = '#00f64c20';
+        btn.style.color = '#00f64c';
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.background = '';
+            btn.style.color = '';
+        }, 1500);
+    } else {
+        console.error("Unable to copy text in this environment.");
+    }
+};
 window.shareReelToStory = window.handleShareReelToStory;
