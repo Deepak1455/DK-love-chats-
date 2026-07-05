@@ -55,12 +55,29 @@ function extractHashtags(text) {
 }
 
 // 🌟 रीयल-टाइम में टेक्स्ट और बैकड्रॉप हाइलाइटर को सिंक करने का फ़ंक्शन
+// 🌟 रीयल-टाइम में टेक्स्ट और बैकड्रॉप हाइलाइटर को सिंक करने का फ़ंक्शन
 window.handleCaptionInput = () => {
     const textarea = document.getElementById('post-caption');
     const backdrop = document.getElementById('backdrop-caption-highlight');
     if (!textarea || !backdrop) return;
 
     let text = textarea.value;
+
+    // 🚫 डॉट (.) और कॉमा (,) को ऑटो-रिमूव करने का सुरक्षित लॉजिक (कर्सर पोजीशन के साथ)
+    if (/[.,]/.test(text)) {
+        const start = textarea.selectionStart;
+        const beforeCursor = text.substring(0, start);
+        // कर्सर से पहले कितने डॉट/कॉमा हटे, उनकी गिनती करें ताकि कर्सर की पोजीशन सही रहे
+        const removedCount = (beforeCursor.match(/[.,]/g) || []).length;
+
+        // डॉट और कॉमा को हटाएँ
+        textarea.value = text.replace(/[.,]/g, '');
+        text = textarea.value; // नए क्लीन टेक्स्ट को वेरिएबल में सेट करें
+
+        // कर्सर को वापस उसकी सही पोजीशन पर सेट करें
+        const newPos = Math.max(0, start - removedCount);
+        textarea.setSelectionRange(newPos, newPos);
+    }
 
     // XSS से सुरक्षा के लिए कैरेक्टर एस्केपिंग
     let escapedText = text
