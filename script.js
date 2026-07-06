@@ -1144,13 +1144,20 @@ function makeElementDraggable(elmnt) {
 }
 
 // --- STORY MUSIC & TRIMMER ---
+// 🌟 सेटिंग्स: यहाँ अपना Render बैकएंड URL और YouTube API Key डालें
+const BACKEND_URL = "https://lovechats-backend.onrender.com"; // 👈 यहाँ अपना असली Render URL डालें
+const YT_API_KEY = "YOUR_YOUTUBE_API_KEY"; // 👈 अपनी YouTube API Key डालें (वैकल्पिक)
+
 async function syncMusicLibrary() {
     try {
         const q = query(collection(db, "songs"), orderBy("timestamp", "desc"));
         const snapshot = await getDocs(q);
         musicLibrary = []; 
         snapshot.forEach(docSnap => musicLibrary.push({ id: docSnap.id, ...docSnap.data() }));
-    } catch (e) { console.error("Music Fetch Error:", e); }
+    } catch (e) { 
+        console.error("Music Fetch Error:", e); 
+        musicLibrary = [];
+    }
 }
 
 window.triggerMusicUpload = async () => {
@@ -1159,6 +1166,8 @@ window.triggerMusicUpload = async () => {
         modal.classList.remove('hidden');
         const container = document.getElementById('music-list-container');
         container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff9f43;"><i class="fa-solid fa-spinner fa-spin"></i> Loading Tracks...</div>';
+        
+        // पहले फ़ायरबेस के लोकल क्यूरेटेड गाने लोड करें
         await syncMusicLibrary(); 
         renderMusicList(musicLibrary);
     }
@@ -1170,24 +1179,80 @@ function renderMusicList(songs) {
     const container = document.getElementById('music-list-container');
     if(!container) return;
     container.innerHTML = "";
-    if(songs.length === 0) { container.innerHTML = `<div style="text-align:center; color:#555; padding:30px;">No music found in library.</div>`; return; }
+    if(songs.length === 0) { container.innerHTML = `<div style="text-align:center; color:#555; padding:30px;">No music found.</div>`; return; }
 
     songs.forEach(song => {
         const div = document.createElement('div');
         div.className = "music-item fade-in";
         div.onclick = () => window.selectSongFromSearch(song); 
+        
+        const coverImg = song.cover || 'https://i.pravatar.cc/150?u=music';
         div.innerHTML = `
-            <img src="${song.cover || 'https://i.pravatar.cc/150?u=music'}" class="music-cover" onerror="this.src='https://i.pravatar.cc/150?u=error'">
-            <div class="music-info"><b style="color:white; font-size:0.9rem;">${song.title}</b><span style="color:#888; font-size:0.75rem;">${song.artist}</span></div>
+            <img src="${coverImg}" class="music-cover" onerror="this.src='https://i.pravatar.cc/150?u=error'">
+            <div class="music-info">
+                <b style="color:white; font-size:0.9rem;">${song.title}</b>
+                <span style="color:#888; font-size:0.75rem;">${song.artist}</span>
+            </div>
             <div style="margin-left:auto; color:var(--primary); font-size:1.1rem;"><i class="fa-solid fa-circle-play"></i></div>`;
         container.appendChild(div);
     });
 }
 
-window.filterMusicList = () => {
-    const queryTxt = document.getElementById('music-search-bar').value.toLowerCase().trim();
-    const filtered = musicLibrary.filter(s => (s.title || "").toLowerCase().includes(queryTxt) || (s.artist || "").toLowerCase().includes(queryTxt));
-    renderMusicList(filtered);
+// सर्च बार के लिए यूट्यूब म्यूज़िक लाइव सर्च इंजन
+window.filterMusicList = async () => {
+    const queryTxt = document.getElementById('music-search-bar').value.trim();
+    
+    // अगर सर्च बॉक्स खाली है, तो वापस फ़ायरबेस के क्यूरेटेड गानों की लिस्ट दिखाएं
+    if (queryTxt === "") {
+        renderMusicList(musicLibrary);
+        return;
+    }
+
+    if (queryTxt.length < 2) return;
+
+    const container = document.getElementById('music-list-container');
+    if (container) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff9f43;"><i class="fa-solid fa-spinner fa-spin"></i> Searching YouTube...</div>';
+    }
+
+    let songs = [];
+    try {
+        if (YT_API_KEY && YT_API_KEY !== "YOUR_YOUTUBE_API_KEY") {
+            // तरीका 1: ऑफिशियल YouTube Search API (अगर की उपलब्ध है)
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(queryTxt + " audio")}&type=video&videoCategoryId=10&maxResults=15&key=${YT_API_KEY}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.items) {
+                songs = data.items.map(item => ({
+                    id: item.id.videoId,
+                    title: item.snippet.title,
+                    artist: item.snippet.channelTitle,
+                    cover: item.snippet.thumbnails.medium.url,
+                    url: `https://www.youtube.com/watch?v=${item.id.videoId}`
+                }));
+            }
+        } else {
+            // तरीका 2: Piped API (मुफ्त बैकअप सर्च - बिना API की के)
+            const res = await fetch(`https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(queryTxt)}&filter=music_videos`);
+            const data = await res.json();
+            if (data.videos) {
+                songs = data.videos.slice(0, 15).map(v => {
+                    const vidId = v.url.split("v=")[1] || v.url.split("/").pop();
+                    return {
+                        id: vidId,
+                        title: v.title,
+                        artist: v.uploaderName,
+                        cover: v.thumbnail,
+                        url: `https://www.youtube.com/watch?v=${vidId}`
+                    };
+                });
+            }
+        }
+        renderMusicList(songs);
+    } catch (e) {
+        console.error("Search Error:", e);
+        if (container) container.innerHTML = '<div style="text-align:center; color:red; padding:20px;">Search failed. Try again.</div>';
+    }
 };
 
 window.removeStoryMusic = () => {
@@ -1200,6 +1265,49 @@ window.removeStoryMusic = () => {
     if(trimmerContainer) { trimmerContainer.style.display = ""; trimmerContainer.classList.add('hidden'); }
     document.getElementById('music-status-text').innerHTML = "No music";
     if(typeof showToast === 'function') showToast("Removed", "Music removed", currentUser?.photoURL);
+};
+
+// 🌟 यूट्यूब और फ़ायरबेस दोनों गानों को प्ले करने वाला कंबाइंड फ़ंक्शन
+window.selectSongFromSearch = (song) => {
+    if (!song || !song.url) return;
+    editorPreviewAudio.pause();
+    if(musicLoopInterval) clearInterval(musicLoopInterval);
+    if(progressInterval) clearInterval(progressInterval);
+    
+    // अगर गाना यूट्यूब लिंक है तो आपके Render बैकएंड से स्ट्रीम होगा, अन्यथा सीधे लोड होगा (Cloudinary के गानों के लिए)
+    let finalStreamUrl = song.url;
+    if (song.url.includes("youtube.com") || song.url.includes("youtu.be")) {
+        finalStreamUrl = `${BACKEND_URL}/api/stream?url=${encodeURIComponent(song.url)}`;
+    }
+    
+    editorMusicUrl = finalStreamUrl;
+    editorPreviewAudio.src = finalStreamUrl; 
+    editorPreviewAudio.load();
+
+    const trimmerContainer = document.getElementById('music-trimmer-container');
+    const scrubber = document.getElementById('music-scrubber');
+
+    editorPreviewAudio.onloadedmetadata = () => {
+        if(scrubber) { scrubber.max = Math.floor(editorPreviewAudio.duration) - editorStoryDuration; scrubber.value = 0; }
+        editorMusicStartTime = 0;
+        
+        const wrapper = document.getElementById('waveform-wrapper');
+        if(wrapper) {
+            wrapper.querySelectorAll('.waveform-bar').forEach(b => b.remove());
+            for (let i = 0; i < 60; i++) {
+                const bar = document.createElement('div'); bar.className = 'waveform-bar';
+                bar.style.height = (Math.floor(Math.random() * 80) + 20) + '%';
+                wrapper.insertBefore(bar, scrubber);
+            }
+        }
+        
+        updateTrimmerUI(0); startMusicLoop(); window.startRunningProgress(); 
+    };
+
+    if (trimmerContainer) { trimmerContainer.style.display = 'block'; trimmerContainer.classList.remove('hidden'); }
+    const musicStatus = document.getElementById('music-status-text');
+    if (musicStatus) musicStatus.innerHTML = `🎵 ${song.title} <i class="fa-solid fa-xmark" onclick="removeStoryMusic()"></i>`;
+    window.closeMusicSearch(); 
 };
 
 function formatTimeDuration(seconds) {
