@@ -89,32 +89,62 @@ function updateDOMForUser(userId) {
     const liveUser = window.commentUsersStore.get(userId);
     if (!liveUser) return;
     
-    const rows = document.querySelectorAll(`.comment-author-${userId}`);
-    rows.forEach(row => {
-        const img = row.querySelector('.comment-avatar');
-        if (img && img.src !== liveUser.avatar) {
-            img.src = liveUser.avatar;
-        }
-        const nameSpan = row.querySelector('.comment-user');
-        if (nameSpan && nameSpan.innerText !== liveUser.name) {
-            nameSpan.innerText = liveUser.name;
-        }
-        const handleDiv = row.querySelector('.comment-handle');
-        if (handleDiv && handleDiv.innerText !== liveUser.username) {
-            handleDiv.innerText = liveUser.username;
-        }
-        const badgeContainer = row.querySelector('.comment-badge-container');
-        if (badgeContainer) {
-            const hasBadge = badgeContainer.querySelector('svg') !== null;
-            if (liveUser.isVerified && !hasBadge) {
-                badgeContainer.innerHTML = ROSE_GOLD_TICK_SVG;
-            } else if (!liveUser.isVerified && hasBadge) {
-                badgeContainer.innerHTML = '';
+    requestAnimationFrame(() => {
+        // 1. लेखक के कमेंट्स (Avatars, Names, Handles, Badges) को अपडेट करें
+        const rows = document.querySelectorAll(`.comment-author-${userId}`);
+        rows.forEach(row => {
+            const img = row.querySelector('.comment-avatar');
+            if (img && img.src !== liveUser.avatar) {
+                img.src = liveUser.avatar;
+            }
+            const nameSpan = row.querySelector('.comment-user');
+            if (nameSpan && nameSpan.innerText !== liveUser.name) {
+                nameSpan.innerText = liveUser.name;
+            }
+            const handleDiv = row.querySelector('.comment-handle');
+            if (handleDiv && handleDiv.innerText !== liveUser.username) {
+                handleDiv.innerText = liveUser.username;
+            }
+            const badgeContainer = row.querySelector('.comment-badge-container');
+            if (badgeContainer) {
+                const hasBadge = badgeContainer.querySelector('svg') !== null;
+                if (liveUser.isVerified && !hasBadge) {
+                    badgeContainer.innerHTML = ROSE_GOLD_TICK_SVG;
+                } else if (!liveUser.isVerified && hasBadge) {
+                    badgeContainer.innerHTML = '';
+                }
+            }
+        });
+
+        // 2. 🌟 रियल-टाइम "@username" टैग और Rose Gold Badge (Tick) रिफ्रेश
+        const replyTags = document.querySelectorAll(`.reply-target-${userId}`);
+        replyTags.forEach(tag => {
+            const textNode = tag.querySelector('.reply-target-text');
+            if (textNode && textNode.innerText !== liveUser.username) {
+                textNode.innerText = liveUser.username;
+            }
+            
+            const badge = tag.querySelector(`.reply-target-badge-${userId}`);
+            if (badge) {
+                const hasBadge = badge.querySelector('svg') !== null;
+                if (liveUser.isVerified && !hasBadge) {
+                    badge.innerHTML = ROSE_GOLD_TICK_SVG;
+                } else if (!liveUser.isVerified && hasBadge) {
+                    badge.innerHTML = '';
+                }
+            }
+        });
+
+        // 3. लाइव रिप्लाई इनपुट इंडिकेटर अपडेट
+        if (window.replyingToUserId === userId) {
+            window.replyingToUsername = liveUser.username;
+            const activePill = document.querySelector('#comment-reply-indicator span span');
+            if (activePill && activePill.innerText !== liveUser.username) {
+                activePill.innerText = liveUser.username;
             }
         }
     });
 }
-
 function subscribeToCommentAuthor(userId) {
     if (window.commentUserListeners.has(userId)) return;
 
@@ -139,7 +169,9 @@ function subscribeToCommentAuthor(userId) {
 }
 
 function unsubscribeAllCommentAuthors() {
-    window.commentUserListeners.forEach(unsub => { if (typeof unsub === "function") unsub(); });
+    window.commentUserListeners.forEach(unsub => { 
+        if (typeof unsub === "function") unsub(); 
+    });
     window.commentUserListeners.clear();
     window.commentUsersStore.clear();
 }
@@ -148,13 +180,37 @@ window.openComments = (pid) => {
     window.activeCommentPostId = pid; 
     window.toggleModal('comments-modal', true); 
     
+    // लाइव कमेंट मैपिंग ऑब्जेक्ट
+    window.commentAuthorsMap = window.commentAuthorsMap || new Map();
+    
+    if (!document.getElementById('enhanced-comments-scroll-styles')) {
+        const style = document.createElement('style');
+        style.id = 'enhanced-comments-scroll-styles';
+        style.innerHTML = `
+            .comment-replies-list::-webkit-scrollbar,
+            .comment-text-scroll::-webkit-scrollbar {
+                width: 3px;
+            }
+            .comment-replies-list::-webkit-scrollbar-track,
+            .comment-text-scroll::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .comment-replies-list::-webkit-scrollbar-thumb,
+            .comment-text-scroll::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 10px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     const listContainer = document.getElementById('comments-list'); 
     if (listContainer) {
         listContainer.innerHTML = `
-            <div class="comment-header-indicator" style="width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; margin: 10px auto 15px; flex-shrink: 0;"></div>
-            <div id="comments-items-wrapper" style="display: flex; flex-direction: column; overflow-y: auto; flex: 1;">
-                <div id="comments-loading-state" style="text-align:center; padding:30px;">
-                    <div class="splash-loader" style="width:30px; height:30px; margin:0 auto; border: 2px solid #ff006e; border-top-color: transparent; border-radius: 50%; animation: fa-spin 1s linear infinite;"></div>
+            <div class="comment-header-indicator" style="width: 42px; height: 5px; background: #cbd5e1; border-radius: 10px; margin: 12px auto 16px; flex-shrink: 0;"></div>
+            <div id="comments-items-wrapper" style="display: flex; flex-direction: column; overflow-y: auto; flex: 1; padding: 0 4px;">
+                <div id="comments-loading-state" style="text-align:center; padding:40px;">
+                    <div class="splash-loader" style="width:28px; height:28px; margin:0 auto; border: 2.5px solid #ff006e; border-top-color: transparent; border-radius: 50%; animation: fa-spin 0.8s linear infinite;"></div>
                 </div>
             </div>`; 
     }
@@ -180,9 +236,9 @@ window.openComments = (pid) => {
         
         if (snapshot.empty) {
             itemsWrapper.innerHTML = `
-                <div id="comments-empty-placeholder" style="text-align:center; color:#94a3b8; padding:40px; font-weight:600; font-size:0.9rem;">
+                <div id="comments-empty-placeholder" style="text-align:center; color:#94a3b8; padding:50px 20px; font-weight:600; font-size:0.9rem; letter-spacing: -0.2px;">
                     No comments yet.<br>
-                    <small style="font-weight:400; color:#cbd5e1;">Be the first to share your thoughts!</small>
+                    <small style="font-weight:400; color:#cbd5e1; margin-top: 6px; display: block;">Be the first to share your thoughts!</small>
                 </div>`;
             return;
         }
@@ -202,79 +258,292 @@ window.openComments = (pid) => {
                 isVerified: false
             };
 
+            window.commentAuthorsMap.set(commentId, commentData.userId);
             subscribeToCommentAuthor(commentData.userId);
 
-            let existingRow = document.getElementById(`comment-row-${commentId}`);
-            
-            if (existingRow) {
-                const likeIcon = existingRow.querySelector('.comment-like-btn');
-                const likeCountSpan = existingRow.querySelector('.comment-like-count');
-                const likeContainer = existingRow.querySelector('.comment-like-container');
-                
-                if (likeContainer) {
-                    likeContainer.setAttribute('data-liked', isLiked ? 'true' : 'false');
-                }
-                if (likeIcon) {
-                    if (isLiked) {
-                        likeIcon.className = "fa-solid fa-heart comment-like-btn";
-                        likeIcon.style.color = "#ff006e";
-                    } else {
-                        likeIcon.className = "fa-regular fa-heart comment-like-btn";
-                        likeIcon.style.color = "#cbd5e1";
+            const isLongText = commentData.text && commentData.text.length > 150;
+            const textScrollStyle = isLongText 
+                ? "max-height: 115px; overflow-y: auto; scroll-behavior: smooth; padding-right: 6px; scrollbar-width: thin; -webkit-overflow-scrolling: touch;" 
+                : "";
+
+            const parentId = commentData.parentId;
+
+            // 🌟 NESTED REPLIES CARDBOARD (With Clickable username, Rose Gold Tick, and Smart Time)
+            if (parentId) {
+                const parentRow = document.getElementById(`comment-row-${parentId}`);
+                if (parentRow) {
+                    let repliesContainer = parentRow.querySelector('.comment-replies-list');
+                    if (!repliesContainer) {
+                        repliesContainer = document.createElement('div');
+                        repliesContainer.className = 'comment-replies-list';
+                        repliesContainer.style.cssText = "margin-top: 12px; padding-left: 14px; border-left: 2px dashed #e2e8f0; display: flex; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box; max-height: 220px; overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; padding-right: 4px;";
+                        parentRow.querySelector('.comment-body').appendChild(repliesContainer);
+                    }
+
+                    const parentUserId = window.commentAuthorsMap.get(parentId);
+                    if (parentUserId) {
+                        subscribeToCommentAuthor(parentUserId);
+                    }
+                    const liveParentUser = parentUserId ? window.commentUsersStore.get(parentUserId) : null;
+                    const liveParentUsername = liveParentUser ? liveParentUser.username : (commentData.replyToUsername || '');
+
+                    let existingReply = document.getElementById(`comment-row-${commentId}`);
+                    if (!existingReply) {
+                        existingReply = document.createElement('div');
+                        existingReply.id = `comment-row-${commentId}`;
+                        existingReply.className = `comment-item comment-author-${commentData.userId} fade-in`;
+                        existingReply.style.cssText = "display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; width: 100%; box-sizing: border-box;";
+                        
+                        existingReply.innerHTML = `
+                            <img src="${liveUser.avatar}" class="comment-avatar" style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1.5px #fff, 0 0 0 3px #ff006e; background: #fff;" onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">
+                            <div class="comment-body" style="flex: 1; text-align: left; min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 4px; height: 16px;">
+                                    <span class="comment-user" style="font-weight: 750; color: #1e293b; font-size: 0.8rem; cursor: pointer;" onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">${liveUser.name}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 4px; height: 14px; margin-top: 1px;">
+                                    <span class="comment-handle" style="font-size: 0.7rem; color: #64748b; font-weight: 500;">${liveUser.username}</span>
+                                    <span class="comment-badge-container" style="display: inline-flex; align-items: center; height: 12px;">${liveUser.isVerified ? ROSE_GOLD_TICK_SVG : ''}</span>
+                                    <!-- 🌟 रिप्लाई कमेंट में टाइम डिस्प्ले -->
+                                    <span style="font-size: 0.68rem; color: #94a3b8; font-weight: 500; margin-left: 2px;">• ${window.formatCommentTime(commentData.timestamp)}</span>
+                                </div>
+                                <div class="comment-text comment-text-scroll" style="color: #475569; font-size: 0.8rem; margin-top: 5px; word-break: break-word; line-height: 1.45; ${textScrollStyle}">
+                                    
+                                    <span class="reply-target-${parentUserId || ''}" 
+                                          onclick="if(typeof window.viewUserProfile === 'function') { window.viewUserProfile('${parentUserId}'); window.toggleModal('comments-modal', false); }"
+                                          style="color: #ff006e; font-weight: 700; margin-right: 6px; background: rgba(255, 0, 110, 0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; display: inline-flex; align-items: center; gap: 2px; vertical-align: middle;">
+                                        <span class="reply-target-text">${liveParentUsername}</span>
+                                        <span class="reply-target-badge-${parentUserId || ''}" style="display: inline-flex; align-items: center; height: 12px;">
+                                            ${(liveParentUser && liveParentUser.isVerified) ? ROSE_GOLD_TICK_SVG : ''}
+                                        </span>
+                                    </span>${commentData.text}
+                                </div>
+                            </div>
+                        `;
+                        repliesContainer.appendChild(existingReply);
                     }
                 }
-                if (likeCountSpan) {
-                    likeCountSpan.innerText = commentData.likes ? commentData.likes.length : 0;
-                }
             } else {
-                const newRow = document.createElement('div');
-                newRow.id = `comment-row-${commentId}`;
-                newRow.className = `comment-item comment-author-${commentData.userId} fade-in`;
+                // 🌟 PARENT COMMENTS CARDBOARD (With Reply Trigger & Smart Time next to Reply)
+                let existingRow = document.getElementById(`comment-row-${commentId}`);
                 
-                newRow.style.cssText = "display: flex; align-items: flex-start; gap: 12px; padding: 15px; border-bottom: 1px solid #f1f5f9; box-sizing: border-box; overflow: hidden; min-height: 75px;";
-                
-                newRow.innerHTML = `
-                    <img src="${liveUser.avatar}" class="comment-avatar" style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2.5px solid var(--primary, #ff006e); background: #f1f5f9; flex-shrink: 0;" 
-                         onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">
-                    <div class="comment-body" style="flex: 1; text-align: left; min-width: 0;">
-                        
-                        <!-- 💡 FULL NAME ROW: यहाँ से वेरिफिकेशन बैच को पूर्णतः हटा दिया गया है -->
-                        <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap; height: 18px; overflow: hidden;">
-                            <span class="comment-user" style="font-weight: 800; color: #1a1a1a; font-size: 0.9rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;"
-                                  onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">
-                                  ${liveUser.name}
-                            </span>
-                        </div>
-                        
-                        <!-- 💡 USERNAME @ ROW: रोज़ गोल्ड वेरिफिकेशन टिक को यहाँ यूज़रनेम के साथ सिंक किया गया है -->
-                        <div style="display: flex; align-items: center; gap: 4px; height: 16px; margin-top: 1px;">
-                            <span class="comment-handle" style="font-size: 0.75rem; color: #64748b; font-weight: 600; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;"
+                if (existingRow) {
+                    const likeIcon = existingRow.querySelector('.comment-like-btn');
+                    const likeCountSpan = existingRow.querySelector('.comment-like-count');
+                    const likeContainer = existingRow.querySelector('.comment-like-container');
+                    
+                    if (likeContainer) {
+                        likeContainer.setAttribute('data-liked', isLiked ? 'true' : 'false');
+                    }
+                    if (likeIcon) {
+                        if (isLiked) {
+                            likeIcon.className = "fa-solid fa-heart comment-like-btn";
+                            likeIcon.style.color = "#ff006e";
+                        } else {
+                            likeIcon.className = "fa-regular fa-heart comment-like-btn";
+                            likeIcon.style.color = "#cbd5e1";
+                        }
+                    }
+                    if (likeCountSpan) {
+                        likeCountSpan.innerText = commentData.likes ? commentData.likes.length : 0;
+                    }
+                } else {
+                    const newRow = document.createElement('div');
+                    newRow.id = `comment-row-${commentId}`;
+                    newRow.className = `comment-item comment-author-${commentData.userId} fade-in`;
+                    
+                    newRow.style.cssText = "display: flex; flex-direction: column; padding: 16px 14px; border-bottom: 1px solid #f1f5f9; box-sizing: border-box; overflow: hidden; min-height: 75px; background: #ffffff;";
+                    
+                    newRow.innerHTML = `
+                        <div style="display: flex; align-items: flex-start; gap: 12px; width: 100%;">
+                            <img src="${liveUser.avatar}" class="comment-avatar" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px; border-radius: 50%; object-fit: cover; cursor: pointer; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #ff006e; background: #fff; flex-shrink: 0;" 
                                  onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">
-                                 ${liveUser.username}
-                            </span>
-                            <span class="comment-badge-container" style="display: inline-flex; align-items: center; height: 14px; margin-bottom: 1px;">
-                                ${liveUser.isVerified ? ROSE_GOLD_TICK_SVG : ''}
-                            </span>
-                        </div>
+                            <div class="comment-body" style="flex: 1; text-align: left; min-width: 0;">
+                                
+                                <!-- FULL NAME ROW -->
+                                <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap; height: 18px; overflow: hidden;">
+                                    <span class="comment-user" style="font-weight: 800; color: #0f172a; font-size: 0.88rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; letter-spacing: -0.15px;"
+                                          onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">
+                                          ${liveUser.name}
+                                    </span>
+                                </div>
+                                
+                                <!-- USERNAME @ ROW -->
+                                <div style="display: flex; align-items: center; gap: 4px; height: 16px; margin-top: 1px;">
+                                    <span class="comment-handle" style="font-size: 0.72rem; color: #64748b; font-weight: 600; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;"
+                                         onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">
+                                         ${liveUser.username}
+                                    </span>
+                                    <span class="comment-badge-container" style="display: inline-flex; align-items: center; height: 14px; margin-bottom: 1px;">
+                                        ${liveUser.isVerified ? ROSE_GOLD_TICK_SVG : ''}
+                                    </span>
+                                </div>
 
-                        <div class="comment-text" style="color: #475569; font-size: 0.85rem; margin-top: 4px; word-break: break-word; line-height: 1.4;">
-                            ${commentData.text}
-                        </div>
-                    </div>
-                    <div class="comment-like-container" 
-                         data-liked="${isLiked ? 'true' : 'false'}"
-                         onclick="window.handleLikeComment('${commentId}', this, '${commentData.userId}')" 
-                         style="display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; min-width: 32px; max-width: 32px; flex-shrink: 0; box-sizing: border-box; margin-top: 2px;">
-                        <i class="fa-${isLiked ? 'solid' : 'regular'} fa-heart comment-like-btn" id="like-icon-${commentId}" style="font-size: 1rem; color: ${isLiked ? '#ff006e' : '#cbd5e1'}; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: inline-block; width: 16px; height: 16px; text-align: center;"></i>
-                        <span class="comment-like-count" id="like-count-${commentId}" style="font-size: 0.7rem; font-weight: 700; margin-top: 4px; color: #64748b; line-height: 1; text-align: center; display: block; width: 100%;">${commentData.likes ? commentData.likes.length : 0}</span>
-                    </div>`;
-                
-                itemsWrapper.appendChild(newRow);
+                                <div class="comment-text comment-text-scroll" style="color: #334155; font-size: 0.84rem; margin-top: 5px; word-break: break-word; line-height: 1.45; letter-spacing: -0.1px; ${textScrollStyle}">
+                                    ${commentData.text}
+                                </div>
+                                
+                                <!-- रिप्लाई ट्रिगर (टाइम स्टैम्प के साथ) -->
+                                <div style="display: flex; gap: 15px; margin-top: 8px; align-items: center; height: 16px; user-select: none;">
+                                    <!-- 🌟 पैरेंट कमेंट में टाइम डिस्प्ले -->
+                                    <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 500;">${window.formatCommentTime(commentData.timestamp)}</span>
+                                    <span onclick="window.setReplyTo('${commentId}', '${liveUser.username}')" style="font-size: 0.7rem; color: #ff006e; font-weight: 750; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
+                                        <i class="fa-solid fa-reply" style="font-size: 0.65rem;"></i> Reply
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="comment-like-container" 
+                                 data-liked="${isLiked ? 'true' : 'false'}"
+                                 onclick="window.handleLikeComment('${commentId}', this, '${commentData.userId}')" 
+                                 style="display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; min-width: 32px; max-width: 32px; flex-shrink: 0; box-sizing: border-box; margin-top: 2px;">
+                                <i class="fa-${isLiked ? 'solid' : 'regular'} fa-heart comment-like-btn" id="like-icon-${commentId}" style="font-size: 0.95rem; color: ${isLiked ? '#ff006e' : '#cbd5e1'}; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: inline-block; width: 16px; height: 16px; text-align: center;"></i>
+                                <span class="comment-like-count" id="like-count-${commentId}" style="font-size: 0.7rem; font-weight: 700; margin-top: 4px; color: #64748b; line-height: 1; text-align: center; display: block; width: 100%;">${commentData.likes ? commentData.likes.length : 0}</span>
+                            </div>
+                        </div>`;
+                    
+                    itemsWrapper.appendChild(newRow);
+                }
             }
         });
     }, (error) => {
         console.error("Comments Observer Error:", error);
     }); 
+};
+// =========================================================================
+// =========================================================================
+// --- 🕒 SMART COMMENT TIMESTAMP FORMATTER ---
+// =========================================================================
+window.formatCommentTime = (timestamp) => {
+    if (!timestamp) return "Just now"; // ऑप्टिमिस्टिक रिपॉन्स (Zero-Latency)
+
+    let date;
+    if (typeof timestamp.toDate === 'function') {
+        date = timestamp.toDate();
+    } else if (timestamp instanceof Date) {
+        date = timestamp;
+    } else if (typeof timestamp === 'number') {
+        date = new Date(timestamp);
+    } else if (timestamp.seconds) {
+        date = new Date(timestamp.seconds * 1000);
+    } else {
+        return "Just now";
+    }
+
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
+    if (seconds < 10) return "Just now";
+    if (seconds < 60) return `${seconds}s`;
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d`;
+
+    const weeks = Math.floor(days / 7);
+    if (weeks < 4) return `${weeks}w`;
+
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo`;
+
+    const years = Math.floor(days / 365);
+    return `${years}y`;
+};
+// =========================================================================
+// --- 💬 PREMIUM COMMENT REPLY UTILITY SYSTEM (TOP ALIGNED LAYOUT) ---
+// =========================================================================
+window.replyingToCommentId = null;
+window.replyingToUsername = null;
+
+// स्लाइड-डाउन एनीमेशन के लिए CSS इंजेक्ट करें (यदि पहले से न हो)
+if (!document.getElementById('reply-animation-styles')) {
+    const style = document.createElement('style');
+    style.id = 'reply-animation-styles';
+    style.innerHTML = `
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .reply-bar-active {
+            animation: slideInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+window.setReplyTo = (commentId, username) => {
+    // 1. 🌟 कमेंट आईडी के ज़रिये रिप्लाई किए जाने वाले पैरेंट यूज़र की आईडी मैप से खोजें
+    const targetUserId = window.commentAuthorsMap ? window.commentAuthorsMap.get(commentId) : null;
+    
+    window.replyingToCommentId = commentId;
+    window.replyingToUserId = targetUserId;
+    
+    // 2. 🌟 पैरेंट यूज़र का लाइव प्रोफ़ाइल यूज़रनेम फ़ेच करें (ताकि स्टैटिक या फ़ॉलबैक @user हैंडल न दिखे)
+    const liveTargetUser = targetUserId ? window.commentUsersStore.get(targetUserId) : null;
+    const displayUsername = liveTargetUser ? liveTargetUser.username : username;
+    
+    window.replyingToUsername = displayUsername;
+    
+    let indicator = document.getElementById('comment-reply-indicator');
+    const inputEl = document.getElementById('comment-input');
+    if (!inputEl) return;
+    
+    const inputRow = inputEl.parentElement; 
+    const outerFooter = inputRow ? inputRow.parentElement : null;
+    
+    if (!indicator && outerFooter) {
+        indicator = document.createElement('div');
+        indicator.id = 'comment-reply-indicator';
+        indicator.className = 'reply-bar-active';
+        
+        indicator.style.cssText = `
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            background: #fff5f8; 
+            padding: 10px 16px; 
+            border-top: 1px solid #ffe4ee;
+            border-bottom: 1px solid #ffe4ee;
+            font-size: 0.78rem; 
+            color: #ff006e; 
+            font-weight: 700; 
+            width: 100%; 
+            box-sizing: border-box; 
+            transition: all 0.25s ease;
+        `;
+        
+        outerFooter.insertBefore(indicator, inputRow);
+    }
+    
+    if (indicator) {
+        indicator.innerHTML = `
+            <span style="display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-reply" style="font-size: 0.72rem; transform: scaleX(-1);"></i> 
+                <!-- 🌟 यहाँ लाइव और रियल-टाइम प्रोफ़ाइल यूज़रनेम रेंडर होता है -->
+                Replying to <span style="background: #ff006e; color: #ffffff; padding: 2.5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; letter-spacing: -0.15px; box-shadow: 0 2px 6px rgba(255, 0, 110, 0.15);">${displayUsername}</span>
+            </span>
+            <i class="fa-solid fa-xmark" onclick="window.cancelReply()" style="cursor: pointer; padding: 5px; font-size: 1rem; color: #ff006e; transition: transform 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.transform='scale(1.25)'" onmouseout="this.style.transform='scale(1)'"></i>
+        `;
+        indicator.style.display = "flex";
+    }
+    
+    inputEl.focus();
+};
+window.cancelReply = () => {
+    window.replyingToCommentId = null;
+    window.replyingToUsername = null;
+    const indicator = document.getElementById('comment-reply-indicator');
+    if (indicator) {
+        indicator.style.display = "none";
+    }
 };
 window.commentLikeLock = window.commentLikeLock || new Set();
 
@@ -352,7 +621,11 @@ window.handleSendComment = async () => {
     const inputEl = document.getElementById('comment-input');
     if (!inputEl) return;
     
-    const commentText = inputEl.value.trim(); 
+    const rawInput = inputEl.value;
+    
+    // 🌟 HTML टैग्स को पूर्णतः हटाने और साफ़ करने के लिए फ़िल्टर (HTML Auto-Remove)
+    const commentText = rawInput.replace(/<\/?[^>]+(>|$)/g, "").trim(); 
+    
     if (!commentText || !window.activeCommentPostId || window.isCommentSending) return;
 
     window.isCommentSending = true;
@@ -361,14 +634,23 @@ window.handleSendComment = async () => {
     try {
         const userPhoto = window.currentUserData?.avatarBase64 || window.currentUser?.photoURL || "https://i.pravatar.cc/150";
         
-        await window.addDoc(window.collection(window.db, "posts", window.activeCommentPostId, "comments"), {
+        // मुख्य पेलोड ऑब्जेक्ट
+        const commentPayload = {
             text: commentText, 
             userName: window.currentUser.displayName || "User", 
             userPhoto: userPhoto, 
             userId: window.currentUser.uid, 
             timestamp: window.serverTimestamp(), 
             likes: []
-        }); 
+        };
+
+        // 🌟 यदि कोई रिप्लाई एक्टिव है, तो उसे पैरेंट कार्डबोर्ड के साथ लिंक करें
+        if (window.replyingToCommentId) {
+            commentPayload.parentId = window.replyingToCommentId;
+            commentPayload.replyToUsername = window.replyingToUsername || "";
+        }
+
+        await window.addDoc(window.collection(window.db, "posts", window.activeCommentPostId, "comments"), commentPayload); 
 
         const postRef = window.doc(window.db, "posts", window.activeCommentPostId);
         const postSnap = await window.getDoc(postRef);
@@ -397,8 +679,15 @@ window.handleSendComment = async () => {
                 ); 
             }
         }
+
+        // 🌟 सेंड होने के बाद रिप्लाई बार को छुपाएं और स्टेट खाली करें
+        if (typeof window.cancelReply === 'function') {
+            window.cancelReply();
+        }
+
     } catch (e) { 
         console.error("Error sending comment:", e); 
+        // त्रुटि होने की स्थिति में इनपुट को वापस पहले जैसा करें
         inputEl.value = commentText; 
     } finally {
         window.isCommentSending = false;
