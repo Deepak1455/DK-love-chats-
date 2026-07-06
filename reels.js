@@ -302,18 +302,24 @@ function createReelElement(id, data) {
     div.innerHTML = `
         <video data-original-src="${videoUrl}" src="" poster="${posterUrl}" class="reel-video" loop playsinline preload="none"></video>
         
-        <!-- ⚡ प्रोग्रेस बार को Bottom Nav के ठीक ऊपर (जैसे: bottom: 75px) रखने के लिए -->
+        <!-- ⚡ स्मार्ट और इंटरैक्टिव प्रोग्रेस बार कंटेनर (टच करने के लिए 14px का चौड़ा क्षेत्र, पर दृश्यमान बार केवल 3px का रहेगा) -->
         <div class="reel-progress-container" style="
             position: absolute; 
-            bottom: 75px; /* 👈 यहाँ अपने Bottom Nav की ऊंचाई के अनुसार 50px, 60px या 70px लिखें */
+            bottom: 75px; 
             left: 0; 
             width: 100%; 
-            height: 3px; 
-            background: rgba(255, 255, 255, 0.15); 
+            height: 14px; 
+            background: transparent; 
             z-index: 15; 
-            pointer-events: none;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-end;
+            pointer-events: auto; /* टच/क्लिक सक्षम करें */
         ">
-            <div class="reel-progress-bar" style="height: 100%; width: 0%; background: #ff006e; transition: width 0.1s linear; box-shadow: 0 0 8px #ff006e;"></div>
+            <!-- वास्तविक दृश्यमान ट्रैक -->
+            <div class="reel-progress-track" style="width: 100%; height: 3px; background: rgba(255, 255, 255, 0.15);">
+                <div class="reel-progress-bar" style="height: 100%; width: 0%; background: #ff006e; transition: width 0.1s linear; box-shadow: 0 0 8px #ff006e;"></div>
+            </div>
         </div>
 
         <div class="reel-overlay-ui" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; display: flex; align-items: center; justify-content: center;">
@@ -380,6 +386,7 @@ function createReelElement(id, data) {
     const statusIcon = div.querySelector('.reel-status-icon');
     const loadingSpinner = div.querySelector('.reel-loading-spinner');
     const progressBar = div.querySelector('.reel-progress-bar'); // प्रोग्रेस बार एलिमेंट
+    const progressContainer = div.querySelector('.reel-progress-container'); // प्रोग्रेस कंटेनर
     let lastTapTime = 0, clickTimeout = null;
 
     // ⚡ ऑटो-स्क्रॉल के सेव किए गए स्टेट को रेंडरिंग के समय लागू करें
@@ -396,8 +403,53 @@ function createReelElement(id, data) {
     video.onwaiting = () => { loadingSpinner.style.display = 'block'; }; 
     video.onplaying = () => { loadingSpinner.style.display = 'none'; };
 
+    // ⚡ कंट्रोल/सीकिंग (Scrubbing) लॉजिक
+    let isDragging = false;
+
+    const handleSeek = (e) => {
+        if (!video.duration) return;
+        const rect = progressContainer.getBoundingClientRect();
+        
+        // माउस या टच कोऑर्डिनेट्स प्राप्त करें
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0].clientX);
+        if (clientX === undefined) return;
+
+        let offsetX = clientX - rect.left;
+        offsetX = Math.max(0, Math.min(offsetX, rect.width)); // सीमा तय करें
+        const percentage = offsetX / rect.width;
+
+        // बिना लैग के त्वरित विज़ुअल फीडबैक के लिए विड्थ तुरंत सेट करें
+        progressBar.style.width = `${percentage * 100}%`;
+        
+        // वीडियो के करंट टाइम को अपडेट करें
+        video.currentTime = percentage * video.duration;
+    };
+
+    // पॉइंटर डाउन (टैप या क्लिक स्टार्ट)
+    progressContainer.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        video.pause(); // सीक करते समय अस्थायी रूप से वीडियो को रोकें
+        handleSeek(e);
+        progressContainer.setPointerCapture(e.pointerId); // पॉइंटर को कैप्चर करें ताकि बाहर जाने पर भी ड्रैग काम करे
+    });
+
+    // पॉइंटर मूव (ड्रैगिंग चालू होने पर)
+    progressContainer.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        handleSeek(e);
+    });
+
+    // पॉइंटर अप (टैप या ड्रैग समाप्त)
+    progressContainer.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        progressContainer.releasePointerCapture(e.pointerId);
+        video.play().catch(() => {}); // रिलीज़ करने के बाद वीडियो वापस चालू करें
+    });
+
     // ⚡ प्रोग्रेस बार इवेंट्स: वीडियो टाइम के साथ सिंक करना
     video.ontimeupdate = () => {
+        if (isDragging) return; // ड्रैग करते समय वीडियो टाइम द्वारा बार को ओवरराइड होने से रोकें
         if (!video.duration || video.paused) return;
         const percentage = (video.currentTime / video.duration) * 100;
         progressBar.style.width = `${percentage}%`;
@@ -417,7 +469,8 @@ function createReelElement(id, data) {
     };
 
     div.addEventListener('pointerup', (e) => {
-        if(e.target.closest('.reel-follow-btn') || e.target.closest('.reel-action-btn') || e.target.closest('.reel-avatar') || e.target.closest('.reel-user-name') || e.target.closest('.reel-caption span') || e.target.closest('.reel-caption')) return;
+        // ⚡ प्रोग्रेस कंटेनर पर क्लिक करने पर मुख्य प्ले/पॉज या लाइक ट्रिगर होने से रोकें
+        if(e.target.closest('.reel-follow-btn') || e.target.closest('.reel-action-btn') || e.target.closest('.reel-avatar') || e.target.closest('.reel-user-name') || e.target.closest('.reel-caption span') || e.target.closest('.reel-caption') || e.target.closest('.reel-progress-container')) return;
         const currentTime = Date.now(), tapInterval = currentTime - lastTapTime;
 
         if (tapInterval < 300 && tapInterval > 0) {
@@ -782,15 +835,22 @@ window.openReelModesModal = (reelId, btnEl) => {
 /**
  * पॉपअप बंद करने का फ़ंक्शन
  */
+/**
+ * मोडल को स्मार्ट, स्मूथ और सुपर-फास्ट बंद करने का फ़ंक्शन
+ */
 window.closeReelModesModal = () => {
     const modal = document.getElementById('reel-modes-modal');
     if (modal) {
+        // 1. एनीमेशन क्लास हटाएं (स्लाइड और स्केल डाउन शुरू होगा)
         modal.classList.remove('active');
+        
+        // 🚀 SMART UX TRICK: वीडियो को तुरंत प्ले करें ताकि एनीमेशन खत्म होने तक यह पहले से ही चल रहा हो!
+        window.resumeActiveReel(); 
+        
+        // 2. 180ms (CSS ट्रांजिशन टाइम) के बाद डिस्प्ले को पूरी तरह ब्लॉक करें
         setTimeout(() => {
             modal.style.display = 'none';
-            // बैकग्राउंड वीडियो फिर से शुरू करें
-            window.resumeActiveReel();
-        }, 250);
+        }, 180); 
     }
 };
 
