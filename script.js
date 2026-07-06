@@ -448,6 +448,7 @@ window.addEventListener('popstate', (event) => {
             return;
         }
     }
+
 const activeModals = [
     { id: 'chat-profile-modal', class: 'active', isHidden: false, close: () => window.closeChatProfile() },
     { id: 'media-viewer-modal', class: 'active', close: () => window.closeFullScreenMedia() },
@@ -460,7 +461,8 @@ const activeModals = [
     { id: 'msg-options-modal', class: 'hidden', isHidden: true, close: () => window.closeMsgOptions() },
     { id: 'inbox-options-modal', class: 'hidden', isHidden: true, close: () => window.closeInboxOptions() },
     { id: 'comments-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('comments-modal', false) },
-    { id: 'share-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('share-modal', false) },
+    { id: 'share-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('share-modal', false) },    
+    { id: 'reel-modes-modal', class: 'hidden', isHidden: true, close: () => window.closeReelModesModal() },
     { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
     { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
     { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
