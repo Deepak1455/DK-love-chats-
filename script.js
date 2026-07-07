@@ -1148,6 +1148,38 @@ function makeElementDraggable(elmnt) {
 const BACKEND_URL = "https://lovechats-backend.onrender.com"; // 👈 यहाँ अपना असली Render URL डालें
 const YT_API_KEY = "YOUR_YOUTUBE_API_KEY"; // 👈 अपनी YouTube API Key डालें (वैकल्पिक)
 
+// 🌟 बैकअप Piped सर्वर की लिस्ट (अगर एक डाउन होगा, तो ऐप आटोमेटिक दूसरे पर स्विच हो जाएगा)
+const PIPED_INSTANCES = [
+    "https://pipedapi.kavin.rocks",
+    "https://pipedapi.tokhmi.xyz",
+    "https://pipedapi.moomoo.me",
+    "https://piped-api.lunar.icu",
+    "https://api.piped.projectsegfau.lt"
+];
+
+// मल्टी-सर्वर से सुरक्षित डेटा फ़ेच करने वाला हेल्पर फ़ंक्शन
+async function fetchWithFallback(endpoint) {
+    for (const base of PIPED_INSTANCES) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 सेकंड का टाइमआउट प्रति सर्वर
+            
+            const res = await fetch(`${base}${endpoint}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (res.ok) {
+                const data = await res.json();
+                if (data && (data.items || data.audioStreams)) {
+                    return data; // सफल रिस्पॉन्स मिलने पर वापस भेजें
+                }
+            }
+        } catch (err) {
+            console.warn(`Piped instance ${base} failed or timed out. Trying next backup...`);
+        }
+    }
+    throw new Error("All public music servers are currently busy.");
+}
+
 async function syncMusicLibrary() {
     try {
         const q = query(collection(db, "songs"), orderBy("timestamp", "desc"));
@@ -1167,7 +1199,6 @@ window.triggerMusicUpload = async () => {
         const container = document.getElementById('music-list-container');
         container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff9f43;"><i class="fa-solid fa-spinner fa-spin"></i> Loading Tracks...</div>';
         
-        // पहले फ़ायरबेस के लोकल क्यूरेटेड गाने लोड करें
         await syncMusicLibrary(); 
         renderMusicList(musicLibrary);
     }
@@ -1198,11 +1229,10 @@ function renderMusicList(songs) {
     });
 }
 
-// सर्च बार के लिए यूट्यूब म्यूज़िक लाइव सर्च इंजन
+// सर्च बार के लिए स्मार्ट यूट्यूब म्यूज़िक लाइव सर्च इंजन
 window.filterMusicList = async () => {
     const queryTxt = document.getElementById('music-search-bar').value.trim();
     
-    // अगर सर्च बॉक्स खाली है, तो वापस फ़ायरबेस के क्यूरेटेड गानों की लिस्ट दिखाएं
     if (queryTxt === "") {
         renderMusicList(musicLibrary);
         return;
@@ -1212,13 +1242,13 @@ window.filterMusicList = async () => {
 
     const container = document.getElementById('music-list-container');
     if (container) {
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff9f43;"><i class="fa-solid fa-spinner fa-spin"></i> Searching YouTube...</div>';
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff9f43;"><i class="fa-solid fa-spinner fa-spin"></i> Searching YouTube Music...</div>';
     }
 
     let songs = [];
     try {
         if (YT_API_KEY && YT_API_KEY !== "YOUR_YOUTUBE_API_KEY") {
-            // तरीका 1: ऑफिशियल YouTube Search API (अगर की उपलब्ध है)
+            // तरीका 1: ऑफिशियल YouTube Search API (अगर API Key सेट की है)
             const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(queryTxt + " audio")}&type=video&videoCategoryId=10&maxResults=15&key=${YT_API_KEY}`;
             const res = await fetch(url);
             const data = await res.json();
@@ -1232,17 +1262,26 @@ window.filterMusicList = async () => {
                 }));
             }
         } else {
-            // तरीका 2: Piped API (मुफ्त बैकअप सर्च - बिना API की के)
-            const res = await fetch(`https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(queryTxt)}&filter=music_videos`);
-            const data = await res.json();
-            if (data.videos) {
-                songs = data.videos.slice(0, 15).map(v => {
-                    const vidId = v.url.split("v=")[1] || v.url.split("/").pop();
+            // तरीका 2: सुरक्षित मल्टी-सर्वर Piped API (बग फिक्स्ड: 'items' ऑब्जेक्ट को मैप किया गया है)
+            const data = await fetchWithFallback(`/search?q=${encodeURIComponent(queryTxt)}&filter=music_videos`);
+            if (data.items) {
+                // केवल उन आइटम्स को फ़िल्टर करना जो वीडियो या स्ट्रीम टाइप के हैं
+                const videoItems = data.items.filter(item => item.type === "stream");
+                
+                songs = videoItems.slice(0, 15).map(v => {
+                    let vidId = "";
+                    if (v.url) {
+                        if (v.url.includes("v=")) {
+                            vidId = v.url.split("v=")[1].split("&")[0];
+                        } else {
+                            vidId = v.url.split("/").pop();
+                        }
+                    }
                     return {
                         id: vidId,
-                        title: v.title,
-                        artist: v.uploaderName,
-                        cover: v.thumbnail,
+                        title: v.title || "Unknown Title",
+                        artist: v.uploaderName || "Unknown Artist",
+                        cover: v.thumbnail || 'https://i.pravatar.cc/150?u=music',
                         url: `https://www.youtube.com/watch?v=${vidId}`
                     };
                 });
@@ -1251,7 +1290,11 @@ window.filterMusicList = async () => {
         renderMusicList(songs);
     } catch (e) {
         console.error("Search Error:", e);
-        if (container) container.innerHTML = '<div style="text-align:center; color:red; padding:20px;">Search failed. Try again.</div>';
+        if (container) {
+            container.innerHTML = `<div style="text-align:center; color:#ff4757; padding:20px;">
+                <i class="fa-solid fa-circle-exclamation"></i> Servers are busy. Please try searching again.
+            </div>`;
+        }
     }
 };
 
@@ -1267,14 +1310,14 @@ window.removeStoryMusic = () => {
     if(typeof showToast === 'function') showToast("Removed", "Music removed", currentUser?.photoURL);
 };
 
-// 🌟 यूट्यूब और फ़ायरबेस दोनों गानों को प्ले करने वाला कंबाइंड फ़ंक्शन
+// यूट्यूब और लोकल फ़ायरबेस गानों को सुचारू रूप से प्ले करने वाला कंबाइंड फ़ंक्शन
 window.selectSongFromSearch = (song) => {
     if (!song || !song.url) return;
     editorPreviewAudio.pause();
     if(musicLoopInterval) clearInterval(musicLoopInterval);
     if(progressInterval) clearInterval(progressInterval);
     
-    // अगर गाना यूट्यूब लिंक है तो आपके Render बैकएंड से स्ट्रीम होगा, अन्यथा सीधे लोड होगा (Cloudinary के गानों के लिए)
+    // अगर यूट्यूब लिंक है तो आपके Render बैकएंड से स्ट्रीम होगा, अन्यथा सीधे लोड होगा
     let finalStreamUrl = song.url;
     if (song.url.includes("youtube.com") || song.url.includes("youtu.be")) {
         finalStreamUrl = `${BACKEND_URL}/api/stream?url=${encodeURIComponent(song.url)}`;
