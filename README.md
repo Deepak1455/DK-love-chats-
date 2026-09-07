@@ -1,12 +1,6 @@
-# DK Love Chats ❤️ Ultimate
+# DK Indus Social Media 🚀 Ultimate
 
-A premium, secure, and fast Progressive Web Application (PWA) for real-time private chatting, interactive stories, and engaging reels.
+A premium, secure, and ultra-fast Progressive Web Application (PWA) for real-time social networking, reels, stories, and encrypted chatting.
 
 ## Live Application
-Access the app here: [DK Love Chats Live](https://deepak1455.github.io/DK-love-chats-/)
-
-## Features
-- Client-side security simulation.
-- Real-time chat with text, emojis, and media sharing.
-- Dynamic stories and reels panel.
-- Offline-ready Nearby Radar scanner.
+Access the app here: [DK Indus Social Media Live](https://deepak1455.github.io/DK-love-chats-/)
