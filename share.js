@@ -8,9 +8,9 @@ let filteredShareListUids = [];
 let currentShareListIndex = 0; 
 let isFetchingShareList = false;
 
-// बेस URL को नए डोमेन पर अपडेट किया गया है
+// बेस URL और ब्रांडेड शेयरिंग टेक्स्ट
 const APP_SHARE_URL = "https://deepak1455.github.io/DK-love-chats-/";
-const APP_SHARE_TEXT = "Hey! ❤️ Join me on DK Love Chats - A secure and fun way to chat! ❤️ Join here: ";
+const APP_SHARE_TEXT = "Hey! 🚀 Join me on DK Indus Social Media - The smartest and fastest social network! 🌟 Join here: ";
 
 // ==========================================
 // --- SHARE URL GENERATOR HELPER ---
@@ -468,17 +468,17 @@ window.handleShareReelToStory = async () => {
 // ==========================================
 window.shareExternalPlatform = (platform) => {
     let finalShareUrl = APP_SHARE_URL;
-    let shareText = "Hey! ❤️ Join me on DK Love Chats!";
+    let shareText = "Hey! 🚀 Join me on DK Indus Social Media!";
 
     if (sharePayload && sharePayload.id) {
         finalShareUrl = window.getGenerateShareUrl(sharePayload.id, sharePayload.type, sharePayload.mediaType);
         
         if (sharePayload.mediaType === 'video' || sharePayload.type === 'reel') {
-            shareText = `Hey! Check out this awesome Reel on DK Love Chats: ${finalShareUrl}`;
+            shareText = `Hey! Check out this awesome Reel on DK Indus Social Media: ${finalShareUrl}`;
         } else if (sharePayload.type === 'story') {
-            shareText = `Hey! Check out this Story on DK Love Chats: ${finalShareUrl}`;
+            shareText = `Hey! Check out this Story on DK Indus Social Media: ${finalShareUrl}`;
         } else {
-            shareText = `Hey! Check out this post on DK Love Chats: ${finalShareUrl}`;
+            shareText = `Hey! Check out this post on DK Indus Social Media: ${finalShareUrl}`;
         }
     }
     
@@ -574,7 +574,7 @@ window.shareToPlatform = async (platform) => {
         case 'native':
             if (navigator.share) {
                 try { 
-                    await navigator.share({ title: 'DK Love Chats', text: APP_SHARE_TEXT, url: APP_SHARE_URL }); 
+                    await navigator.share({ title: 'DK Indus Social Media', text: APP_SHARE_TEXT, url: APP_SHARE_URL }); 
                 } catch (e) { 
                     if (e.name !== 'AbortError') window.copyAppURL(); 
                 }
@@ -585,67 +585,10 @@ window.shareToPlatform = async (platform) => {
     }
 };
 
-// =========================================================
-// --- 🛠️ BUG FIX: REFERRAL LIVE AUTO-SYNC ENGINE ----------
-// =========================================================
-
-/**
- * यह फ़ंक्शन प्रोफ़ाइल और पॉप-अप दोनों जगह के रेफ़रल कोड को लाइव सिंक करता है।
- * यदि डेटा कैश में नहीं है, तो यह सीधे डेटाबेस से लाइव फ़ेच करता है।
- */
-window.syncReferralData = async () => {
-    const profileRefer = document.getElementById('profile-refer-code');
-    const modalRefer = document.getElementById('modal-refer-code');
-    
-    // यदि स्क्रीन पर कोई भी रेफ़रल एलिमेंट नहीं है, तो आगे न बढ़ें
-    if (!profileRefer && !modalRefer) return;
-
-    let d = window.currentUserData;
-    
-    // 🔍 BUG FIX FALLBACK: यदि कैश डेटा खाली है, तो फ़ायरस्टोर से तुरंत लाइव फ़ेच करें
-    if ((!d || !d.referralCode) && window.currentUser) {
-        try {
-            if (typeof window.getDoc === 'function' && typeof window.doc === 'function') {
-                const uDoc = await window.getDoc(window.doc(window.db, "users", window.currentUser.uid));
-                if (uDoc.exists()) {
-                    d = uDoc.data();
-                    window.currentUserData = d; // कैश को अपडेट करें
-                }
-            }
-        } catch (err) {
-            console.error("Failed to fetch referral data live:", err);
-        }
-    }
-
-    // 💡 SMART FALLBACK CODE: यदि डेटाबेस से भी लोड नहीं हुआ, तो UID से कोड बनाकर दिखाएं (ताकि LOADING... न आए)
-    const fallbackCode = window.currentUser ? window.currentUser.uid.substring(0, 8).toUpperCase() : "GETCODE123";
-    const code = d?.referralCode || d?.referralCode || fallbackCode;
-    const refCount = d?.referralsCount || 0;
-    const progressPct = Math.min((refCount / 10) * 100, 100) + "%";
-
-    // 1. प्रोफ़ाइल स्क्रीन के तत्वों को अपडेट करें
-    if (profileRefer) profileRefer.innerText = code;
-    const profileProgressText = document.getElementById('refer-progress-text');
-    const profileProgressFill = document.getElementById('refer-progress-fill');
-    if (profileProgressText) profileProgressText.innerText = `${refCount}/10 Refers`;
-    if (profileProgressFill) profileProgressFill.style.width = progressPct;
-
-    // 2. शेयर पॉप-अप (Modal) के तत्वों को अपडेट करें
-    if (modalRefer) modalRefer.innerText = code;
-    const modalProgressText = document.getElementById('modal-refer-progress-text');
-    const modalProgressFill = document.getElementById('modal-refer-progress-fill');
-    if (modalProgressText) modalProgressText.innerText = `${refCount}/10 Refers`;
-    if (modalProgressFill) modalProgressFill.style.width = progressPct;
-};
-
-// 🌟 अपडेटेड ऑल शेयर फ़ंक्शन (पॉप-अप खुलते ही सिंक ट्रिगर करेगा)
 window.openAllShare = () => {
     const modal = document.getElementById('all-share-modal'); 
     if (!modal) return;
     
-    // पॉप-अप खुलते ही लाइव सिंक इंजन चलाएं
-    window.syncReferralData();
-
     modal.style.display = 'flex';
     requestAnimationFrame(() => { 
         modal.classList.remove('hidden'); 
@@ -666,26 +609,10 @@ window.closeAllShare = () => {
 };
 
 window.shareApp = () => {
-    const referCard = document.getElementById('my-referral-card');
-    
-    // अगर प्रोफ़ाइल स्क्रीन पर कार्ड एक्टिव है, तो स्मूथ स्क्रॉल और ग्लो इफ़ेक्ट दिखाएं
-    if (referCard && !referCard.classList.contains('hidden')) {
-        if (navigator.vibrate) navigator.vibrate([20, 40]);
-        
-        referCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // एक सेकंड के लिए चमकने वाला ग्लो इफ़ेक्ट डालें
-        referCard.classList.add('glow-highlight');
-        setTimeout(() => {
-            referCard.classList.remove('glow-highlight');
-        }, 1500);
+    if (window.innerWidth < 768 && navigator.share) {
+        window.shareToPlatform('native'); 
     } else {
-        // अन्यथा सामान्य शेयर विंडो खोलें
-        if (window.innerWidth < 768 && navigator.share) {
-            window.shareToPlatform('native'); 
-        } else {
-            window.openAllShare(); 
-        }
+        window.openAllShare(); 
     }
 };
 
