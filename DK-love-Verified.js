@@ -1,5 +1,5 @@
 // =========================================================
-// DK-love-Verified.js - Consolidated Smart Verification & Achievements Engine
+// DK-love-Verified.js - DK Indus Smart Verification & Achievements Engine
 // =========================================================
 import { 
     doc, 
@@ -12,9 +12,6 @@ import {
     arrayUnion,
     onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-
-
-
 
 // रीयल-टाइम स्नैपशॉट को ट्रैक और साफ़ करने के लिए वेरिएबल
 window.unsubscribeHubUser = window.unsubscribeHubUser || null;
@@ -40,9 +37,9 @@ export async function recordUserActivity(userId, db) {
         await updateDoc(userRef, {
             loginDays: arrayUnion(today)
         });
-        console.log("[Verification Engine] Activity logged for:", today);
+        console.log("[DK Indus Engine] Activity logged for:", today);
     } catch (e) {
-        console.error("[Verification Engine] Error recording daily activity:", e.message);
+        console.error("[DK Indus Engine] Error recording daily activity:", e.message);
     }
 }
 
@@ -113,7 +110,7 @@ export async function checkVerificationEligibility(userId, db) {
         if (isFullyEligible && !userData.isVerified) {
             await updateDoc(userRef, { isVerified: true });
             if (typeof window.showCustomAlert === 'function') {
-                window.showCustomAlert("Unlocked 🎉", "Congratulations! Your account is now verified.", "success");
+                window.showCustomAlert("Unlocked 🎉", "Congratulations! You are now a Verified DK Indus Creator.", "success");
             }
             userData.isVerified = true;
         }
@@ -124,7 +121,7 @@ export async function checkVerificationEligibility(userId, db) {
         };
 
     } catch (e) {
-        console.error("[Verification Engine] Error analyzing verification metrics:", e.message);
+        console.error("[DK Indus Engine] Error analyzing verification metrics:", e.message);
         return null;
     }
 }
@@ -140,7 +137,7 @@ export function getVerifiedBadgeHTML(isVerified, size = 32) {
     const glowId = `premiumGlow_${uniqueSuffix}`;
 
     return `
-    <svg width="${size}" height="${size}" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-left: 6px; display: inline-block; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));" title="Verified Creator Profile">
+    <svg width="${size}" height="${size}" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-left: 6px; display: inline-block; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));" title="DK Indus Verified Creator">
       <defs>
         <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#FFE5B4"/>
@@ -181,7 +178,7 @@ export function getVerifiedBadgeHTML(isVerified, size = 32) {
 window.getVerifiedBadgeHTML = getVerifiedBadgeHTML;
 
 /**
- * 4. यूआई चेकलिस्ट लेआउट जनरेटर (CSS क्लास बाइंडिंग के साथ)
+ * 4. यूआई चेकलिस्ट लेआउट जनरेटर
  */
 function buildChecklistHTML(data, forceComplete = false) {
     const loginDaysCurrent = forceComplete ? Math.max(data.loginDays.current, 15) : data.loginDays.current;
@@ -364,14 +361,18 @@ window.openVerificationHub = async () => {
         
         const isVerified = userData.isVerified === true || (data && data.isVerified === true);
         const isAdminVerified = userData.verifiedByAdmin === true || userData.isDkVerified === true || userData.verifiedBy === 'admin';
-        const isTrackerActivated = isVerified || userData.trackerActivated === true || localStorage.getItem(`DLC_tracker_activated_${userId}`) === 'true';
+        
+        // बैकवर्ड कम्पैटिबल एक्टिवेशन चेक
+        const isTrackerActivated = isVerified || 
+                                   userData.trackerActivated === true || 
+                                   localStorage.getItem(`DKI_tracker_activated_${userId}`) === 'true' ||
+                                   localStorage.getItem(`DLC_tracker_activated_${userId}`) === 'true';
 
         if (userData.trackerActivated === true) {
-            localStorage.setItem(`DLC_tracker_activated_${userId}`, 'true');
+            localStorage.setItem(`DKI_tracker_activated_${userId}`, 'true');
         }
 
         if (data) {
-            // क्रियाशीलता बटन स्थिति जनरेटर
             let actionButtonHTML = "";
             if (!isAdminVerified) {
                 if (isTrackerActivated) {
@@ -395,7 +396,7 @@ window.openVerificationHub = async () => {
                                 cursor: default;
                                 pointer-events: none;
                             ">
-                                ${getVerifiedBadgeHTML(true, 18)} Activated
+                                ${getVerifiedBadgeHTML(true, 18)} DK Indus Verified Active
                             </button>
                         `;
                     } else {
@@ -449,7 +450,6 @@ window.openVerificationHub = async () => {
                 }
             }
 
-            // अचीवमेंट बोर्ड यूआई कंडीशनल जनरेटर (CSS Classes के साथ एकीकृत)
             let achievementsCardBoardHTML = "";
             if (!isAdminVerified) {
                 achievementsCardBoardHTML = `
@@ -481,7 +481,7 @@ window.openVerificationHub = async () => {
                                     <i class="fa-solid fa-award" style="color: #0095f6; font-size: 1.6rem;"></i>
                                 </div>
                                 <h2 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #fff;">Badge Achievements</h2>
-                                <span style="font-size: 0.72rem; color: #0095f6; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; display: block; margin-top: 4px;">Verified Creator Hub</span>
+                                <span style="font-size: 0.72rem; color: #0095f6; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; display: block; margin-top: 4px;">DK Indus Creator Hub</span>
                             </div>
 
                             <div id="checklist-embed-container" class="${isVerified ? 'milestone-verified-active' : ''}" style="display: flex; flex-direction: column; gap: 14px; font-size: 0.88rem; color: #cbd5e1;">
@@ -494,7 +494,7 @@ window.openVerificationHub = async () => {
                                             Rose Gold Verified!
                                         </div>
                                         <p style="font-size: 0.78rem; color: #cbd5e1; margin-top: 4px; line-height: 1.3;">
-                                            Your Rose Gold Verified Tick is active.
+                                            Your DK Indus Rose Gold Verified Tick is active.
                                         </p>
                                     </div>
                                     ${buildChecklistHTML(data, true)} 
@@ -504,7 +504,6 @@ window.openVerificationHub = async () => {
                     </div>
                 `;
             } else {
-                // एडमिन वेरिफिकेशन स्थिति (इसके लोड होने पर CSS क्लास `admin-verified-active` सभी चेकलिस्ट एलिमेंट्स को हाइड रखेगी)
                 achievementsCardBoardHTML = `
                     <div style="
                         width: 100%;
@@ -520,13 +519,12 @@ window.openVerificationHub = async () => {
                         <div style="position: relative; display: inline-block; margin-bottom: 10px;">
                             ${getVerifiedBadgeHTML(true, 44)}
                         </div>
-                        <h3 style="margin: 0; color: #ffffff; font-weight: 900; font-size: 1.25rem;">DK Rose Gold Verified!</h3>
+                        <h3 style="margin: 0; color: #ffffff; font-weight: 900; font-size: 1.25rem;">DK Indus Rose Gold Verified!</h3>
                         <p style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.4; margin: 8px 0 0 0; font-weight: 500;">
-                            Your DK Rose Gold Verified Tick is active.
+                            Your DK Indus Rose Gold Verified Tick is active.
                         </p>
                     </div>
                     
-                    <!-- छिपे हुए सुरक्षित चेकलिस्ट कंटेनर पर क्लास लागू करना -->
                     <div id="checklist-embed-container" class="admin-verified-active" style="display:none;">
                          ${buildChecklistHTML(data, false)}
                     </div>
@@ -552,7 +550,7 @@ window.openVerificationHub = async () => {
                         How to Activate Verification?
                     </h4>
                     <p style="color: #cbd5e1; font-size: 0.82rem; line-height: 1.5; margin: 0 0 14px 0;">
-                        To activate the Rose Gold Verified Creator Badge on DK Love Chats, you must achieve the following milestones:
+                        To activate the Rose Gold Verified Creator Badge on DK Indus Social Media, you must achieve the following milestones:
                     </p>
                     <ul style="margin: 0; padding: 0; list-style-type: none; color: #94a3b8; font-size: 0.8rem; line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
                         <li style="display: flex; align-items: center; gap: 10px;">
@@ -602,14 +600,15 @@ window.revealAchievementsCard = async () => {
 
     const userId = window.currentUser ? window.currentUser.uid : null;
     if (userId) {
+        localStorage.setItem(`DKI_tracker_activated_${userId}`, 'true');
         localStorage.setItem(`DLC_tracker_activated_${userId}`, 'true');
         try {
             await updateDoc(doc(window.db, "users", userId), {
                 trackerActivated: true
             });
-            console.log("[Verification Engine] Tracker activation synced to database.");
+            console.log("[DK Indus Engine] Tracker activation synced to database.");
         } catch (dbErr) {
-            console.warn("[Verification Engine] Database sync failed, using local persistence fallback:", dbErr.message);
+            console.warn("[DK Indus Engine] Database sync failed, using local persistence fallback:", dbErr.message);
         }
     }
 
