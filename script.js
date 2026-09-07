@@ -17,7 +17,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, setDoc, getDocs, where, getDoc, writeBatch, limit, deleteDoc, arrayUnion, arrayRemove, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collectionGroup, startAfter, limitToLast } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-// 🌟 नया सुरक्षित इम्पोर्ट: isSupported को शामिल किया गया है
+// 🌟 सुरक्षित इम्पोर्ट: isSupported को शामिल किया गया है
 import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-messaging.js";
 
 const firebaseConfig = {
@@ -50,16 +50,20 @@ isSupported().then((supported) => {
 }).catch((err) => {
     console.error("FCM Compatibility Check Error:", err);
 });
-// 🌟 वेरिफिकेशन इंजन मॉड्यूल को रजिस्टर करें (यह सभी ग्लोबल फ़ंक्शंस को एक्टिव कर देगा)
+
+// 🌟 वेरिफिकेशन इंजन मॉड्यूल को रजिस्टर करें
 import "./DK-love-Verified.js";
+
 // Smart Back-Navigation Globals
-window.navHistoryStack = []; // खुले हुए मोबाइल्स/चैट रूम्स का ट्रैक रखने के लिए
-let lastBackPressTime = 0;   // डबल-टैप एक्जिट डिटेक्शन के लिए
+window.navHistoryStack = []; 
+let lastBackPressTime = 0;   
+
 // Exposing missing Firestore functions for share.js and other files
 window.addDoc = addDoc;
 window.setDoc = setDoc;
 window.serverTimestamp = serverTimestamp;
 window.writeBatch = writeBatch;
+
 // Exposing to window for external file compatibility
 window.app = app; 
 window.db = db;
@@ -161,7 +165,7 @@ let returnToChatData = null, targetSharedPostId = null, currentVisibleReelId = n
 const userCache = new Map();
 
 // ==========================================
-// --- 🌟 नया सुरक्षित FCM टोकन रजिस्ट्रेशन ---
+// --- 🌟 FCM TOKEN REGISTRATION ---
 // ==========================================
 async function registerNotificationToken(userId) {
     if (!('serviceWorker' in navigator) || !messaging) {
@@ -204,7 +208,6 @@ onAuthStateChanged(auth, (user) => {
                 currentUserData = docSnap.data();
                 window.currentUserData = currentUserData;
             } else {
-                // 🌟 रेस-कंडीशन सुरक्षा: पहली बार लॉगिन/साइनअप करने पर 'undefined' क्रैश रोकने के लिए फ़ॉलबैक
                 currentUserData = {
                     uid: user.uid,
                     name: user.displayName || "Google User",
@@ -220,10 +223,10 @@ onAuthStateChanged(auth, (user) => {
             }
         });
 
-        // 🌟 यूजर लॉगिन होने पर सुरक्षित रूप से टोकन रजिस्ट्रेशन शुरू करें
         registerNotificationToken(user.uid);
     }
 });
+
 const parseStartupDeepLinks = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const reelId = urlParams.get('reel');
@@ -265,7 +268,7 @@ window.checkAndRedirectPendingDeepLinks = async () => {
 };
 
 // ==========================================
-// --- 🌟 PWA DEEP LINK ROUTING SYSTEM (BUG RESOLVED) ---
+// --- 🌟 PWA DEEP LINK ROUTING SYSTEM ---
 // ==========================================
 function handleDeepLinking() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -352,7 +355,7 @@ window.addEventListener('offline', updateNetworkStatus);
 updateNetworkStatus();
 
 window.addEventListener('load', () => {
-    history.pushState({ app: 'lovechats', view: 'home' }, null, window.location.href);
+    history.pushState({ app: 'dkindus', view: 'home' }, null, window.location.href);
     
     editorCanvas = document.getElementById('drawing-canvas');
     if(editorCanvas) {
@@ -405,7 +408,7 @@ window.confirmAppExit = () => {
 };
 
 window.addEventListener('popstate', (event) => {
-    history.pushState({ app: 'lovechats' }, null, window.location.href);
+    history.pushState({ app: 'dkindus' }, null, window.location.href);
 
     if (window.returnToChatData && window.targetSharedPostId) {
         const homeView = document.getElementById('home-view');
@@ -449,31 +452,31 @@ window.addEventListener('popstate', (event) => {
         }
     }
 
-const activeModals = [
-    { id: 'chat-profile-modal', class: 'active', isHidden: false, close: () => window.closeChatProfile() },
-    { id: 'media-viewer-modal', class: 'active', close: () => window.closeFullScreenMedia() },
-    { id: 'notif-full-modal', class: 'hidden', isHidden: true, close: () => window.toggleNotifFullModal(false) }, 
-    { id: 'single-post-view-modal', class: 'hidden', isHidden: true, close: () => window.closeSinglePostView(true) },
-    { id: 'story-view-modal', class: 'hidden', isHidden: true, close: () => window.closeStory() },
-    { id: 'story-editor-modal', class: 'hidden', isHidden: true, close: () => window.closeStoryEditor() },
-    { id: 'offline-radar-modal', class: 'hidden', isHidden: true, close: () => window.closeRadar() },
-    { id: 'global-search-modal', class: 'hidden', isHidden: true, close: () => window.closeGlobalSearch() },
-    { id: 'msg-options-modal', class: 'hidden', isHidden: true, close: () => window.closeMsgOptions() },
-    { id: 'inbox-options-modal', class: 'hidden', isHidden: true, close: () => window.closeInboxOptions() },
-    { id: 'comments-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('comments-modal', false) },
-    { id: 'share-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('share-modal', false) },    
-    { id: 'reel-modes-modal', class: 'hidden', isHidden: true, close: () => window.closeReelModesModal() },
-    { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
-    { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
-    { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
-    { id: 'verification-hub-modal', class: 'hidden', isHidden: true, close: () => window.closeVerificationHub() },
-    { id: 'create-post-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('create-post-modal', false) },
-    { id: 'password-prompt-modal', class: 'hidden', isHidden: true, close: () => window.cancelUnlockChat() },
-    { id: 'story-viewers-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('story-viewers-modal', false) },
-    { id: 'custom-alert-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomAlert() },
-    { id: 'custom-confirm-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomConfirm() },
-    { id: 'exit-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('exit-modal', false) }
-];
+    const activeModals = [
+        { id: 'chat-profile-modal', class: 'active', isHidden: false, close: () => window.closeChatProfile() },
+        { id: 'media-viewer-modal', class: 'active', close: () => window.closeFullScreenMedia() },
+        { id: 'notif-full-modal', class: 'hidden', isHidden: true, close: () => window.toggleNotifFullModal(false) }, 
+        { id: 'single-post-view-modal', class: 'hidden', isHidden: true, close: () => window.closeSinglePostView(true) },
+        { id: 'story-view-modal', class: 'hidden', isHidden: true, close: () => window.closeStory() },
+        { id: 'story-editor-modal', class: 'hidden', isHidden: true, close: () => window.closeStoryEditor() },
+        { id: 'offline-radar-modal', class: 'hidden', isHidden: true, close: () => window.closeRadar() },
+        { id: 'global-search-modal', class: 'hidden', isHidden: true, close: () => window.closeGlobalSearch() },
+        { id: 'msg-options-modal', class: 'hidden', isHidden: true, close: () => window.closeMsgOptions() },
+        { id: 'inbox-options-modal', class: 'hidden', isHidden: true, close: () => window.closeInboxOptions() },
+        { id: 'comments-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('comments-modal', false) },
+        { id: 'share-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('share-modal', false) },    
+        { id: 'reel-modes-modal', class: 'hidden', isHidden: true, close: () => window.closeReelModesModal() },
+        { id: 'user-list-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('user-list-modal', false) },
+        { id: 'edit-profile-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('edit-profile-modal', false) },
+        { id: 'settings-modal', class: 'hidden', isHidden: true, close: () => window.closeSettingsModal() },
+        { id: 'verification-hub-modal', class: 'hidden', isHidden: true, close: () => window.closeVerificationHub() },
+        { id: 'create-post-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('create-post-modal', false) },
+        { id: 'password-prompt-modal', class: 'hidden', isHidden: true, close: () => window.cancelUnlockChat() },
+        { id: 'story-viewers-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('story-viewers-modal', false) },
+        { id: 'custom-alert-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomAlert() },
+        { id: 'custom-confirm-modal', class: 'hidden', isHidden: true, close: () => window.closeCustomConfirm() },
+        { id: 'exit-modal', class: 'hidden', isHidden: true, close: () => window.toggleModal('exit-modal', false) }
+    ];
 
     for (let modal of activeModals) {
         const el = document.getElementById(modal.id);
@@ -521,7 +524,6 @@ const activeModals = [
         }
     }
 });
-
 
 // ==========================================
 // --- UTILITY & HELPER FUNCTIONS ---
@@ -790,7 +792,7 @@ function loadStories() {
         snapshot.forEach(docSnap => {
             const s = docSnap.data();
             const storyTime = s.timestamp?.toMillis ? s.timestamp.toMillis() : 0;
-            if(now - storyTime < 86400000) { // 1 day
+            if(now - storyTime < 86400000) { 
                 if (!groupedStories.has(s.userId)) groupedStories.set(s.userId, { userId: s.userId, userName: s.userName, userPhoto: s.userPhoto, stories: [] });
                 groupedStories.get(s.userId).stories.push({ ...s, id: docSnap.id });
             }
@@ -926,7 +928,6 @@ window.closeStoryEditor = () => {
     if(vid) { vid.pause(); vid.src = ""; }
 };
 
-// --- DRAWING & TEXT TOOLS ---
 function getTouchPos(e) {
     const rect = editorCanvas.getBoundingClientRect();
     const touch = e.touches[0];
@@ -1144,11 +1145,9 @@ function makeElementDraggable(elmnt) {
 }
 
 // --- STORY MUSIC & TRIMMER ---
-// 🌟 सेटिंग्स: यहाँ अपना Render बैकएंड URL और YouTube API Key डालें
-const BACKEND_URL = "https://lovechats-backend.onrender.com"; // 👈 यहाँ अपना असली Render URL डालें
-const YT_API_KEY = "YOUR_YOUTUBE_API_KEY"; // 👈 अपनी YouTube API Key डालें (वैकल्पिक)
+const BACKEND_URL = "https://lovechats-backend.onrender.com"; 
+const YT_API_KEY = "YOUR_YOUTUBE_API_KEY"; 
 
-// 🌟 बैकअप Piped सर्वर की लिस्ट (अगर एक डाउन होगा, तो ऐप आटोमेटिक दूसरे पर स्विच हो जाएगा)
 const PIPED_INSTANCES = [
     "https://pipedapi.kavin.rocks",
     "https://pipedapi.tokhmi.xyz",
@@ -1157,12 +1156,11 @@ const PIPED_INSTANCES = [
     "https://api.piped.projectsegfau.lt"
 ];
 
-// मल्टी-सर्वर से सुरक्षित डेटा फ़ेच करने वाला हेल्पर फ़ंक्शन
 async function fetchWithFallback(endpoint) {
     for (const base of PIPED_INSTANCES) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 सेकंड का टाइमआउट प्रति सर्वर
+            const timeoutId = setTimeout(() => controller.abort(), 4000); 
             
             const res = await fetch(`${base}${endpoint}`, { signal: controller.signal });
             clearTimeout(timeoutId);
@@ -1170,7 +1168,7 @@ async function fetchWithFallback(endpoint) {
             if (res.ok) {
                 const data = await res.json();
                 if (data && (data.items || data.audioStreams)) {
-                    return data; // सफल रिस्पॉन्स मिलने पर वापस भेजें
+                    return data; 
                 }
             }
         } catch (err) {
@@ -1229,7 +1227,6 @@ function renderMusicList(songs) {
     });
 }
 
-// सर्च बार के लिए स्मार्ट यूट्यूब म्यूज़िक लाइव सर्च इंजन
 window.filterMusicList = async () => {
     const queryTxt = document.getElementById('music-search-bar').value.trim();
     
@@ -1248,7 +1245,6 @@ window.filterMusicList = async () => {
     let songs = [];
     try {
         if (YT_API_KEY && YT_API_KEY !== "YOUR_YOUTUBE_API_KEY") {
-            // तरीका 1: ऑफिशियल YouTube Search API (अगर API Key सेट की है)
             const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(queryTxt + " audio")}&type=video&videoCategoryId=10&maxResults=15&key=${YT_API_KEY}`;
             const res = await fetch(url);
             const data = await res.json();
@@ -1262,10 +1258,8 @@ window.filterMusicList = async () => {
                 }));
             }
         } else {
-            // तरीका 2: सुरक्षित मल्टी-सर्वर Piped API (बग फिक्स्ड: 'items' ऑब्जेक्ट को मैप किया गया है)
             const data = await fetchWithFallback(`/search?q=${encodeURIComponent(queryTxt)}&filter=music_videos`);
             if (data.items) {
-                // केवल उन आइटम्स को फ़िल्टर करना जो वीडियो या स्ट्रीम टाइप के हैं
                 const videoItems = data.items.filter(item => item.type === "stream");
                 
                 songs = videoItems.slice(0, 15).map(v => {
@@ -1310,14 +1304,12 @@ window.removeStoryMusic = () => {
     if(typeof showToast === 'function') showToast("Removed", "Music removed", currentUser?.photoURL);
 };
 
-// यूट्यूब और लोकल फ़ायरबेस गानों को सुचारू रूप से प्ले करने वाला कंबाइंड फ़ंक्शन
 window.selectSongFromSearch = (song) => {
     if (!song || !song.url) return;
     editorPreviewAudio.pause();
     if(musicLoopInterval) clearInterval(musicLoopInterval);
     if(progressInterval) clearInterval(progressInterval);
     
-    // अगर यूट्यूब लिंक है तो आपके Render बैकएंड से स्ट्रीम होगा, अन्यथा सीधे लोड होगा
     let finalStreamUrl = song.url;
     if (song.url.includes("youtube.com") || song.url.includes("youtu.be")) {
         finalStreamUrl = `${BACKEND_URL}/api/stream?url=${encodeURIComponent(song.url)}`;
@@ -1443,41 +1435,6 @@ window.finishMusicTrimming = () => {
     const timeFmt = `${min}:${sec < 10 ? '0' : ''}${sec}`;
     document.getElementById('music-status-text').innerHTML = `🎵 Starts at ${timeFmt} <i class="fa-solid fa-xmark" onclick="removeStoryMusic()"></i>`;
     if(typeof showToast === 'function') showToast("Music Set", `Song starts from ${timeFmt}`, currentUser?.photoURL);
-};
-
-window.selectSongFromSearch = (song) => {
-    if (!song || !song.url) return;
-    editorPreviewAudio.pause();
-    if(musicLoopInterval) clearInterval(musicLoopInterval);
-    if(progressInterval) clearInterval(progressInterval);
-    
-    editorMusicUrl = song.url;
-    editorPreviewAudio.src = song.url; editorPreviewAudio.load();
-
-    const trimmerContainer = document.getElementById('music-trimmer-container');
-    const scrubber = document.getElementById('music-scrubber');
-
-    editorPreviewAudio.onloadedmetadata = () => {
-        if(scrubber) { scrubber.max = Math.floor(editorPreviewAudio.duration) - editorStoryDuration; scrubber.value = 0; }
-        editorMusicStartTime = 0;
-        
-        const wrapper = document.getElementById('waveform-wrapper');
-        if(wrapper) {
-            wrapper.querySelectorAll('.waveform-bar').forEach(b => b.remove());
-            for (let i = 0; i < 60; i++) {
-                const bar = document.createElement('div'); bar.className = 'waveform-bar';
-                bar.style.height = (Math.floor(Math.random() * 80) + 20) + '%';
-                wrapper.insertBefore(bar, scrubber);
-            }
-        }
-        
-        updateTrimmerUI(0); startMusicLoop(); window.startRunningProgress(); 
-    };
-
-    if (trimmerContainer) { trimmerContainer.style.display = 'block'; trimmerContainer.classList.remove('hidden'); }
-    const musicStatus = document.getElementById('music-status-text');
-    if (musicStatus) musicStatus.innerHTML = `🎵 ${song.title} <i class="fa-solid fa-xmark" onclick="removeStoryMusic()"></i>`;
-    window.closeMusicSearch(); 
 };
 
 window.toggleMute = () => {
@@ -2137,24 +2094,20 @@ window.deleteCurrentStory = () => {
     }
 };
 
-// स्टोरी लाइक के लिए त्वरित स्पैम-क्लिक प्रोटेक्शन लॉक
 window.storyLikeLock = window.storyLikeLock || new Set();
 
 window.toggleStoryLike = async () => {
     const story = activeStoryQueue[currentStoryIdx]; 
     if(!story) return;
 
-    // 🛡️ 1. स्पैम लॉक: यदि लाइक प्रक्रिया चल रही है, तो अन्य क्लिक रोकें
     if (window.storyLikeLock.has(story.id)) return;
     window.storyLikeLock.add(story.id);
 
     const likeBtn = document.getElementById('story-like-btn');
     const isLiked = likeBtn.classList.contains('liked');
 
-    // 📱 2. सूक्ष्म वाइब्रेशन फ़ीडबैक (Premium Feel)
     if (navigator.vibrate) navigator.vibrate(25);
 
-    // ⚡ 3. Optimistic UI Update (बिना इंतज़ार किए तुरंत बदलाव दिखाना)
     if (isLiked) {
         likeBtn.classList.remove('liked', 'fa-solid'); 
         likeBtn.classList.add('fa-regular');
@@ -2162,7 +2115,6 @@ window.toggleStoryLike = async () => {
         likeBtn.classList.add('liked', 'fa-solid'); 
         likeBtn.classList.remove('fa-regular');
         
-        // ऑडियो साउंड और उड़ने वाले दिलों का इफ़ेक्ट
         if (typeof playSendSound === 'function') playSendSound(); 
         if (typeof showFloatingHearts === 'function') showFloatingHearts();
     }
@@ -2175,15 +2127,12 @@ window.toggleStoryLike = async () => {
         } else {
             await window.updateDoc(storyRef, { likes: window.arrayUnion(window.currentUser.uid) });
             
-            // 🌟 4. खुद की स्टोरी होने पर नोटिफिकेशन ट्रिगर न करें, दूसरों की होने पर ही भेजें
             if (story.userId !== window.currentUser.uid && typeof window.sendNotification === 'function') {
                 await window.sendNotification(story.userId, 'like_story', 'liked your story', story.id);
             }
         }
     } catch(e) {
         console.error("Story Like Update Error, rolling back UI:", e);
-        
-        // 🔄 5. नेटवर्क कनेक्टिविटी टूटने पर UI रीस्टोर (Rollback Mechanism)
         if (isLiked) {
             likeBtn.classList.add('liked', 'fa-solid'); 
             likeBtn.classList.remove('fa-regular');
@@ -2192,10 +2141,10 @@ window.toggleStoryLike = async () => {
             likeBtn.classList.add('fa-regular');
         }
     } finally {
-        // प्रक्रिया समाप्त होने के बाद ताला खोलें
         window.storyLikeLock.delete(story.id);
     }
 };
+
 // ==========================================
 // --- STORY ANIMATION (FLOATING HEARTS) ---
 // ==========================================
@@ -2253,18 +2202,12 @@ window.checkUsernameAvailability = () => {
 }
 
 // =========================================================
-// --- 🛡️ RESILIENT GOOGLE AUTHENTICATION SYSTEM (SMART & SMOOTH) ---
+// --- 🛡️ GOOGLE AUTHENTICATION SYSTEM ---
 // =========================================================
-
-// इन-ऐप ब्राउज़र (Instagram, Facebook, Messenger, WhatsApp etc.) डिटेक्शन
 const isInAppBrowser = () => {
     const ua = navigator.userAgent || navigator.vendor || window.opera;
     return (ua.indexOf('Instagram') > -1 || ua.indexOf('FBAN') > -1 || ua.indexOf('FBAV') > -1 || ua.indexOf('Messenger') > -1 || ua.indexOf('WhatsApp') > -1);
 };
-
-// =========================================================
-// --- 🚀 SMART, SMOOTH & FAST GOOGLE AUTHENTICATION SYSTEM ---
-// =========================================================
 
 async function saveGoogleUserToFirestore(user) {
     if (!user || !user.uid) return;
@@ -2274,7 +2217,6 @@ async function saveGoogleUserToFirestore(user) {
 
     const safeEmail = (user.email || "").trim().toLowerCase();
     
-    // नाम साफ़ (Sanitize) करें और ईमेल से सुंदर नाम निकालने का प्रयास करें
     let extractedName = (user.displayName || "").replace(/\s+/g, ' ').trim();
     if (!extractedName && safeEmail.includes('@')) {
         const emailPrefix = safeEmail.split('@')[0];
@@ -2287,13 +2229,11 @@ async function saveGoogleUserToFirestore(user) {
         extractedName = "Google User";
     }
 
-    // HD प्रोफाइल फोटो अपग्रेड (96px से 400px high-res)
     let safePhoto = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(extractedName)}`;
     if (safePhoto && safePhoto.includes("googleusercontent.com")) {
         safePhoto = safePhoto.replace(/=s96-c/g, "=s400-c");
     }
 
-    // स्मार्ट और यूनिक यूजरनेम जनरेटर (तेज और डेटाबेस-फ्रेंडली)
     const generateUniqueUsername = async (baseName, email) => {
         let base = "user";
         if (email && email.includes('@')) {
@@ -2307,11 +2247,9 @@ async function saveGoogleUserToFirestore(user) {
 
         let uniqueUsername = base;
         
-        // डेटाबेस में केवल एक बार त्वरित जाँच करें
         const q = query(collection(db, "users"), where("username", "==", uniqueUsername));
         const snap = await getDocs(q);
         
-        // यदि यूजरनेम पहले से मौजूद है, तो रैंडम 3 डिजिट जोड़कर उसे तुरंत यूनिक बनाएं (अनावश्यक लूप से बचाव)
         if (!snap.empty) {
             uniqueUsername = base + "_" + Math.floor(100 + Math.random() * 900);
         }
@@ -2319,7 +2257,6 @@ async function saveGoogleUserToFirestore(user) {
     };
 
     if (!userSnap.exists()) {
-        // --- 🆕 नया अकाउंट क्रिएशन (New User Sign-up - Referral Removed) ---
         const finalUsername = await generateUniqueUsername(extractedName, safeEmail);
 
         const userData = {
@@ -2340,12 +2277,10 @@ async function saveGoogleUserToFirestore(user) {
             showCustomAlert("Welcome!", `Account created as @${finalUsername}`, "success");
         }
     } else {
-        // --- 🔄 पुराना अकाउंट (स्मार्ट ऑटो-रिपेयर / अपडेट इंजन - Referral Removed) ---
         const existingData = userSnap.data();
         const updatePayload = { lastActive: Date.now() };
         let needsUpdate = false;
 
-        // क) क्या प्रोफाइल नाम जेनेरिक/अपूर्ण है?
         const isGenericName = !existingData.name || 
                               existingData.name.toLowerCase() === "user" || 
                               existingData.name.toLowerCase() === "google user" ||
@@ -2356,7 +2291,6 @@ async function saveGoogleUserToFirestore(user) {
             needsUpdate = true;
         }
 
-        // ख) क्या यूजरनेम जेनेरिक/अस्थायी है? (जैसे "user", "googleuser" या ऑटो-जनरेटेड "user_123")
         const isGenericUsername = !existingData.username || 
                                   existingData.username.toLowerCase() === "user" || 
                                   existingData.username.toLowerCase() === "googleuser" ||
@@ -2370,7 +2304,6 @@ async function saveGoogleUserToFirestore(user) {
             }
         }
 
-        // ग) क्या पुरानी प्रोफाइल इमेज अस्थायी (ui-avatars) है जबकि असली उपलब्ध है?
         if (!existingData.photoURL || existingData.photoURL.includes("ui-avatars.com")) {
             if (user.photoURL && !user.photoURL.includes("ui-avatars.com")) {
                 updatePayload.photoURL = safePhoto;
@@ -2378,11 +2311,9 @@ async function saveGoogleUserToFirestore(user) {
             }
         }
 
-        // यदि कोई नया बदलाव हुआ है तो ही डेटाबेस में लिखें (Fast & Save Cost)
         if (needsUpdate) {
             await setDoc(userRef, updatePayload, { merge: true });
             
-            // ग्लोबल कैश और लोकल स्टेट को तुरंत अपडेट करें (No Refresh Required)
             if (window.currentUserData) {
                 if (updatePayload.name) window.currentUserData.name = updatePayload.name;
                 if (updatePayload.username) window.currentUserData.username = updatePayload.username;
@@ -2397,30 +2328,27 @@ async function saveGoogleUserToFirestore(user) {
                 showCustomAlert("Profile Synced!", `Your account details have been updated as @${updatedUsername}`, "success");
             }
         } else {
-            // कोई सुधार आवश्यक नहीं होने पर केवल सक्रियता का समय पैच करें
             await setDoc(userRef, { lastActive: Date.now() }, { merge: true });
         }
     }
 }
 
-// 🔄 रिडायरेक्ट परिणाम कैप्चरर
 async function checkGoogleRedirectResult() {
     if (sessionStorage.getItem('google_login_pending') !== 'true') return;
     
     try {
         const result = await getRedirectResult(auth);
-        sessionStorage.removeItem('google_login_pending'); // रिडायरेक्ट पूरा होने पर फ्लैग हटाएं
+        sessionStorage.removeItem('google_login_pending'); 
         if (result && result.user) {
             await saveGoogleUserToFirestore(result.user);
         }
     } catch (error) {
-        sessionStorage.removeItem('google_login_pending'); // त्रुटि आने पर भी फ़्लैग साफ़ करें
+        sessionStorage.removeItem('google_login_pending'); 
         console.error("Google Redirect Error:", error);
         handleGoogleAuthError(error);
     }
 }
 
-// शांत और सटीक एरर अलर्ट
 function handleGoogleAuthError(error) {
     if (!error || !error.code) return; 
 
@@ -2443,7 +2371,6 @@ function handleGoogleAuthError(error) {
     }
 }
 
-// Google Sign-In बटन एक्शन
 window.handleGoogleSignIn = async () => {
     if (navigator.vibrate) navigator.vibrate(30);
     const provider = new GoogleAuthProvider();
@@ -2628,7 +2555,7 @@ window.triggerLogoutFromSettings = () => {
     if (navigator.vibrate) navigator.vibrate(20);
     if(typeof closeSettingsModal === 'function') closeSettingsModal();
     setTimeout(() => {
-        window.showDynamicConfirm("Confirm Logout", "Are you sure you want to logout from DK Love Chats?", "fa-solid fa-right-from-bracket", () => {
+        window.showDynamicConfirm("Confirm Logout", "Are you sure you want to logout from DK Indus Social Media?", "fa-solid fa-right-from-bracket", () => {
             if (navigator.vibrate) navigator.vibrate([30, 30]);
             signOut(auth).then(() => { window.location.reload(); });
         });
@@ -2903,9 +2830,6 @@ window.closeSinglePostView = () => {
     }
 };
 
-
-
-// कमेंट्स लाइक के लिए त्वरित स्पैम-क्लिक प्रोटेक्शन लॉक
 window.commentLikeLock = window.commentLikeLock || new Set();
 
 window.handleLikeComment = async (commentId, isLiked, commentOwnerId, commentText) => {
@@ -2938,7 +2862,6 @@ window.handleLikeComment = async (commentId, isLiked, commentOwnerId, commentTex
     }
 };
 
-// त्वरित लगातार सबमिशन को रोकने के लिए सेंडिंग स्टेट
 window.isCommentSending = window.isCommentSending || false;
 
 window.handleSendComment = async () => { 
@@ -3000,6 +2923,7 @@ window.handleSendComment = async () => {
         window.isCommentSending = false;
     }
 };
+
 // ==========================================
 // --- SHARED POST & NAVIGATION LOGIC ---
 // ==========================================
@@ -3219,7 +3143,7 @@ window.createRealLookingBot = async (targetUserId) => {
         const botId = 'bot_' + Math.random().toString(36).substr(2, 9);
         const firstNames = ["Rahul", "Priya", "Amit", "Sana", "Vikram", "Neha", "Arjun", "Anjali", "Rohan", "Ishita"];
         const lastNames = ["Sharma", "Verma", "Khan", "Singh", "Das", "Malhotra", "Goel", "Patel"];
-        const fakeBios = ["Living life!", "Love Chats User ❤️", "Traveler ✈️", "Music Lover 🎵", "Secure Chatting!", "Always Online 🚀"];
+        const fakeBios = ["Living life!", "DK Indus User 🚀", "Traveler ✈️", "Music Lover 🎵", "Smart & Fast Social App!", "Always Online 🌟"];
 
         const randomName = firstNames[Math.floor(Math.random() * firstNames.length)] + " " + lastNames[Math.floor(Math.random() * lastNames.length)];
         const randomBio = fakeBios[Math.floor(Math.random() * fakeBios.length)];
@@ -3385,7 +3309,6 @@ onAuthStateChanged(auth, async (user) => {
             return; 
         }
 
-        // --- 🛡️ BAN SECURITY CHECK ---
         currentUser = user;
         window.currentUser = user;
         
@@ -3394,7 +3317,6 @@ onAuthStateChanged(auth, async (user) => {
             if(userDoc.exists()) {
                 currentUserData = userDoc.data();
             } else {
-                // 🌟 रेस-कंडीशन सुरक्षा फ़ॉलबैक (डेटाबेस पेलोड सिंक होने तक के लिए)
                 currentUserData = {
                     name: user.displayName || "Google User",
                     username: user.email ? user.email.split('@')[0] : "user",
@@ -3470,7 +3392,6 @@ onAuthStateChanged(auth, async (user) => {
             .catch((err) => {
                 console.warn("Calling System dynamic initialization skipped or failed:", err);
             });
-        // ====================================
         
         setTimeout(() => {
             if (typeof window.checkAndRedirectPendingDeepLinks === 'function') {
@@ -3493,6 +3414,7 @@ onAuthStateChanged(auth, async (user) => {
         }
     }
 });
+
 // ==========================================
 // --- APP SETTINGS (MAINTENANCE & UPDATE) ---
 // ==========================================
