@@ -1,8 +1,8 @@
 // =========================================================
-// --- DK LOVE CHATS - PROFILE & USER LIST SYSTEM ENGINE ---
+// --- DK INDUS SOCIAL MEDIA - PROFILE & USER LIST SYSTEM ENGINE ---
 // =========================================================
 
-// 1. संख्या को शॉर्ट फॉर्मेट में बदलने के लिए हेल्पर (जैसे: 1500 -> 1.5K)
+// 1. संख्या को शॉर्ट फॉर्मेट में बदलने के लिए हेल्पर (जैसे: 1500 -> 1.5K, 1M)
 window.formatCount = (num) => {
     if (!num || isNaN(num)) return '0';
     if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -57,7 +57,7 @@ window.forceStopAllReels = () => {
 };
 
 // =========================================================
-// --- PROFILE VIEWING LOGIC (REAL-TIME SYNCED - Referral Removed) ---
+// --- PROFILE VIEWING LOGIC (REAL-TIME SYNCED) ---
 // =========================================================
 window.viewUserProfile = async (targetUid) => {
     if (typeof window.forceStopAllReels === 'function') window.forceStopAllReels();
@@ -121,7 +121,7 @@ window.viewUserProfile = async (targetUid) => {
                         </div>
 
                         <button class="btn-share-app" style="width:100%; height:48px;" onclick="shareApp()">
-                            <i class="fa-solid fa-share-nodes"></i> Share DK Love Chats
+                            <i class="fa-solid fa-share-nodes"></i> Share DK Indus App
                         </button>
                     </div>
                 `;
@@ -150,7 +150,7 @@ window.viewUserProfile = async (targetUid) => {
         }
 
         // =========================================================
-        // --- REAL-TIME SYNC SNAPSHOT LISTENER (Referral Removed) ---
+        // --- REAL-TIME SYNC SNAPSHOT LISTENER ---
         // =========================================================
         if (window.unsubscribeProfileUser) {
             window.unsubscribeProfileUser();
@@ -171,11 +171,9 @@ window.viewUserProfile = async (targetUid) => {
                     liveNameEl.innerText = liveData.name || "User";
                 }
 
-                // सुरक्षित रियल-टाइम इमेज चेकर (Flickering से बचने के लिए)
                 const liveImgEl = document.getElementById('profile-img');
                 if (liveImgEl) {
                     const nextImgSrc = liveData.avatarBase64 || liveData.photoURL || "https://i.pravatar.cc/150";
-                    // अपलोड के दौरान ओवरराइट होने से रोकें
                     const isMe = window.currentUser && targetId === window.currentUser.uid;
                     if (!(isMe && (window.profileRawFile || window.selectedMediaBase64))) {
                         if (!liveImgEl.src.includes(nextImgSrc)) {
@@ -321,12 +319,11 @@ window.loadUserPosts = async (uid) => {
 };
 
 // =========================================================
-// --- EDIT PROFILE MODULE (RE-DESIGNED) ---
+// --- EDIT PROFILE MODULE ---
 // =========================================================
 let editUsernameTimer = null;
 let isEditUsernameAvailable = true;
 
-// नई डीपी चुनने पर प्रिव्यू लोड करने की क्रिया
 window.handleProfileFileSelect = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -345,7 +342,6 @@ window.handleProfileFileSelect = (event) => {
     reader.readAsDataURL(file);
 };
 
-// प्रिव्यू इमेज पर क्लिक करके सीधे फाइल पिकर ट्रिगर करने और बाइंड करने का फ़ंक्शन
 window.initProfileImagePicker = () => {
     const previewEl = document.getElementById('edit-profile-preview');
     const fileInput = document.getElementById('edit-profile-input') || document.getElementById('edit-avatar-input');
@@ -367,7 +363,6 @@ window.openEditProfile = () => {
     const bioInput = document.getElementById('edit-bio');
     const usernameInput = document.getElementById('edit-username');
 
-    // रीयल-टाइम डेटा पॉपुलेशन
     nameInput.value = window.currentUserData?.name || window.currentUser.displayName || ""; 
     bioInput.value = window.currentUserData?.bio || "";
     usernameInput.value = window.currentUserData?.username || "";
@@ -381,10 +376,8 @@ window.openEditProfile = () => {
     document.getElementById('edit-username-check-icon').className = 'fa-solid fa-circle-check username-status status-valid';
     isEditUsernameAvailable = true; 
 
-    // आटोमैटिक इमेज पिकर बाइंडिंग एक्टिवेट करें
     window.initProfileImagePicker();
 
-    // इमोजी और कैरेक्टर लिमिट फ़िल्टर
     const sanitizeAndClean = (e, limit = null) => {
         let val = e.target.value;
         const emojiPattern = /[\uD800-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
@@ -454,7 +447,6 @@ window.checkEditUsernameAvailability = () => {
     }, 600); 
 };
 
-// प्रोफ़ाइल सेविंग क्रियान्वयक (फ़ास्ट और फ़्लिकर-मुक्त अपडेट)
 window.handleSaveProfile = async () => { 
     let n = document.getElementById('edit-name').value.trim(); 
     let b = document.getElementById('edit-bio').value.trim(); 
@@ -481,7 +473,6 @@ window.handleSaveProfile = async () => {
     try {
         let url = null;
         
-        // तात्कालिक स्थानीय ऑब्जेक्ट प्रिव्यू
         let localPreviewUrl = null;
         if (window.profileRawFile) {
             localPreviewUrl = URL.createObjectURL(window.profileRawFile);
@@ -489,7 +480,6 @@ window.handleSaveProfile = async () => {
             localPreviewUrl = window.selectedMediaBase64;
         }
 
-        // स्क्रीन पर डीपी तुरंत बदलें
         if (localPreviewUrl) {
             const profileImg = document.getElementById('profile-img');
             if (profileImg) profileImg.src = localPreviewUrl;
@@ -498,7 +488,6 @@ window.handleSaveProfile = async () => {
             if (myStoryImg) myStoryImg.src = localPreviewUrl;
         }
 
-        // फ़ाइल अपलोड प्रोसेस
         if(window.profileRawFile) {
             if (typeof window.uploadFile === 'function') {
                 try {
@@ -518,7 +507,6 @@ window.handleSaveProfile = async () => {
             }
         }
         
-        // फ़ायरबेस ऑथ प्रोफ़ाइल को अपडेट करें
         if (typeof window.updateProfile === 'function' && window.currentUser) {
             await window.updateProfile(window.currentUser, { 
                 displayName: n, 
@@ -526,7 +514,6 @@ window.handleSaveProfile = async () => {
             });
         }
         
-        // अंतिम डीपी का चयन
         const finalAvatar = url || localPreviewUrl || window.currentUserData?.avatarBase64 || window.currentUserData?.photoURL || "";
         
         const updateData = { name: n, bio: b, username: u }; 
@@ -535,10 +522,8 @@ window.handleSaveProfile = async () => {
             updateData.photoURL = finalAvatar; 
         }
         
-        // फ़ायरस्टोर डेटाबेस डॉक्यूमेंट अपडेट करें
         await window.updateDoc(window.doc(window.db, "users", window.currentUser.uid), updateData); 
 
-        // रीयल-टाइम लोकल स्टेट कैश सिंक करें
         if (window.currentUserData) {
             window.currentUserData.name = n;
             window.currentUserData.bio = b;
@@ -549,7 +534,6 @@ window.handleSaveProfile = async () => {
             }
         }
 
-        // डोम पर टेक्स्ट और डीपी तुरंत रिफ्लेक्ट करें
         const profileImg = document.getElementById('profile-img');
         if (profileImg && finalAvatar) profileImg.src = finalAvatar;
 
@@ -570,11 +554,9 @@ window.handleSaveProfile = async () => {
             profileUsername.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">@${u}${badgeHtml}</span>`;
         }
 
-        // प्रोफ़ाइल फाइल कैश साफ़ करें
         window.profileRawFile = null;
         window.selectedMediaBase64 = null;
         
-        // एडिट मोडल को बंद करें
         window.toggleModal('edit-profile-modal', false); 
         
         if(typeof showCustomAlert === 'function') {
@@ -594,7 +576,7 @@ window.handleSaveProfile = async () => {
 };
 
 // =========================================================
-// --- FOLLOWERS / FOLLOWING LIST MODULE (Referral Removed) ---
+// --- FOLLOWERS / FOLLOWING LIST MODULE ---
 // =========================================================
 let currentListUids = [], filteredListUids = [], currentListIndex = 0, isFetchingList = false;
 
