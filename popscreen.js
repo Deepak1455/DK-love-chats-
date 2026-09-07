@@ -2,9 +2,7 @@
  * popscreen.js - Unified Pop-Screens Engine (Comments & Instagram Bottom Sheet)
  * Fully Sync-Optimized with Swipe-to-Expand, Dynamic State Binding, 
  * Reverted Message Text Link Payload, and Locked Instagram UI Layouts.
- * [Bug Fix Update]: Resolves parameter mismatch for shared posts, reels, and stories in cardboard.
- * [Stable Update]: Resolves display state toggles, pointer-blocking, and missing story intent.
- * [Perfect Sync]: Corrects Reels/Posts/Stories navigation. Eliminates external HTTP text links.
+ * Brand: DK Indus Social Media 🚀
  */
 
 // --- 🎖️ ROSE GOLD VERIFIED TICK SVG ---
@@ -33,7 +31,7 @@ const ROSE_GOLD_TICK_SVG = `
 </svg>`;
 
 const APP_SHARE_URL = "https://deepak1455.github.io/DK-love-chats-/";
-const APP_SHARE_TEXT = "Hey! ❤️ Join me on DK Love Chats - A secure and fun way to chat! ❤️ Join here: ";
+const APP_SHARE_TEXT = "Hey! 🚀 Join me on DK Indus Social Media - The smartest and fastest social network! 🌟 Join here: ";
 
 // =========================================================
 // --- 🔗 DYNAMIC LINK GENERATOR HELPERS ---
@@ -90,7 +88,6 @@ function updateDOMForUser(userId) {
     if (!liveUser) return;
     
     requestAnimationFrame(() => {
-        // 1. लेखक के कमेंट्स (Avatars, Names, Handles, Badges) को अपडेट करें
         const rows = document.querySelectorAll(`.comment-author-${userId}`);
         rows.forEach(row => {
             const img = row.querySelector('.comment-avatar');
@@ -116,7 +113,6 @@ function updateDOMForUser(userId) {
             }
         });
 
-        // 2. 🌟 रियल-टाइम "@username" टैग और Rose Gold Badge (Tick) रिफ्रेश
         const replyTags = document.querySelectorAll(`.reply-target-${userId}`);
         replyTags.forEach(tag => {
             const textNode = tag.querySelector('.reply-target-text');
@@ -135,7 +131,6 @@ function updateDOMForUser(userId) {
             }
         });
 
-        // 3. लाइव रिप्लाई इनपुट इंडिकेटर अपडेट
         if (window.replyingToUserId === userId) {
             window.replyingToUsername = liveUser.username;
             const activePill = document.querySelector('#comment-reply-indicator span span');
@@ -145,6 +140,7 @@ function updateDOMForUser(userId) {
         }
     });
 }
+
 function subscribeToCommentAuthor(userId) {
     if (window.commentUserListeners.has(userId)) return;
 
@@ -180,7 +176,6 @@ window.openComments = (pid) => {
     window.activeCommentPostId = pid; 
     window.toggleModal('comments-modal', true); 
     
-    // लाइव कमेंट मैपिंग ऑब्जेक्ट
     window.commentAuthorsMap = window.commentAuthorsMap || new Map();
     
     if (!document.getElementById('enhanced-comments-scroll-styles')) {
@@ -268,7 +263,6 @@ window.openComments = (pid) => {
 
             const parentId = commentData.parentId;
 
-            // 🌟 NESTED REPLIES CARDBOARD (With Clickable username, Rose Gold Tick, and Smart Time)
             if (parentId) {
                 const parentRow = document.getElementById(`comment-row-${parentId}`);
                 if (parentRow) {
@@ -303,11 +297,9 @@ window.openComments = (pid) => {
                                 <div style="display: flex; align-items: center; gap: 4px; height: 14px; margin-top: 1px;">
                                     <span class="comment-handle" style="font-size: 0.7rem; color: #64748b; font-weight: 500;">${liveUser.username}</span>
                                     <span class="comment-badge-container" style="display: inline-flex; align-items: center; height: 12px;">${liveUser.isVerified ? ROSE_GOLD_TICK_SVG : ''}</span>
-                                    <!-- 🌟 रिप्लाई कमेंट में टाइम डिस्प्ले -->
                                     <span style="font-size: 0.68rem; color: #94a3b8; font-weight: 500; margin-left: 2px;">• ${window.formatCommentTime(commentData.timestamp)}</span>
                                 </div>
                                 <div class="comment-text comment-text-scroll" style="color: #475569; font-size: 0.8rem; margin-top: 5px; word-break: break-word; line-height: 1.45; ${textScrollStyle}">
-                                    
                                     <span class="reply-target-${parentUserId || ''}" 
                                           onclick="if(typeof window.viewUserProfile === 'function') { window.viewUserProfile('${parentUserId}'); window.toggleModal('comments-modal', false); }"
                                           style="color: #ff006e; font-weight: 700; margin-right: 6px; background: rgba(255, 0, 110, 0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; display: inline-flex; align-items: center; gap: 2px; vertical-align: middle;">
@@ -323,7 +315,6 @@ window.openComments = (pid) => {
                     }
                 }
             } else {
-                // 🌟 PARENT COMMENTS CARDBOARD (With Reply Trigger & Smart Time next to Reply)
                 let existingRow = document.getElementById(`comment-row-${commentId}`);
                 
                 if (existingRow) {
@@ -359,7 +350,6 @@ window.openComments = (pid) => {
                                  onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">
                             <div class="comment-body" style="flex: 1; text-align: left; min-width: 0;">
                                 
-                                <!-- FULL NAME ROW -->
                                 <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap; height: 18px; overflow: hidden;">
                                     <span class="comment-user" style="font-weight: 800; color: #0f172a; font-size: 0.88rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; letter-spacing: -0.15px;"
                                           onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">
@@ -367,7 +357,6 @@ window.openComments = (pid) => {
                                     </span>
                                 </div>
                                 
-                                <!-- USERNAME @ ROW -->
                                 <div style="display: flex; align-items: center; gap: 4px; height: 16px; margin-top: 1px;">
                                     <span class="comment-handle" style="font-size: 0.72rem; color: #64748b; font-weight: 600; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;"
                                          onclick="if(typeof window.viewUserProfile === 'function') window.viewUserProfile('${commentData.userId}'); window.toggleModal('comments-modal', false);">
@@ -382,9 +371,7 @@ window.openComments = (pid) => {
                                     ${commentData.text}
                                 </div>
                                 
-                                <!-- रिप्लाई ट्रिगर (टाइम स्टैम्प के साथ) -->
                                 <div style="display: flex; gap: 15px; margin-top: 8px; align-items: center; height: 16px; user-select: none;">
-                                    <!-- 🌟 पैरेंट कमेंट में टाइम डिस्प्ले -->
                                     <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 500;">${window.formatCommentTime(commentData.timestamp)}</span>
                                     <span onclick="window.setReplyTo('${commentId}', '${liveUser.username}')" style="font-size: 0.7rem; color: #ff006e; font-weight: 750; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
                                         <i class="fa-solid fa-reply" style="font-size: 0.65rem;"></i> Reply
@@ -408,12 +395,12 @@ window.openComments = (pid) => {
         console.error("Comments Observer Error:", error);
     }); 
 };
-// =========================================================================
+
 // =========================================================================
 // --- 🕒 SMART COMMENT TIMESTAMP FORMATTER ---
 // =========================================================================
 window.formatCommentTime = (timestamp) => {
-    if (!timestamp) return "Just now"; // ऑप्टिमिस्टिक रिपॉन्स (Zero-Latency)
+    if (!timestamp) return "Just now"; 
 
     let date;
     if (typeof timestamp.toDate === 'function') {
@@ -451,13 +438,13 @@ window.formatCommentTime = (timestamp) => {
     const years = Math.floor(days / 365);
     return `${years}y`;
 };
+
 // =========================================================================
-// --- 💬 PREMIUM COMMENT REPLY UTILITY SYSTEM (TOP ALIGNED LAYOUT) ---
+// --- 💬 COMMENT REPLY UTILITY SYSTEM ---
 // =========================================================================
 window.replyingToCommentId = null;
 window.replyingToUsername = null;
 
-// स्लाइड-डाउन एनीमेशन के लिए CSS इंजेक्ट करें (यदि पहले से न हो)
 if (!document.getElementById('reply-animation-styles')) {
     const style = document.createElement('style');
     style.id = 'reply-animation-styles';
@@ -480,13 +467,11 @@ if (!document.getElementById('reply-animation-styles')) {
 }
 
 window.setReplyTo = (commentId, username) => {
-    // 1. 🌟 कमेंट आईडी के ज़रिये रिप्लाई किए जाने वाले पैरेंट यूज़र की आईडी मैप से खोजें
     const targetUserId = window.commentAuthorsMap ? window.commentAuthorsMap.get(commentId) : null;
     
     window.replyingToCommentId = commentId;
     window.replyingToUserId = targetUserId;
     
-    // 2. 🌟 पैरेंट यूज़र का लाइव प्रोफ़ाइल यूज़रनेम फ़ेच करें (ताकि स्टैटिक या फ़ॉलबैक @user हैंडल न दिखे)
     const liveTargetUser = targetUserId ? window.commentUsersStore.get(targetUserId) : null;
     const displayUsername = liveTargetUser ? liveTargetUser.username : username;
     
@@ -527,7 +512,6 @@ window.setReplyTo = (commentId, username) => {
         indicator.innerHTML = `
             <span style="display: inline-flex; align-items: center; gap: 6px;">
                 <i class="fa-solid fa-reply" style="font-size: 0.72rem; transform: scaleX(-1);"></i> 
-                <!-- 🌟 यहाँ लाइव और रियल-टाइम प्रोफ़ाइल यूज़रनेम रेंडर होता है -->
                 Replying to <span style="background: #ff006e; color: #ffffff; padding: 2.5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; letter-spacing: -0.15px; box-shadow: 0 2px 6px rgba(255, 0, 110, 0.15);">${displayUsername}</span>
             </span>
             <i class="fa-solid fa-xmark" onclick="window.cancelReply()" style="cursor: pointer; padding: 5px; font-size: 1rem; color: #ff006e; transition: transform 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.transform='scale(1.25)'" onmouseout="this.style.transform='scale(1)'"></i>
@@ -537,6 +521,7 @@ window.setReplyTo = (commentId, username) => {
     
     inputEl.focus();
 };
+
 window.cancelReply = () => {
     window.replyingToCommentId = null;
     window.replyingToUsername = null;
@@ -545,6 +530,7 @@ window.cancelReply = () => {
         indicator.style.display = "none";
     }
 };
+
 window.commentLikeLock = window.commentLikeLock || new Set();
 
 window.handleLikeComment = async (commentId, containerEl, commentOwnerId) => {
@@ -622,8 +608,6 @@ window.handleSendComment = async () => {
     if (!inputEl) return;
     
     const rawInput = inputEl.value;
-    
-    // 🌟 HTML टैग्स को पूर्णतः हटाने और साफ़ करने के लिए फ़िल्टर (HTML Auto-Remove)
     const commentText = rawInput.replace(/<\/?[^>]+(>|$)/g, "").trim(); 
     
     if (!commentText || !window.activeCommentPostId || window.isCommentSending) return;
@@ -634,7 +618,6 @@ window.handleSendComment = async () => {
     try {
         const userPhoto = window.currentUserData?.avatarBase64 || window.currentUser?.photoURL || "https://i.pravatar.cc/150";
         
-        // मुख्य पेलोड ऑब्जेक्ट
         const commentPayload = {
             text: commentText, 
             userName: window.currentUser.displayName || "User", 
@@ -644,7 +627,6 @@ window.handleSendComment = async () => {
             likes: []
         };
 
-        // 🌟 यदि कोई रिप्लाई एक्टिव है, तो उसे पैरेंट कार्डबोर्ड के साथ लिंक करें
         if (window.replyingToCommentId) {
             commentPayload.parentId = window.replyingToCommentId;
             commentPayload.replyToUsername = window.replyingToUsername || "";
@@ -680,20 +662,17 @@ window.handleSendComment = async () => {
             }
         }
 
-        // 🌟 सेंड होने के बाद रिप्लाई बार को छुपाएं और स्टेट खाली करें
         if (typeof window.cancelReply === 'function') {
             window.cancelReply();
         }
 
     } catch (e) { 
         console.error("Error sending comment:", e); 
-        // त्रुटि होने की स्थिति में इनपुट को वापस पहले जैसा करें
         inputEl.value = commentText; 
     } finally {
         window.isCommentSending = false;
     }
 };
-
 
 // ==========================================
 // --- SECTION 2: SHARE SYSTEM LOGIC ---
@@ -705,7 +684,6 @@ window.shareUsersLimit = 25;
 window.hasMoreShareUsers = true;
 window.shareUsersLimitLoading = false;
 
-// DOM अपडेट हेल्पर
 function updateDOMForShareUser(userId, liveUser) {
     const row = document.getElementById(`share-row-${userId}`);
     if (!row) return;
@@ -825,7 +803,6 @@ window.updateShareModalList = () => {
             isActive: isActive
         };
 
-        // 🛡️ क्रैश से सुरक्षा: जाँचें कि फ़ंक्शन स्क्रिप्ट में मौजूद है या नहीं
         if (typeof subscribeToCommentAuthor === 'function') {
             subscribeToCommentAuthor(userId);
         }
@@ -882,19 +859,16 @@ window.updateShareModalList = () => {
 };
 
 window.openShareModal = async (itemId, itemType, itemMeta = {}) => {
-    // 🌟 पैरामीटर सैनिटाइज़र: script.js और नए फ़ॉर्मेट के बीच तालमेल बिठाने के लिए
     let normalizedType = itemType;
     if (itemType === 'video') normalizedType = 'reel';
     if (itemType === 'image') normalizedType = 'post';
 
-    // 🌟 सुरक्षा फ़ेच (Dynamic Firestore Auto-Fetch): यदि मेटाडेटा अधूरा है, तो फ़ायरस्टोर से लाइव डेटा लाएँ
     let mediaUrl = itemMeta.url || itemMeta.sharedContentUrl || itemMeta.mediaUrl || "";
     let mediaType = itemMeta.type || itemMeta.sharedContentType || (normalizedType === 'reel' ? 'video' : 'image');
     let ownerId = itemMeta.ownerId || itemMeta.sharedContentOwnerId || itemMeta.userId || "";
     let ownerName = itemMeta.ownerName || itemMeta.sharedContentOwnerName || itemMeta.userName || "";
     let ownerPhoto = itemMeta.ownerPhoto || itemMeta.sharedContentOwnerPhoto || itemMeta.userPhoto || "";
 
-    // यदि डेटा अधूरा है, तो फ़ायरस्टोर से पोस्ट/रील का लाइव डेटा फ़ेच करें
     if ((!mediaUrl || !ownerName) && (normalizedType === 'post' || normalizedType === 'reel')) {
         try {
             if (typeof window.getDoc === 'function' && typeof window.doc === 'function') {
@@ -940,7 +914,6 @@ window.openShareModal = async (itemId, itemType, itemMeta = {}) => {
     };
     
     window.commentSelectedUsers = []; 
-    
     window.shareUsersLimit = 25;
     window.hasMoreShareUsers = true;
     window.shareUsersLimitLoading = false;
@@ -1165,7 +1138,7 @@ window.toggleShareUserSelection = (userId, gridItem) => {
 };
 
 // ======================================================================
-// --- 🛡️ BACKEND DUAL-PAYLOAD COMPATIBILITY ENGINE (STABLE RE-SYNC) ---
+// --- 🛡️ BACKEND DUAL-PAYLOAD COMPATIBILITY ENGINE ---
 // ======================================================================
 window.sendBatchShare = async () => {
     if (window.commentSelectedUsers.length === 0 || !window.activeShareData) return;
@@ -1185,7 +1158,6 @@ window.sendBatchShare = async () => {
             const roomId = ids.join("_");
             const messageRef = window.doc(window.collection(window.db, "chats", roomId, "messages"));
             
-            // 🌟 लिंक न भेजने का नियम (No HTTP Link Send): पेलोड में कोई बाहरी यूआरएल सेंड नहीं होगा।
             let cleanDescriptor = "";
             if (itemType === 'reel') {
                 cleanDescriptor = " Shared a Reel";
@@ -1200,11 +1172,7 @@ window.sendBatchShare = async () => {
                 receiverId: targetUid,
                 seen: false,
                 timestamp: window.serverTimestamp(),
-                
-                // 🌟 HTTP लिंक के बिना साफ़ टेक्स्ट डिस्क्रिप्शन
                 text: cleanDescriptor,
-                
-                // 🌟 Old share.js parameters mapping (For legacy rendering compatibility)
                 isSharedContent: true, 
                 sharedContentId: itemId,
                 sharedContentType: itemType === 'reel' ? 'video' : (itemType === 'story' ? 'story' : 'image'),
@@ -1213,7 +1181,6 @@ window.sendBatchShare = async () => {
                 sharedContentOwnerName: ownerName || "User",
                 sharedContentOwnerPhoto: ownerPhoto || "",
 
-                // 🌟 Modern chats.js payload mapping (Cardboard Visuals)
                 isSharedPost: true,
                 sharedPostId: itemId,
                 sharedPostType: itemType, 
@@ -1222,10 +1189,9 @@ window.sendBatchShare = async () => {
                 sharedOwnerId: ownerId || "",
                 sharedOwnerName: ownerName || "",
                 sharedOwnerPhoto: ownerPhoto || "",
-                sharedLink: "" // 🌟 NO URL LINK ATTACHED
+                sharedLink: "" 
             };
 
-            // रीयल-टाइम अपडेट: आइटम टाइप के आधार पर फ़ायरस्टोर सिंक पैरामीटर्स का सटीक असाइनमेंट
             if (itemType === 'reel') {
                 sharedData.isReelShare = true;
                 sharedData.sharedReelId = itemId;
@@ -1234,7 +1200,6 @@ window.sendBatchShare = async () => {
                 sharedData.sharedReelOwnerName = ownerName || "";
                 sharedData.sharedReelOwnerPhoto = ownerPhoto || "";
                 
-                // Backup fields to ensure standard post cardboard fallback works
                 sharedData.isPostShare = true;
                 sharedData.sharedPostId = itemId;
                 sharedData.sharedPostUrl = url || "";
@@ -1255,7 +1220,6 @@ window.sendBatchShare = async () => {
                 sharedData.repliedStoryOwnerName = ownerName || "";
                 sharedData.repliedStoryOwnerPhoto = ownerPhoto || "";
                 
-                // Backup mappings for story replies
                 sharedData.isStoryReply = true;
                 sharedData.repliedStoryId = itemId;
                 sharedData.repliedStoryType = type || 'image';
@@ -1266,7 +1230,6 @@ window.sendBatchShare = async () => {
 
             batch.set(messageRef, sharedData);
 
-            // इनबॉक्स सूची में लास्ट मैसेज अपडेट
             const roomRef = window.doc(window.db, "chats", roomId);
             batch.set(roomRef, {
                 users: [window.currentUser.uid, targetUid],
@@ -1302,7 +1265,7 @@ window.sendBatchShare = async () => {
 };
 
 // ==========================================
-// --- 🌟 REAL REEL/POST TO STORY SHARING ENGINE ---
+// --- 🌟 SHARE REEL/POST TO STORY ENGINE ---
 // ==========================================
 window.handleShareReelToStory = async () => {
     if (!window.currentUser) {
@@ -1329,7 +1292,6 @@ window.handleShareReelToStory = async () => {
         const mediaType = type || (itemType === 'reel' ? 'video' : 'image');
         let coverUrl = null;
 
-        // यदि वीडियो है, तो स्टोरी कवर के लिए थंबনেল प्लेसहोल्डर जेनरेट करें
         if (mediaType === 'video' && mediaUrl) {
             coverUrl = mediaUrl.replace(/\.[^/.]+$/, ".jpg");
         }
@@ -1378,11 +1340,11 @@ window.shareExternalPlatform = (platform) => {
     
     let shareText = APP_SHARE_TEXT;
     if (type === 'video' || itemType === 'reel') {
-        shareText = `Hey! Check out this awesome Reel on DK Love Chats: ${link}`;
+        shareText = `Hey! Check out this awesome Reel on DK Indus Social Media: ${link}`;
     } else if (itemType === 'story') {
-        shareText = `Hey! Check out this Story on DK Love Chats: ${link}`;
+        shareText = `Hey! Check out this Story on DK Indus Social Media: ${link}`;
     } else {
-        shareText = `Hey! Check out this post on DK Love Chats: ${link}`;
+        shareText = `Hey! Check out this post on DK Indus Social Media: ${link}`;
     }
     
     const text = encodeURIComponent(shareText);
@@ -1483,7 +1445,7 @@ window.shareToPlatform = async (platform) => {
         case 'native':
             if (navigator.share) {
                 try { 
-                    await navigator.share({ title: 'DK Love Chats', text: APP_SHARE_TEXT, url: APP_SHARE_URL }); 
+                    await navigator.share({ title: 'DK Indus Social Media', text: APP_SHARE_TEXT, url: APP_SHARE_URL }); 
                 } catch (e) { 
                     if (e.name !== 'AbortError') window.copyAppURL(); 
                 }
@@ -1565,7 +1527,6 @@ window.expandShareSheetToFullScreen = () => {
     }
 };
 
-// जेस्चर डिटेक्टर्स (Gesture Detectors)
 setTimeout(() => {
     const dragBar = document.getElementById('share-drag-bar');
     const sheet = document.getElementById('share-sheet-container');
@@ -1597,7 +1558,7 @@ setTimeout(() => {
 }, 1000);
 
 // =========================================================================
-// --- 🌟 WRAP TOGGLE MODAL FOR NATIVE-LIKE HALF-SCREEN BOTTOM SHEET TRANSITIONS ---
+// --- 🌟 NATIVE-LIKE HALF-SCREEN BOTTOM SHEET TRANSITIONS ---
 // =========================================================================
 const originalToggleModal = window.toggleModal;
 window.toggleModal = (id, show) => {
@@ -1609,7 +1570,7 @@ window.toggleModal = (id, show) => {
         if (show) {
             modal.style.display = "flex"; 
             modal.classList.remove('hidden');
-            void modal.offsetWidth; // Force reflow
+            void modal.offsetWidth; 
             modal.style.opacity = "1";
             modal.style.pointerEvents = "auto"; 
             sheet.style.transform = "translate3d(0, 0, 0)";
@@ -1636,7 +1597,7 @@ window.toggleModal = (id, show) => {
 };
 
 // =========================================================================
-// --- 🌟 REAL-TIME CARDBOARD AUTO-UPDATE OBSERVER (ZERO-CONFIGURATION) ---
+// --- 🌟 REAL-TIME CARDBOARD AUTO-UPDATE OBSERVER ---
 // =========================================================================
 window.cardboardUsersStore = window.cardboardUsersStore || new Map();
 window.cardboardUserListeners = window.cardboardUserListeners || new Map();
@@ -1667,28 +1628,23 @@ function updateDOMForCardboardUser(userId) {
     const liveUser = window.cardboardUsersStore.get(userId);
     if (!liveUser) return;
 
-    // संपूर्ण डॉक्यूमेंट में इस आईडी से जुड़े सभी कार्डबोर्ड खोजें
     const targets = document.querySelectorAll(`[data-cardboard-owner="${userId}"]`);
     targets.forEach(container => {
-        // Live DP Update
         const avatarImg = container.querySelector('.shared-owner-avatar, .cardboard-avatar, img');
         if (avatarImg && avatarImg.src !== liveUser.avatar) {
             avatarImg.src = liveUser.avatar;
         }
 
-        // Live Name Update
         const nameEl = container.querySelector('.shared-owner-name, .cardboard-name, b, span');
         if (nameEl && nameEl.innerText !== liveUser.name) {
             nameEl.innerText = liveUser.name;
         }
 
-        // Live Handle Update
         const handleEl = container.querySelector('.shared-owner-handle, .cardboard-handle, small');
         if (handleEl && handleEl.innerText !== liveUser.username) {
             handleEl.innerText = liveUser.username;
         }
 
-        // Live Verified Badge Update
         const badgeEl = container.querySelector('.shared-owner-badge, .cardboard-badge, .comment-badge-container');
         if (badgeEl) {
             const hasBadge = badgeEl.querySelector('svg') !== null;
@@ -1701,7 +1657,6 @@ function updateDOMForCardboardUser(userId) {
     });
 }
 
-// नया मैसेज लोड होने पर आटोमैटिक ट्रैक करने के लिए MutationObserver
 const cardboardObserver = new MutationObserver((mutations) => {
     mutations.forEach(mutation => {
         mutation.addedNodes.forEach(node => {
@@ -1723,7 +1678,6 @@ const cardboardObserver = new MutationObserver((mutations) => {
 
 cardboardObserver.observe(document.body, { childList: true, subtree: true });
 
-// फ़ॉल-बैक इनिशियल स्कैन
 setTimeout(() => {
     document.querySelectorAll('[data-cardboard-owner]').forEach(cb => {
         const ownerId = cb.getAttribute('data-cardboard-owner');
@@ -1731,16 +1685,12 @@ setTimeout(() => {
     });
 }, 1500);
 
-
 // =========================================================================
-// --- 🌟 JUMP TO REELS TAB SMART OVERRIDES (NAV STABLE ENGINE) ---
+// --- 🌟 JUMP TO POST/REELS TAB SMART NAVIGATION ---
 // =========================================================================
 window.goToPost = async (postId, type) => {
     const normalizedType = (type || "").toLowerCase().trim();
-    // यदि type 'video' या 'reel' है, तो सीधे 'reels' स्क्रीन चुनें
     const tab = (normalizedType === 'video' || normalizedType === 'reel') ? 'reels' : 'home';
-    
-    console.log(`[Smart-Jump] Navigating to ${tab} for post ${postId} (Type: ${type})`);
 
     const chatRoom = document.getElementById('chat-room');
     if (chatRoom && chatRoom.classList.contains('active') && typeof currentChatId !== 'undefined' && currentChatId) {
@@ -1819,18 +1769,16 @@ window.openSharedPost = async (postId) => {
     }
 
     try {
-        // 1. Try to fetch from posts collection (for Posts and Reels)
         const postDoc = await window.getDoc(window.doc(window.db, "posts", postId));
         if (postDoc.exists()) {
             const postData = postDoc.data();
-            const mediaType = postData.mediaType || 'image'; // 'video' represents reel, 'image' represents post
+            const mediaType = postData.mediaType || 'image';
             if (typeof window.goToPost === 'function') {
                 window.goToPost(postId, mediaType);
             }
             return;
         }
 
-        // 2. If not found in posts, try to fetch from stories collection (for Stories)
         const storyDoc = await window.getDoc(window.doc(window.db, "stories", postId));
         if (storyDoc.exists()) {
             const storyData = storyDoc.data();
@@ -1843,7 +1791,6 @@ window.openSharedPost = async (postId) => {
             return;
         }
 
-        // 3. Fallback: If item is deleted
         if (typeof window.showToast === 'function') {
             window.showToast("Deleted", "This item has been deleted or expired.", window.currentUser?.photoURL, "error");
         }
