@@ -18,7 +18,8 @@ let offlineActionQueue = JSON.parse(localStorage.getItem('offline_notif_actions'
 let currentNotifLimit = 10;
 let isNotifsLoadingMore = false;
 let hasMoreNotifications = true;
-let animatedNotifIds = new Set(); // पहले से एनीमेट हो चुके कार्ड्स को ट्रैक करने के लिए
+let animatedNotifIds = new Set();
+let isInitialNotifLoad = true; // पहली बार पुराने नोटिफिकेशन्स पर बार-बार घंटी बजने से रोकने के लिए
 
 // ===================================================
 // 🛠️ SMART CSS INJECTOR (ZERO-LAG SCROLLING & GPU COMPOSITING)
@@ -83,31 +84,21 @@ notifStyle.innerHTML = `
         opacity: 0;
         will-change: transform, opacity;
     }
-    
-    /* ⚡ सुपर फास्ट स्क्रॉलिंग और वाइट स्क्रीन प्रोटेक्शन */
     #notif-full-modal {
         scroll-behavior: smooth;
         will-change: scroll-position;
         -webkit-overflow-scrolling: touch;
     }
-    
     .notif-item-full {
         content-visibility: auto;
         contain-intrinsic-size: auto 120px;
         will-change: transform, opacity;
         transform: translate3d(0,0,0);
     }
-    
-    .notif-item-full img {
-        image-rendering: -webkit-optimize-contrast;
-        backface-visibility: hidden;
-    }
-    
-    /* 🎯 स्मार्ट "क्लिक हियर टू टॉप" बटन - कार्ड्स से अलग सीधे स्क्रीन की बॉडी पर सेट */
     .notif-scroll-top-btn {
-        position: fixed !important;  /* पूरे ब्राउज़र स्क्रीन पर लॉक रखने के लिए */
-        bottom: 30px !important;    /* निचले हिस्से में बिल्कुल निश्चित स्थिति */
-        right: 25px !important;     /* दाईं तरफ बिल्कुल निश्चित स्थिति */
+        position: fixed !important;
+        bottom: 30px !important;
+        right: 25px !important;
         width: 50px;
         height: 50px;
         background: var(--primary-grad, linear-gradient(135deg, #ff006e, #8338ec));
@@ -120,26 +111,57 @@ notifStyle.innerHTML = `
         font-size: 1.2rem;
         box-shadow: 0 6px 20px rgba(131, 56, 236, 0.4);
         cursor: pointer;
-        z-index: 999999 !important; /* सभी नोटिफिकेशन कार्ड्स और मोडल के ऊपर रखने के लिए सर्वोच्च इंडेक्स */
+        z-index: 999999 !important;
         opacity: 0;
         transform: translateY(30px) scale(0.6);
         transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1), transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
         pointer-events: none;
         will-change: transform, opacity;
     }
-    
     .notif-scroll-top-btn.visible {
         opacity: 1;
         transform: translateY(0) scale(1);
         pointer-events: auto;
     }
-    
     .notif-scroll-top-btn:active {
         transform: scale(0.9) translateY(2px);
-        box-shadow: 0 4px 10px rgba(131, 56, 236, 0.3);
     }
 `;
 document.head.appendChild(notifStyle);
+
+// ===================================================
+// 🔔 REAL ANDROID STATUS BAR NOTIFICATION ENGINE
+// ===================================================
+async function showRealSystemNotification(title, body, icon, clickUrl = '/') {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    try {
+        if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+
+        if ('serviceWorker' in navigator) {
+            const reg = await navigator.serviceWorker.ready;
+            reg.showNotification(title, {
+                body: body,
+                icon: icon || 'https://deepak1455.github.io/DK-love-chats-/logo.png',
+                badge: 'https://deepak1455.github.io/DK-love-chats-/logo.png',
+                vibrate: [200, 100, 200],
+                tag: 'dk-notif-' + Date.now(),
+                renotify: true,
+                data: {
+                    click_action: clickUrl
+                }
+            });
+        } else {
+            new Notification(title, {
+                body: body,
+                icon: icon || 'https://deepak1455.github.io/DK-love-chats-/logo.png'
+            });
+        }
+    } catch (e) {
+        console.warn("Status bar notification trigger skipped:", e);
+    }
+}
+window.showRealSystemNotification = showRealSystemNotification;
 
 // ===================================================
 // 🛠️ SAFE LAZY MESSAGING INITIALIZER
@@ -202,7 +224,6 @@ window.toggleNotifFullModal = (show) => {
         modal.classList.remove('modal-slide-up'); 
         modal.classList.add('modal-slide-down');
         
-        // मोडल बंद होते ही बैक टू टॉप बटन को तुरंत और बिना किसी देरी के छिपाएं
         if (scrollTopBtn) {
             scrollTopBtn.classList.remove('visible');
         }
@@ -234,21 +255,24 @@ function checkNotificationPermission() {
 
 window.enableNotifications = async () => {
     const safeMsg = getMessagingSafely();
-    if (!safeMsg) return;
-
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-        const notifBanner = document.getElementById('notif-perm-banner');
-        if(notifBanner) notifBanner.classList.add('hidden');
-        
-        try {
-            const token = await getToken(safeMsg, { vapidKey: "BMDJDsQo74FayFmBTyW0oXjjB-sUutaiI1FysNolYtCe_MI3w1ZVcIiXgyVDkcpFsbOV8B1CWVYZbcoGd9H8ywk" });
-            if (token && window.currentUser) {
-                await updateDoc(doc(window.db, "users", window.currentUser.uid), { fcmToken: token });
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const notifBanner = document.getElementById('notif-perm-banner');
+            if(notifBanner) notifBanner.classList.add('hidden');
+            
+            if (safeMsg && window.currentUser) {
+                const token = await getToken(safeMsg, { vapidKey: "BMDJDsQo74FayFmBTyW0oXjjB-sUutaiI1FysNolYtCe_MI3w1ZVcIiXgyVDkcpFsbOV8B1CWVYZbcoGd9H8ywk" });
+                if (token) {
+                    await updateDoc(doc(window.db, "users", window.currentUser.uid), { fcmToken: token });
+                }
             }
-        } catch (err) {
-            console.error("Token generation failed: ", err);
+            if (typeof window.showToast === 'function') {
+                window.showToast("Notifications On", "अब आपको सभी संदेशों की सूचना मिलेगी", "", "success");
+            }
         }
+    } catch (err) {
+        console.error("Token generation failed: ", err);
     }
 };
 
@@ -438,7 +462,7 @@ window.handleNotificationClick = (type, payload) => {
 };
 
 // ===================================================
-// 🌟 SMART BACKGROUND PREVIEW LOADER (FALLBACK + IMAGEURL + VIDEO FALLBACK)
+// 🌟 SMART BACKGROUND PREVIEW LOADER
 // ===================================================
 window.loadNotificationMediaPreview = async (notifId, postId, type = 'post') => {
     const container = document.getElementById(`notif-media-${notifId}`);
@@ -449,10 +473,8 @@ window.loadNotificationMediaPreview = async (notifId, postId, type = 'post') => 
         const postSnap = await getDoc(doc(window.db, collectionName, postId));
         if (postSnap.exists()) {
             const postData = postSnap.data();
-            
             const coverSrc = postData.coverUrl || postData.imageUrl;
             const mediaSrc = postData.mediaUrl;
-            
             const isVideo = postData.mediaType === 'video' || (mediaSrc && (mediaSrc.includes('.mp4') || mediaSrc.includes('.mov') || mediaSrc.includes('.webm') || mediaSrc.includes('.mkv')));
             
             container.style.display = "flex";
@@ -515,8 +537,8 @@ async function sendNotification(targetUid, type, message, payload, mediaUrl = ""
 
         await addDoc(collection(window.db, "users", targetUid, "notifications"), {
             type: type, 
-            fromName: window.currentUser.displayName, 
-            fromPhoto: fromPhoto, 
+            fromName: window.currentUser.displayName || "DK User", 
+            fromPhoto: fromPhoto || "https://i.pravatar.cc/150", 
             senderUid: window.currentUser.uid, 
             text: message, 
             timestamp: serverTimestamp(), 
@@ -557,15 +579,11 @@ function renderNotificationSkeletons(container, count = 5) {
 function bindRealTimeSenderDetails(cardId, senderUid, fallbackName, fallbackPhoto) {
     if (!senderUid || !window.db) return;
 
-    // डॉक्यूमेंट पाथ सेट करें
     const docRef = doc(window.db, "users", senderUid);
     
-    // Firestore का रीयल-टाइम लिसनर बाइंड करें
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
         const card = document.getElementById(cardId);
         
-        // सुरक्षा जांच: अगर कार्ड अब DOM में मौजूद नहीं है (जैसे यूजर ने नोटिफिकेशन डिलीट कर दी),
-        // तो इस लिसनर को तुरंत अनसब्सक्राइब करें ताकि मेमोरी लीक न हो।
         if (!card) {
             unsubscribe();
             return;
@@ -577,28 +595,23 @@ function bindRealTimeSenderDetails(cardId, senderUid, fallbackName, fallbackPhot
             const imgEl = card.querySelector('.sender-avatar-img');
             const badgeContainer = card.querySelector('.sender-badge-container');
 
-            // मान प्राप्त करें (प्राइमरी या फॉलबैक)
             const updatedName = userData.name || fallbackName;
             const updatedPhoto = userData.avatarBase64 || userData.photoURL || fallbackPhoto;
             
-            // वेरिफिकेशन स्टेटस जांचें
             const isVerified = userData.isVerified === true || 
                                userData.verified === true || 
                                userData.verificationStatus === 'verified' || 
                                userData.verificationType === 'gold' || 
                                userData.verificationType === 'premium';
 
-            // रीयल-टाइम नाम अपडेट करें
             if (nameEl && nameEl.innerText !== updatedName) {
                 nameEl.innerText = updatedName;
             }
 
-            // रीयल-टाइम प्रोफाइल पिक्चर (DP) अपडेट करें
             if (imgEl && imgEl.src !== updatedPhoto) {
                 imgEl.src = updatedPhoto;
             }
 
-            // रीयल-टाइम Rose Gold Verified Tick अपडेट करें
             if (badgeContainer) {
                 if (isVerified) {
                     badgeContainer.innerHTML = `
@@ -620,12 +633,12 @@ function bindRealTimeSenderDetails(cardId, senderUid, fallbackName, fallbackPhot
             }
         }
     }, (err) => {
-        console.warn("Real-time sender update subscription skipped or failed:", err.message);
+        console.warn("Real-time sender update subscription skipped:", err.message);
     });
 }
 
 // ===================================================
-// 🌟 SMART CARD HTML CREATOR (FOR IN-PLACE DOM INSERTION)
+// 🌟 SMART CARD HTML CREATOR
 // ===================================================
 function createNotificationCardElement(n, animationDelay) {
     const notifTime = n.timestamp?.toMillis ? n.timestamp.toMillis() : Date.now();
@@ -674,7 +687,6 @@ function createNotificationCardElement(n, animationDelay) {
     if (n.type === 'like' || n.type === 'comment' || n.type === 'like_comment' || n.type === 'like_story') {
         const isCoverVideo = coverSrc && (coverSrc.includes('.mp4') || coverSrc.includes('.mov') || coverSrc.includes('.webm'));
         
-        // --- CLEAN DESIGN FIXED (No more 3D card borders with rainbow gradients) ---
         if (coverSrc && !isCoverVideo) {
             mediaThumbnailHTML = `
             <div style="width: 52px; height: 52px; background: #ffffff; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" onclick="${clickAction}">
@@ -752,28 +764,59 @@ function createNotificationCardElement(n, animationDelay) {
 }
 
 // ===================================================
-// --- REAL-TIME NOTIFICATION LISTENERS (LAZY CODELOAD) ---
+// --- REAL-TIME NOTIFICATION LISTENERS & STATUS BAR TRIGGER ---
 // ===================================================
 window.startNotificationListener = async (notifLimit = 10, isScrollAppend = false) => {
     if(unsubscribeNotifs && !isScrollAppend) unsubscribeNotifs();
-    
+    if (!window.currentUser) return;
+
     const notifFullList = document.getElementById('notif-full-list');
     
     if(notifFullList && !isScrollAppend) {
         renderNotificationSkeletons(notifFullList, 6);
     }
     
-    const q = query(collection(window.db, "users", window.currentUser.uid, "notifications"), orderBy("timestamp", "desc"), limit(notifLimit));
+    const q = query(
+        collection(window.db, "users", window.currentUser.uid, "notifications"), 
+        orderBy("timestamp", "desc"), 
+        limit(notifLimit)
+    );
     
     unsubscribeNotifs = onSnapshot(q, async (snapshot) => {
         const badgeHeader = document.getElementById('header-notif-badge');
-        
         let rawNotifs = [];
         let count = 0;
         const now = Date.now();
         const oneDayMs = 24 * 60 * 60 * 1000;
 
         hasMoreNotifications = snapshot.docs.length >= notifLimit;
+
+        // 🌟 रीयल-टाइम नए नोटिफ़िकेशन्स के लिए स्टेटस बार ट्रिगर
+        snapshot.docChanges().forEach((change) => {
+            const n = change.doc.data();
+            const nid = change.doc.id;
+
+            if (change.type === "added" && !isInitialNotifLoad) {
+                if (n.senderUid !== window.currentUser.uid && !n.read) {
+                    let targetUrl = '/';
+                    if (n.type === 'message') targetUrl = `/?openChat=${n.senderUid}`;
+                    else if (n.type === 'like' || n.type === 'comment') targetUrl = `/?post=${n.payload}`;
+
+                    showRealSystemNotification(
+                        n.fromName || "DK Indus", 
+                        n.text || "You have a new notification", 
+                        n.fromPhoto, 
+                        targetUrl
+                    );
+
+                    if (typeof window.triggerNotificationToast === 'function') {
+                        window.triggerNotificationToast({ ...n, id: nid });
+                    }
+                }
+            }
+        });
+
+        isInitialNotifLoad = false;
 
         for (const docSnap of snapshot.docs) {
             const n = docSnap.data();
@@ -886,7 +929,7 @@ window.startNotificationListener = async (notifLimit = 10, isScrollAppend = fals
 
         if(badgeHeader) {
             if(count > 0) { 
-                badgeHeader.innerText = count; 
+                badgeHeader.innerText = count > 99 ? '99+' : count; 
                 badgeHeader.style.display = 'flex'; 
                 unreadNotifsCount = count; 
             } else { 
@@ -1044,6 +1087,7 @@ async function autoCleanOldNotifications() {
 onAuthStateChanged(window.auth, (user) => {
     if (user) {
         setTimeout(autoCleanOldNotifications, 4000);
+        window.startNotificationListener();
     }
 });
 
@@ -1159,10 +1203,10 @@ function displaySmartToast(toastData) {
 }
 
 // ===================================================
-// --- 🎯 SMART ACTION TOAST TRIGGER (Actionable on Tap) ---
+// --- 🎯 SMART ACTION TOAST TRIGGER ---
 // ===================================================
 window.triggerNotificationToast = (notifData) => {
-    const { type, fromName, fromPhoto, senderUid, text, payload } = notifData;
+    const { type, fromName, fromPhoto, text, payload, senderUid } = notifData;
     if (shouldSuppressNotification(senderUid)) return;
 
     let tapAction = null;
